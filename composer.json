@@ -1,0 +1,12 @@
+{
+    "autoload": {
+        "psr-4": {
+            "ChatRoom\\": "src/"
+        }
+    },
+    "require": {
+        "psr/log": "^1.1",
+        "monolog/monolog": "^2.9",
+        "gregwar/captcha": "^1.2"
+    }
+}

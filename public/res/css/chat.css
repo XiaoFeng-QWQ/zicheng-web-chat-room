@@ -1,0 +1,111 @@
+#chat-box-container {
+    min-height: 500px;
+}
+
+.logo {
+    max-height: 40px;
+}
+
+#chat-box {
+    scroll-behavior: smooth;
+    padding: 10px;
+}
+
+.chat-message {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.chat-message .message-content {
+    max-width: 70%;
+    padding: 0.75rem 1rem;
+    border-radius: 0.75rem;
+    word-wrap: break-word;
+    background-color: #f1f1f1;
+    flex-grow: 1;
+}
+
+.chat-message .username {
+    font-weight: bold;
+    margin-bottom: 0.25rem;
+}
+
+.avatar {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    margin-right: 5px;
+    vertical-align: middle;
+}
+
+.right .avatar {
+    margin-left: 5px;
+    margin-right: 0;
+}
+
+.chat-message .user-group {
+    font-size: 0.75rem;
+    color: #888;
+    margin-left: 0.5rem;
+    display: inline-block;
+}
+
+.chat-message .timestamp {
+    font-size: 0.75rem;
+    color: #888;
+    margin-top: 0.5rem;
+}
+
+.chat-message.right .message-content {
+    margin-left: auto;
+    background-color: #bee3f8;
+}
+
+/* 大屏幕设备（桌面） */
+@media (min-width: 992px) {
+    .chat-message .message-content {
+        max-width: 30%;
+    }
+
+    .system-msg {
+        position: relative;
+        left: 50%;
+        margin-left: -100px;
+        max-width: 20%;
+        font-size: 0.9rem;
+    }
+}
+
+/* 中等屏幕设备（平板） */
+@media (min-width: 768px) and (max-width: 991px) {
+    .system-msg {
+        position: relative;
+        left: 50%;
+        margin-left: -100px;
+        max-width: 20%;
+        font-size: 0.9rem;
+    }
+
+    .chat-message .message-content {
+        max-width: 50%;
+    }
+}
+
+/* 小屏幕设备（手机） */
+@media (max-width: 767px) {
+    .chat-message .message-content {
+        max-width: 70%;
+    }
+
+    .system-msg {
+        text-align: center;
+        width: 100%;
+        font-size: 0.9rem;
+    }
+
+    /* 在小屏幕上调整向下按钮的位置 */
+    #scroll-down-button {
+        bottom: 70px;
+    }
+}
