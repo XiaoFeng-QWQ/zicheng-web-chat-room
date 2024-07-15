@@ -6,7 +6,7 @@ use Monolog\Formatter\LineFormatter;
 use ChatRoom\Core\Controller\ChatController;
 
 // 设置日志目录
-$logDirectory = FRAMEWORK_DIR . '/writable/logs';
+$logDirectory = FRAMEWORK_DIR . '/Writable/logs';
 if (!is_dir($logDirectory)) {
     mkdir($logDirectory, 0777, true);
 }

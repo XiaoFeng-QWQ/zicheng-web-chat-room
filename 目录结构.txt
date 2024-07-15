@@ -1,80 +1,81 @@
-◊”≥ΩÕ¯“≥¡ƒÃÏ “V0.11.0(≤‚ ‘∞Ê)
+|   .gitignore
+|   .htaccess
 |   composer.json
 |   composer.lock
-|   FileTree.txt
-|   
-+---app
+|   favicon.ico
+|   index.php
+|   LICENSE
+|   README.md
+|
++---Admin
+|       index.php
+|
++---App
 |   \---Views
 |       |   index.php
-|       |   
+|       |
 |       +---api
 |       |       captcha.php
 |       |       chat.php
 |       |       user.php
-|       |       
+|       |
 |       +---install
 |       |       index.php
-|       |       
+|       |
 |       \---user
-|               login.php
-|               logout.php
-|               register.php
-|               
-+---public
-|   |   .htaccess
-|   |   favicon.ico
-|   |   index.php
-|   |   
-|   \---res
-|       +---css
-|       |       chat.css
-|       |       rest.css
-|       |       user.auth.css
-|       |       
-|       +---image
-|       |   |   20763070231bb43c19b3b857c9d88231103080885.png
-|       |   |   5cd647c3993cbf19.jpg
-|       |   |   7.jpg
-|       |   |   favicon.png
-|       |   |   logo.loading.svg
-|       |   |   logo.png
-|       |   |   logo.svg
-|       |   |   
-|       |   \---avatar
-|       |           default1.webp
-|       |           
-|       \---js
-|               script.js
-|               user.auth.js
-|               
-+---src
+|           |   logout.php
+|           |
+|           \---auth
+|                   login.php
+|                   register.php
+|
++---StaticResources
+|   +---css
+|   |       chat.css
+|   |       rest.css
+|   |       user.auth.css
+|   |
+|   +---image
+|   |       favicon.png
+|   |       logo.loading.svg
+|   |       logo.png
+|   |       logo.svg
+|   |       logo.user.register.svg
+|   |
+|   \---js
+|           script.js
+|           user.auth.js
+|
++---System
 |   +---Core
 |   |   |   Define.php
 |   |   |   Main.php
 |   |   |   Route.php
-|   |   |   
+|   |   |
 |   |   +---Config
 |   |   |       App.php
-|   |   |       
+|   |   |
 |   |   +---Controller
 |   |   |       ChatController.php
 |   |   |       UserController.php
-|   |   |       
+|   |   |
 |   |   +---Database
 |   |   |       SqlLite.php
-|   |   |       
+|   |   |
 |   |   \---Helpers
 |   |           Error.php
 |   |           Helpers.php
 |   |           User.php
-|   |           
+|   |
 |   +---Data
+|   |       database.db
+|   |
 |   \---Font
 |           JetBrainsMono-Italic.ttf
-|           
+|
 +---vendor
 |   |   autoload.php
-|   |   
+|   |
 |   +---bin
 |   +---composer
 |   |       autoload_classmap.php
@@ -88,8 +89,8 @@
 |   |       InstalledVersions.php
 |   |       LICENSE
 |   |       platform_check.php
-|   |       
-|   °≠°≠°≠°≠°≠°≠°≠°≠°≠°≠°≠°≠°≠°≠
-|                   
-\---writable
+|   |
+|  ‚Ä¶‚Ä¶‚Ä¶‚Ä¶‚Ä¶‚Ä¶‚Ä¶‚Ä¶‚Ä¶‚Ä¶‚Ä¶‚Ä¶‚Ä¶‚Ä¶‚Ä¶‚Ä¶
+|
+\---Writable
     \---logs

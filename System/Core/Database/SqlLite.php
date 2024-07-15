@@ -24,7 +24,7 @@ class SqlLite
         $this->logger = $logger;
         try {
             // 建立 SQLite 数据库连接
-            $this->connection = new PDO('sqlite:' . FRAMEWORK_DIR . '/src/Data/database.db');
+            $this->connection = new PDO('sqlite:' . FRAMEWORK_DIR . '/System/Data/database.db');
             $this->connection->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         } catch (PDOException $e) {
             // 生成错误信息和调用堆栈
@@ -35,7 +35,7 @@ class SqlLite
                 $this->logger->error($errorMessage);
                 $this->logger->error($errorTrace);
             }
-            echo "An internal server error occurred. Please contact the administrator.";
+            echo "服务器发生数据库错误。请联系管理员。";
             // 同步输出错误信息和调用堆栈
             http_response_code(500);
             // 终止脚本执行

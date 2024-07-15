@@ -48,7 +48,7 @@ class ComposerStaticInitd751713988987e9331980363e24189ce
         ),
         'ChatRoom\\' => 
         array (
-            0 => __DIR__ . '/../..' . '/src',
+            0 => __DIR__ . '/../..' . '/System',
         ),
     );
 

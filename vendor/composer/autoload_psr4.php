@@ -10,5 +10,5 @@ return array(
     'Psr\\Log\\' => array($vendorDir . '/psr/log/Psr/Log'),
     'Monolog\\' => array($vendorDir . '/monolog/monolog/src/Monolog'),
     'Gregwar\\' => array($vendorDir . '/gregwar/captcha/src/Gregwar'),
-    'ChatRoom\\' => array($baseDir . '/src'),
+    'ChatRoom\\' => array($baseDir . '/System'),
 );

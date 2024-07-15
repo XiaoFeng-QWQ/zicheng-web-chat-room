@@ -17,8 +17,8 @@ if (isset($_SESSION['userinfo'])) {
     <title>登录到在线聊天室</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.3.3/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="/res/css/user.auth.css?v0.2.0">
-    <link rel="stylesheet" href="/res/css/rest.css">
+    <link rel="stylesheet" href="/StaticResources/css/user.auth.css?v0.2.0">
+    <link rel="stylesheet" href="/StaticResources/css/StaticResourcest.css">
     <meta name="keywords" content="在线聊天,聊天室,小枫QWQ,子辰">
     <meta name="description" content="用户登录,这是一个用bootstrapV5写的子辰在线聊天室">
 </head>
@@ -26,7 +26,7 @@ if (isset($_SESSION['userinfo'])) {
 <body>
     <div class="container">
         <div class="user-auth-container">
-            <h1 class="h4 mb-4 fw-normal text-center">登录到子辰在线聊天室V0.11.1(测试版)</h1>
+            <h1 class="h4 mb-4 fw-normal text-center">登录到子辰在线聊天室V<?php echo FRAMEWORK_VERSION ?></h1>
             <form id="loginForm" method="POST">
                 <div>
                     <label for="username" class="form-label">用户名:</label>
@@ -57,7 +57,7 @@ if (isset($_SESSION['userinfo'])) {
     </div>
     <script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
-    <script src="/res/js/user.auth.js"></script>
+    <script src="/StaticResources/js/user.auth.js"></script>
 </body>
 
 </html>

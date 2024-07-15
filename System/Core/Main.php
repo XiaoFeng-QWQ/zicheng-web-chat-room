@@ -21,7 +21,7 @@ class Main
     {
         // 创建 Logger 实例
         $logger = new Logger('App.Route');
-        $logger->pushHandler(new StreamHandler(FRAMEWORK_DIR . '/writable/logs/App.Route.log'));
+        $logger->pushHandler(new StreamHandler(FRAMEWORK_DIR . '/Writable/logs/App.Route.log'));
 
         // 实例化 Route 并传递 Logger 实例
         $this->route = new Route($logger);

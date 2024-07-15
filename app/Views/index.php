@@ -14,7 +14,7 @@ if (!isset($_SESSION['userinfo'])) {
     <title>子辰在线聊天室</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.3.3/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="/res/css/chat.css?v=0.11.0">
+    <link rel="stylesheet" href="/StaticResources/css/chat.css?v=0.11.0">
     <link href="https://gcore.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
     <script>
         const sessionUsername = "<?php echo $_SESSION['userinfo']['username']; ?>"; // 获取用户名
@@ -25,8 +25,8 @@ if (!isset($_SESSION['userinfo'])) {
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
         <div class="container-fluid">
             <a class="navbar-brand d-flex align-items-center" href="#">
-                <img src="/res/image/logo.png" alt="logo" class="logo img-fluid me-2">
-                子辰在线聊天室V0.11.1(测试版)
+                <img src="/StaticResources/image/logo.png" alt="logo" class="logo img-fluid me-2">
+                子辰在线聊天室V<?php echo FRAMEWORK_VERSION ?>
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
@@ -48,7 +48,7 @@ if (!isset($_SESSION['userinfo'])) {
                 <div id="chat-box-container" class="card">
                     <div id="chat-box" class="card-body talk" style="overflow-y: auto; max-height: 75vh; min-height: 75vh;">
                         <div id="loading" class="text-center">
-                            <img src="/res/image/logo.loading.svg" alt="">
+                            <img src="/StaticResources/image/logo.loading.svg" alt="">
                         </div>
                     </div>
                     <form id="chat-form" class="card-footer d-flex">
@@ -85,7 +85,7 @@ if (!isset($_SESSION['userinfo'])) {
 
     <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
     <script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
-    <script src="/res/js/script.js?v0.0.5"></script>
+    <script src="/StaticResources/js/script.js?v0.0.5"></script>
 </body>
 
 </html>

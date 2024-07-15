@@ -20,7 +20,7 @@ if (!$method) {
     respondWithJson(400, METHOD_NOT_PROVIDED_MESSAGE);
 }
 // 设置日志目录和日志文件名
-$logDirectory = FRAMEWORK_DIR . '/writable/logs';
+$logDirectory = FRAMEWORK_DIR . '/Writable/logs';
 ensureDirectoryExists($logDirectory);
 $logFileName = sprintf('%s/UserController[%s].log', $logDirectory, date('Y-m-d'));
 // 创建日志记录器

@@ -11,5 +11,5 @@ header('Content-Type: image/png');
 
 // 运行验证码图像的实际渲染
 $captcha
-    ->build(150, 54, FRAMEWORK_DIR . '/src/Font/JetBrainsMono-Italic.ttf')
+    ->build(150, 54, FRAMEWORK_SYSTEM_DIR . '/Font/JetBrainsMono-Italic.ttf')
     ->output();

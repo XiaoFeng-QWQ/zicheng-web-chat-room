@@ -13,8 +13,6 @@ class UserController
     private $validateUsername;
     /**
      * 系统保留名称
-     *
-     * @var [type]
      */
     private $reservedNames;
     private $logger;
