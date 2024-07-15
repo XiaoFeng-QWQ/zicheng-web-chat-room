@@ -129,7 +129,7 @@ body {
     .user-register-auth-image {
         display: block;
         /* 平板及以上设备显示 */
-        background: url('../../res/image/logo.user.register.svg') no-repeat center center;
+        background: url('/StaticResources/image/logo.user.register.svg') no-repeat center center;
         background-size: cover;
         width: 50%;
         /* 占据一半宽度 */
