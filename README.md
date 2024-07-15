@@ -1,6 +1,6 @@
 # 子辰网页聊天室
 
-![logo](/public/res/image/logo.svg)
+![logo](/StaticResources/image/logo.svg)
 
 ## 使用注意
 1. 确保PHP版本为8.2或8.2以上
