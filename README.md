@@ -3,8 +3,7 @@
 ![logo](/public/res/image/logo.svg)
 
 ## 使用注意
-1. 确保目录为/public/
-2. 确保PHP版本为8.2或8.2以上
+1. 确保PHP版本为8.2或8.2以上
 
 ## 介绍
 1. 一个使用ajax技术实现的网页聊天室  
