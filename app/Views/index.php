@@ -34,7 +34,7 @@ if (!isset($_SESSION['userinfo'])) {
             <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
                 <div class="navbar-nav mr-auto">
                     <a class="nav-link" href="https://image.dfggmc.top/imgs/2024/07/b4fa5d91c72ca548.jpg" target="_blank" rel="noopener noreferrer">联系站长</a>
-                    <a class="nav-link" href="https://gitee.com/XiaoFengQWQ/Zichen-Web-chat-room" target="_blank" rel="noopener noreferrer">Gitee开源地址</a>
+                    <a class="nav-link" href="https://gitee.com/XiaoFengQWQ/zichen-web-chat-room" target="_blank" rel="noopener noreferrer">Gitee开源地址</a>
                 </div>
                 <div class="ms-auto">
                     <button id="logout" class="btn btn-danger">离开聊天室</button>
