@@ -22,7 +22,7 @@ $(document).ready(function () {
                 disableButtonWithLoading(button);
             },
             success: function (response) {
-                handleResponse(response, '登录', '/');
+                handleResponse(response, '主页', '/');
             },
             error: function (jqXHR, textStatus, errorThrown) {
                 handleError(errorThrown);
