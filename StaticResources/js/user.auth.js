@@ -1,6 +1,4 @@
-/**----------------------
- *   ---- Pjax ----
- * ---------------------*/
+// Pjax 初始化以及相关配置
 $(document).pjax('a:not(a[target="_blank"],a[no-pjax])', {
     container: '#pjaxContainer',
     fragment: '#pjaxContainer',
@@ -18,53 +16,45 @@ $(document).on('pjax:end', function () {
     bindFormEvents();
 });
 
+// 绑定初始的表单事件
+bindFormEvents();
+
 /**
  * 绑定登录和注册表单的提交事件
  */
 function bindFormEvents() {
+    // 解除之前的绑定以防止重复绑定
+    $('#loginForm').off('submit');
+    $('#registerForm').off('submit');
+
     // 登录表单提交事件
-    $('#loginForm').on('submit', handleFormSubmit.bind(null, loginUser));
+    $('#loginForm').on('submit', function (event) {
+        handleFormSubmit(event, loginUser);
+    });
+
     // 注册表单提交事件
-    $('#registerForm').on('submit', handleFormSubmit.bind(null, registerUser, validateRegisterForm));
+    $('#registerForm').on('submit', function (event) {
+        handleFormSubmit(event, registerUser);
+    });
 }
 
 /**
  * 通用表单提交事件处理
  * 
- * @param {Function} submitFunction - 表单提交处理函数
- * @param {Function} [validationFunction] - 可选验证函数
  * @param {Event} event - 事件对象
+ * @param {Function} submitFunction - 表单提交处理函数
  */
-function handleFormSubmit(submitFunction, validationFunction, event) {
+function handleFormSubmit(event, submitFunction) {
     event.preventDefault(); // 防止默认表单提交行为
     const form = $(event.target);
+    const formId = form.attr('id');
     const captcha = $('#captcha').val();
     const username = $('#username').val();
     const password = $('#password').val();
-    const confirmPassword = $('#confirm_password').val();
+    const confirmPassword = formId === 'registerForm' ? $('#confirm_password').val() : null;
     const submitButton = form.find('button[type="submit"]');
 
-    if (validationFunction && !validationFunction(password, confirmPassword)) {
-        return; // 终止提交表单
-    }
-
     submitFunction(username, password, confirmPassword, captcha, submitButton);
-}
-
-/**
- * 验证注册表单
- * 
- * @param {string} password - 密码
- * @param {string} confirmPassword - 确认密码
- * @returns {boolean} - 如果验证通过返回 true，否则返回 false
- */
-function validateRegisterForm(password, confirmPassword) {
-    const messageBox = $('#messageBox');
-    if (password !== confirmPassword) {
-        messageBox.html('<div class="alert alert-danger">密码和确认密码不匹配。</div>');
-        return false;
-    }
-    return true;
 }
 
 /**
@@ -74,8 +64,10 @@ function validateRegisterForm(password, confirmPassword) {
  * @param {string} password - 密码
  * @param {string} captcha - 验证码
  * @param {jQuery} button - 触发请求的按钮
+ * 
+ * 
  */
-function loginUser(username, password, captcha, button) {
+function loginUser(username, password, 我TM是占位符, captcha, button) {
     ajaxRequest('/api/user?method=login', { username, password, captcha }, button, '首页', '/');
 }
 
@@ -99,9 +91,9 @@ function registerUser(username, password, confirmPassword, captcha, button) {
  * @param {Object} data - 请求的数据
  * @param {jQuery} button - 触发请求的按钮
  * @param {string} action - 动作名称
- * @param {string} redirectUrl - 成功后的重定向 URL
+ * @param {string} successRedirect - 成功后的重定向 URL
  */
-function ajaxRequest(url, data, button, action, redirectUrl) {
+function ajaxRequest(url, data, button, action, successRedirect) {
     $.ajax({
         url: url,
         type: 'POST',
@@ -112,11 +104,11 @@ function ajaxRequest(url, data, button, action, redirectUrl) {
             disableButtonWithLoading(button);
         },
         success: function (response) {
-            handleResponse(response, action, redirectUrl);
+            handleResponse(response, action, successRedirect);
         },
         error: function (jqXHR, textStatus, errorThrown) {
             handleError(errorThrown);
-            enableButtonWithLoading(button);  // 仅在请求失败时启用按钮
+            enableButtonWithLoading(button); // 仅在请求失败时启用按钮
         }
     });
 }
@@ -130,6 +122,8 @@ function ajaxRequest(url, data, button, action, redirectUrl) {
  */
 function handleResponse(response, action, redirectUrl) {
     const messageBox = $('#messageBox');
+    const submitButton = $('button[type="submit"]');
+
     if (response.code === 200) {
         messageBox.text(`${action}成功，三秒后跳转到${action}`);
         messageBox.removeClass().addClass('alert alert-success');
@@ -137,11 +131,8 @@ function handleResponse(response, action, redirectUrl) {
             window.location.href = redirectUrl;
         }, 3000);
     } else {
-        const submitButton = $('button[type="submit"]');
-
         const message = response.message || `${action}失败`;
         messageBox.text(message).removeClass().addClass('alert alert-danger');
-
         enableButtonWithLoading(submitButton);
     }
 }
@@ -181,6 +172,3 @@ function enableButtonWithLoading(button) {
     button.prop('disabled', false);
     button.html(button.data('original-text'));
 }
-
-// 绑定初始的表单事件
-bindFormEvents();
