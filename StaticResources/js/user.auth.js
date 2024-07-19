@@ -125,7 +125,7 @@ function handleResponse(response, action, redirectUrl) {
     const submitButton = $('button[type="submit"]');
 
     if (response.code === 200) {
-        messageBox.text(`${action}成功，三秒后跳转到${action}`);
+        messageBox.text(`请求成功，三秒后跳转到${action}`);
         messageBox.removeClass().addClass('alert alert-success');
         setTimeout(() => {
             window.location.href = redirectUrl;
