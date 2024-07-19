@@ -14,8 +14,8 @@ if (!isset($_SESSION['userinfo'])) {
     <title>子辰在线聊天室</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.3.3/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="/StaticResources/css/chat.css?v=0.11.0">
     <link href="https://gcore.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="/StaticResources/css/index.chat.css?v=<?php echo FRAMEWORK_VERSION ?>">
     <script>
         const sessionUsername = "<?php echo $_SESSION['userinfo']['username']; ?>"; // 获取用户名
     </script>
@@ -85,7 +85,7 @@ if (!isset($_SESSION['userinfo'])) {
 
     <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
     <script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
-    <script src="/StaticResources/js/script.js?v0.0.5"></script>
+    <script src="/StaticResources/js/index.chat.js?v=<?php echo FRAMEWORK_VERSION ?>"></script>
 </body>
 
 </html>
