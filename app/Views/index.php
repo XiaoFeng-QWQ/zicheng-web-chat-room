@@ -1,10 +1,10 @@
 <?php
-if (!isset($_SESSION['userinfo'])) {
-    if (!is_array($_SESSION['userinfo'])) {
-        header('Location: /user/login');
-        exit();
-    }
+// 检查 $_SESSION['userinfo'] 是否存在且为数组
+if (!isset($_SESSION['userinfo']) || !is_array($_SESSION['userinfo'])) {
+    header('Location: /user/login'); // 重定向到登录页面
+    exit(); // 终止脚本执行
 }
+
 ?>
 <!DOCTYPE html>
 <html lang="zh-cn">
@@ -35,6 +35,7 @@ if (!isset($_SESSION['userinfo'])) {
                 <div class="navbar-nav mr-auto">
                     <a class="nav-link" href="https://image.dfggmc.top/imgs/2024/07/b4fa5d91c72ca548.jpg" target="_blank" rel="noopener noreferrer">联系站长</a>
                     <a class="nav-link" href="https://gitee.com/XiaoFengQWQ/zichen-web-chat-room" target="_blank" rel="noopener noreferrer">Gitee开源地址</a>
+                    <a class="nav-link" href="/Admin/index.php" target="_blank" rel="noopener noreferrer">后台管理</a>
                 </div>
                 <div class="ms-auto">
                     <button id="logout" class="btn btn-danger">离开聊天室</button>

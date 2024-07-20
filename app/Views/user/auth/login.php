@@ -1,11 +1,8 @@
 <?php
-if (isset($_SESSION['userinfo'])) {
-    if (is_array($_SESSION['userinfo'])) {
-        header('Location: /');
-        exit();
-    }
-    header('Location: /');
-    exit();
+// 检查 $_SESSION['userinfo'] 是否存在且为数组
+if (isset($_SESSION['userinfo']) && is_array($_SESSION['userinfo'])) {
+    header('Location: /'); // 重定向到首页
+    exit(); // 终止脚本执行
 }
 
 require_once FRAMEWORK_APP_PATH . '/Views/module/user.auth.head.php'

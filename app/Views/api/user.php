@@ -24,7 +24,7 @@ $logDirectory = FRAMEWORK_DIR . '/Writable/logs';
 ensureDirectoryExists($logDirectory);
 $logFileName = sprintf('%s/UserController[%s].log', $logDirectory, date('Y-m-d'));
 // 创建日志记录器
-$logger = createLogger('UserController.' . $method, $logFileName, LOG_LEVEL);
+$logger = createLogger("UserController.$method", $logFileName, LOG_LEVEL);
 
 // 工具函数
 /**
@@ -109,7 +109,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 unset($_SESSION['captcha']);
                 respondWithJson(400, CAPTCHA_ERROR);
             }
-            break;
         case 'login':
             if (isset($_SESSION['captcha']) && PhraseBuilder::comparePhrases($_SESSION['captcha'], $captcha)) {
                 unset($_SESSION['captcha']);
@@ -118,7 +117,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 unset($_SESSION['captcha']);
                 respondWithJson(400, CAPTCHA_ERROR);
             }
-            break;
         default:
             respondWithJson(400, INVALID_METHOD_MESSAGE);
     }
