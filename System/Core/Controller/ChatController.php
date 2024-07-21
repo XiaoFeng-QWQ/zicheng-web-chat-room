@@ -121,6 +121,12 @@ class ChatController
             return;
         }
 
+        // 检查消息长度是否超过256字符
+        if (strlen($message) > 256) {
+            $this->response(self::STATUS_WARNING, '消息内容不能超过256字符');
+            return;
+        }
+
         // 获取当前 SESSION 的用户信息
         $user = $_SESSION['userinfo'] ?? null;
         // 从数据库获取用户信息

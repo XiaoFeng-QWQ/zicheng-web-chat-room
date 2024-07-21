@@ -6,6 +6,13 @@ let lastScrollTop = 0; // 初始化上一次滚动位置
 let loadingMessages = false; // 是否正在加载消息
 
 /**
+ * 隐藏加载指示器
+ */
+function hideLoading() {
+    $('#loading').hide();
+}
+
+/**
  * 生成文字头像
  * @param {string} name 用户名
  * @param {number} size 尺寸
@@ -139,10 +146,10 @@ function loadChatMessages() {
         data: { offset: offset },
         dataType: 'json',
         success: function (response) {
-            $('#loading').hide();
             const chatBox = $('#chat-box');
             const previousHeight = chatBox[0].scrollHeight;
-            const wasAtBottom = chatBox.scrollTop() + chatBox.outerHeight() >= previousHeight;
+            const scrollPosition = chatBox.scrollTop() + chatBox.outerHeight();
+            const isAtBottom = scrollPosition >= previousHeight;
 
             if (Array.isArray(response)) {
                 response.forEach(message => {
@@ -163,9 +170,13 @@ function loadChatMessages() {
                 scrollToBottom();
             }
 
-            if (!isUserScrolling) {
+            console.debug(isAtBottom)
+
+            if (isAtBottom) {
                 scrollToBottom();
-            } else if (wasAtBottom) {
+                hideLoading(); // 只有在滚动到底部时隐藏加载中的元素
+                $('#chat-box').css('scroll-behavior', 'smooth');
+            } else {
                 $('#scroll-down-button').show();
             }
 
@@ -173,7 +184,6 @@ function loadChatMessages() {
         },
         error: function (xhr) {
             console.error(xhr);
-            $('#loading').hide();
             const chatBox = $('#chat-box');
             chatBox.append(displayMessage({
                 type: 'error',
@@ -181,7 +191,6 @@ function loadChatMessages() {
                 created_at: new Date()
             }, 'error', false));
             scrollToBottom();
-
             loadingMessages = false;
         }
     });
@@ -192,6 +201,14 @@ function loadChatMessages() {
  * @param {string} message 消息内容
  */
 function sendMessage(message) {
+    // 截取超过 256 个字符的部分
+    if (message.length > 256) {
+        message = message.substring(0, 256);
+    }
+
+    // 禁用发送按钮
+    $('#send-button').attr('disabled', true);
+
     $.ajax({
         url: '/api/chat',
         type: 'POST',
@@ -210,7 +227,7 @@ function sendMessage(message) {
                 chatBox.append(displayMessage({
                     type: 'warning',
                     content: response.message,
-                    created_at: new Date().toLocaleTimeString()
+                    created_at: new Date()
                 }, false));
                 scrollToBottom();
             }
@@ -221,9 +238,13 @@ function sendMessage(message) {
                 type: 'error',
                 user_name: '系统',
                 content: '发送消息失败，请稍后再试。',
-                created_at: new Date().toLocaleTimeString()
+                created_at: new Date()
             }, false));
             scrollToBottom();
+        },
+        complete: function () {
+            // 启用发送按钮
+            $('#send-button').attr('disabled', false);
         }
     });
 }
@@ -235,11 +256,12 @@ function bindEventListeners() {
     $('#chat-box').on('scroll', function () {
         const chatBox = $(this);
         const scrollTop = chatBox.scrollTop();
+        const isAtBottom = scrollTop + chatBox.outerHeight() >= chatBox[0].scrollHeight;
 
         if (scrollTop < lastScrollTop) {
             isUserScrolling = true;
             $('#scroll-down-button').show();
-        } else if (scrollTop + chatBox.outerHeight() >= chatBox[0].scrollHeight) {
+        } else if (isAtBottom) {
             isUserScrolling = false;
             $('#scroll-down-button').hide();
         }
@@ -250,7 +272,7 @@ function bindEventListeners() {
     $('#chat-form').on('submit', function (event) {
         event.preventDefault();
         const messageInput = $('#message');
-        const message = messageInput.val();
+        let message = messageInput.val();
         if (message.trim() === '') return;
         messageInput.val(""); // 清空输入框
         sendMessage(message);

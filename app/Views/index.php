@@ -47,18 +47,19 @@ if (!isset($_SESSION['userinfo']) || !is_array($_SESSION['userinfo'])) {
         <div class="row justify-content-center">
             <div class="col-md-12">
                 <div id="chat-box-container" class="card">
-                    <div id="chat-box" class="card-body talk" style="overflow-y: auto; max-height: 75vh; min-height: 75vh;">
-                        <div id="loading" class="text-center">
-                            <img src="/StaticResources/image/logo.loading.svg" alt="">
+                    <div id="chat-box" class="card-body talk">
+                        <div id="loading">
+                            <div class="spinner-border" role="status" aria-hidden="true"></div>
+                            <p>加载中…</p>
                         </div>
                     </div>
                     <form id="chat-form" class="card-footer d-flex">
-                        <input type="text" class="form-control me-2" id="message" maxlength="240" placeholder="聊点什么吧..." required>
-                        <button type="submit" class="btn btn-primary send">发送</button>
+                        <input type="text" class="form-control me-2" id="message" maxlength="256" placeholder="聊点什么吧...(最大256)" required>
+                        <button type="submit" id="send-button" class="btn btn-primary send">发送</button>
                     </form>
                 </div>
                 <!-- 向下箭头按钮 -->
-                <button id="scroll-down-button" class="btn btn-primary" style="position: fixed; bottom: 140px; right: 16px; display: none;">
+                <button id="scroll-down-button" class="btn btn-primary">
                     <i class="bi bi-arrow-down-circle"></i> 返回底部
                 </button>
             </div>
