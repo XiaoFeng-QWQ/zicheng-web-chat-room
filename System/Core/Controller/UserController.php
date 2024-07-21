@@ -40,7 +40,6 @@ class UserController
      * @param string $username
      * @param string $password
      * @param string $confirmPassword
-     * @return array
      */
     public function register($username, $password, $confirmPassword)
     {
@@ -95,7 +94,6 @@ class UserController
     /**
      * @param string $username
      * @param string $password
-     * @return array
      */
     public function login($username, $password)
     {
