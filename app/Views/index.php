@@ -28,19 +28,23 @@ if (!isset($_SESSION['userinfo']) || !is_array($_SESSION['userinfo'])) {
                 <img src="/StaticResources/image/logo.png" alt="logo" class="logo img-fluid me-2">
                 子辰在线聊天室V<?php echo FRAMEWORK_VERSION ?>
             </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
-                <div class="navbar-nav mr-auto">
-                    <a class="nav-link" href="https://image.dfggmc.top/imgs/2024/07/b4fa5d91c72ca548.jpg" target="_blank" rel="noopener noreferrer">联系站长</a>
-                    <a class="nav-link" href="https://gitee.com/XiaoFengQWQ/zichen-web-chat-room" target="_blank" rel="noopener noreferrer">Gitee开源地址</a>
-                    <a class="nav-link" href="/Admin/index.php" target="_blank" rel="noopener noreferrer">后台管理</a>
-                </div>
-                <div class="ms-auto">
-                    <button id="logout" class="btn btn-danger">离开聊天室</button>
-                </div>
-            </div>
+            <li class="nav-item dropdown" style="list-style: none;">
+                <a class="nav-link dropdown-toggle" id="navbarScrollingDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    其他链接
+                </a>
+                <ul class="dropdown-menu" aria-labelledby="navbarScrollingDropdown">
+                    <li>
+                        <a class="dropdown-item" href="https://image.dfggmc.top/imgs/2024/07/b4fa5d91c72ca548.jpg" target="_blank" rel="noopener noreferrer">
+                            联系站长
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" href="https://gitee.com/XiaoFengQWQ/zichen-web-chat-room" target="_blank" rel="noopener noreferrer">Gitee开源地址</a>
+                    </li>
+                </ul>
+            </li>
+            <a class="nav-link" href="/Admin/index.php" target="_blank" rel="noopener noreferrer">后台管理</a>
+            <button id="logout" class="btn btn-danger">离开聊天室</button>
         </div>
     </nav>
     <div class="container mt-4">
