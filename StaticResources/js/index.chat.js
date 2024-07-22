@@ -149,7 +149,7 @@ function loadChatMessages() {
             const chatBox = $('#chat-box');
             const previousHeight = chatBox[0].scrollHeight;
             const scrollPosition = chatBox.scrollTop() + chatBox.outerHeight();
-            const isAtBottom = scrollPosition >= previousHeight;
+            const isAtBottom = Math.ceil(scrollPosition) >= previousHeight - 10; // 增加一个容差
 
             if (Array.isArray(response)) {
                 response.forEach(message => {
@@ -170,18 +170,18 @@ function loadChatMessages() {
                 scrollToBottom();
             }
 
-            console.debug(isAtBottom)
-
             if (isAtBottom) {
+                chatBox.css('scroll-behavior', 'auto'); // 关闭平滑滚动，确保页面即时跳转到底部
                 scrollToBottom();
+                chatBox.css('scroll-behavior', 'smooth'); // 恢复平滑滚动
                 hideLoading(); // 只有在滚动到底部时隐藏加载中的元素
-                $('#chat-box').css('scroll-behavior', 'smooth');
             } else {
                 $('#scroll-down-button').show();
             }
 
             loadingMessages = false;
         },
+
         error: function (xhr) {
             console.error(xhr);
             const chatBox = $('#chat-box');

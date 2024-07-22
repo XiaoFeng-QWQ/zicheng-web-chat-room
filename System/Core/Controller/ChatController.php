@@ -129,17 +129,18 @@ class ChatController
 
         // 获取当前 SESSION 的用户信息
         $user = $_SESSION['userinfo'] ?? null;
-        // 从数据库获取用户信息
-        $userInfo = $this->user_helpers->getUserInfo($user['username']);
 
-        // 检查用户信息是否无效或不是数组
-        if (!$user || !is_array($user)) {
+        // 检查SESSION 的用户信息是否无效或不是数组
+        if (empty($user)) {
             $this->response(self::STATUS_ERROR, self::MESSAGE_NOT_LOGGED_IN);
             return;
         }
 
+        // 从数据库获取用户信息
+        $userInfo = $this->user_helpers->getUserInfo($user['username']);
+
         // 检查用户信息是否为 null
-        if ($userInfo === null) {
+        if (empty($userInfo)) {
             $this->response(self::STATUS_ERROR, self::MESSAGE_NOT_LOGGED_IN);
             return;
         }

@@ -110,7 +110,7 @@ class UserController
             // 使用getUserInfo来获取用户信息
             $user = $this->validateUsername->getUserInfo($username);
 
-            if (!$user) {
+            if (empty($user)) {
                 return $this->Helpers->jsonResponse('用户名不存在', 400);
             }
             if (!password_verify($password, $user['password'])) {

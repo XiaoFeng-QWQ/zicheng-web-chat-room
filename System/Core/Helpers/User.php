@@ -5,7 +5,7 @@ namespace ChatRoom\Core\Helpers;
 use ChatRoom\Core\Database\SqlLite;
 
 /**
- * 用户
+ * 用户辅助类
  */
 class User
 {
@@ -27,13 +27,13 @@ class User
     }
 
     /**
-     * 获取用户信息，
+     * 获取用户信息，返回用户信息数组
      *
      * @param [type] $username 默认通过用户名查询
      * @param [type] $user_id 如果传入，使用用户id查询
-     * @return 返回用户信息数组
+     * @return array
      */
-    public function getUserInfo($username, $user_id = \null)
+    public function getUserInfo($username, $user_id = null)
     {
         $db = SqlLite::getInstance()->getConnection();
         try {
@@ -53,7 +53,7 @@ class User
                 return $userInfo;
             } else {
                 // 如果没有找到用户信息
-                return null;
+                return [];
             }
         } catch (\Exception $e) {
             // 我抛出了一个错误
