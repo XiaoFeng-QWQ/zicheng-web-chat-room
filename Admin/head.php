@@ -57,4 +57,4 @@ if (!defined('FRAMEWORK_DATABASE_PATH')) {
     </header>
     <div id="NProgress"></div>
 
-    <main class="container mt-5 flex-shrink-0" style="padding-top: 60px;">
+    <main class="container mt-5 flex-shrink-0" style="padding-top: 50px;">
