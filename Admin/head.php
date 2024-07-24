@@ -1,6 +1,12 @@
 <?php
 // 引入基本常量
 require_once __DIR__ . '/../System/Core/Define.php';
+
+if (!defined('FRAMEWORK_DATABASE_PATH')) {
+    // 滚去给我安装😡！
+    header('Location: /Admin/install/index.php');
+    exit;
+}
 ?>
 <!DOCTYPE html>
 <html lang="zh-CN">

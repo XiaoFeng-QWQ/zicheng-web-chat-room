@@ -24,7 +24,7 @@ class SqlLite
         $this->logger = $logger;
         try {
             // 建立 SQLite 数据库连接
-            $this->connection = new PDO('sqlite:' . FRAMEWORK_DIR . '/System/Data/database.db');
+            $this->connection = new PDO('sqlite:' . FRAMEWORK_DATABASE_PATH);
             $this->connection->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         } catch (PDOException $e) {
             // 生成错误信息和调用堆栈

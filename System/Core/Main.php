@@ -34,7 +34,13 @@ class Main
      */
     public function run(): void
     {
-        // 启动路由
-        $this->route->processRoutes();
+        if (!defined('FRAMEWORK_DATABASE_PATH')) {
+            // 滚去给我安装😡！
+            header('Location: /Admin/install/index.php');
+            exit;
+        } else {
+            // 启动路由
+            $this->route->processRoutes();
+        }
     }
 }

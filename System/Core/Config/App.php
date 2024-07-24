@@ -12,6 +12,7 @@ class App
      * @var array
      */
     public array $route_rules = [
+        // 基本路由
         '/' => [
             'file' => [
                 '/index.php'

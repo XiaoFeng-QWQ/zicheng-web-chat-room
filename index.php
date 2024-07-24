@@ -4,9 +4,9 @@
  * -----------------------------------
  * 注意：所有有关于文件路径的必须遵守以下规则
  * 末尾不得有"/"文件路径开始必须有"/"
+ * 检测是否安装是检测是否定义常量: FRAMEWORK_DATABASE_PATH (别问我为什么💦)
  * -----------------------------------
  */
-
 // 必须在调用 session_start() 之前设置 session.cookie_lifetime
 // 设置 PHPSESSID cookie 存活时长
 ini_set('session.cookie_lifetime', 86400 * 365); // 设置为1年（86400秒 * 365天）
