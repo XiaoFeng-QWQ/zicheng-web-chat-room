@@ -9,7 +9,7 @@ if (defined('FRAMEWORK_DATABASE_PATH')) {
     header('Location: /');
     exit;
 }
-require_once __DIR__ .'/../../vendor/autoload.php';
+require_once __DIR__ . '/../../vendor/autoload.php';
 
 // 常量配置
 define('MSG_SUCCESS', 'Success!');
@@ -48,11 +48,13 @@ function readme()
 // 获取步骤
 $step = $_GET['step'] ?? '';
 // 生成或验证 CSRF 令牌
-function generateCSRFToken() {
+function generateCSRFToken()
+{
     return bin2hex(random_bytes(16));
 }
 
-function verifyCSRFToken($token) {
+function verifyCSRFToken($token)
+{
     return hash_equals($_SESSION['csrf_token'], $token);
 }
 
@@ -68,6 +70,12 @@ if (empty($_SESSION['csrf_token'])) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>子辰聊天室安装程序</title>
     <link href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.1.3/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        img {
+            max-width: 50%;
+            max-height: 50%;
+        }
+    </style>
 </head>
 
 <body>
@@ -208,11 +216,15 @@ if (empty($_SESSION['csrf_token'])) {
                             echo '<div class="alert alert-danger">' . MSG_DB_WRITE_FAILURE . '</div>';
                         }
                     }
+                } else {
+                    echo '<div class="alert alert-danger">非法访问！</div>';
+                    exit;
                 }
                 break;
             default:
             ?>
                 <h1 class="text-center">欢迎使用子辰聊天室 <i>V<?php echo FRAMEWORK_VERSION ?></i> 安装程序</h1>
+                <h2>描述：</h2>
                 <div class="mt-4 p-3 border border-primary rounded">
                     <?php echo readme(); ?>
                 </div>

@@ -1,6 +1,7 @@
-# 子辰网页聊天室
-
-![logo](/StaticResources/image/logo.svg)
+<center> 
+    <h1>子辰网页聊天室</h1>
+    <img src='/StaticResources/image/logo.svg' alt='logo'></img>
+</center>
 
 ## 使用注意
 1. 确保PHP版本为8.2或8.2以上
