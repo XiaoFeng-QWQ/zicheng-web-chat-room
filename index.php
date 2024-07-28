@@ -28,9 +28,13 @@ if (version_compare(phpversion(), '8.2', '<')) {
 }
 
 require __DIR__ . '/vendor/autoload.php';
-require_once __DIR__ . '/System/Core/Define.php';
+require_once __DIR__ . '/config.global.php';
+require_once FRAMEWORK_CORE_DIR . '/Helpers/handleException.php';
 
 use ChatRoom\Core\Main;
+
+// 注册自定义异常处理器
+set_exception_handler('handleException');
 
 $App = new Main;
 $App->run();

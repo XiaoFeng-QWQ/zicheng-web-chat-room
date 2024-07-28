@@ -1,23 +1,25 @@
 <?php
 
 /**
- * 定义核心
+ * 是否开启DEBUG
+ * 
+ * @var bool
  */
-define('FRAMEWORK_CORE', true);
+define('FRAMEWORK_DEBUG', false);
 
 /**
  * 当前程序根目录
  * 
  * @var string
  */
-define('FRAMEWORK_DIR', dirname(__DIR__, 2));
+define('FRAMEWORK_DIR', dirname(__FILE__));
 
 /**
  * 定义版本
  * 
  * @var int
  */
-define('FRAMEWORK_VERSION', '1.2.0(测试)');
+define('FRAMEWORK_VERSION', '1.2.5(测试)');
 
 /**
  * 当前系统文件目录

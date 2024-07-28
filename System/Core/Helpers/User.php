@@ -2,6 +2,8 @@
 
 namespace ChatRoom\Core\Helpers;
 
+use PDO;
+use Exception;
 use ChatRoom\Core\Database\SqlLite;
 
 /**
@@ -46,7 +48,7 @@ class User
                 $stmt = $db->prepare("SELECT * FROM users WHERE username = ?");
                 $stmt->execute([$username]);
             }
-            $userInfo = $stmt->fetch(\PDO::FETCH_ASSOC);
+            $userInfo = $stmt->fetch(PDO::FETCH_ASSOC);
 
             if ($userInfo) {
                 // 如果找到了用户信息，则返回它
@@ -55,9 +57,9 @@ class User
                 // 如果没有找到用户信息
                 return [];
             }
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             // 我抛出了一个错误
-            throw new \Exception($e->getMessage());
+            throw new Exception($e->getMessage());
         }
     }
 

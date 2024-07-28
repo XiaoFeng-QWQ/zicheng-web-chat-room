@@ -2,8 +2,6 @@
 
 namespace ChatRoom\Core;
 
-use Monolog\Logger;
-use Monolog\Handler\StreamHandler;
 
 /**
  * 入口类
@@ -16,15 +14,10 @@ use Monolog\Handler\StreamHandler;
 class Main
 {
     public Route $route;
-
+    
     public function __construct()
     {
-        // 创建 Logger 实例
-        $logger = new Logger('App.Route');
-        $logger->pushHandler(new StreamHandler(FRAMEWORK_DIR . '/Writable/logs/App.Route.log'));
-
-        // 实例化 Route 并传递 Logger 实例
-        $this->route = new Route($logger);
+        $this->route = new Route(); // 初始化 $route 属性
     }
 
     /**

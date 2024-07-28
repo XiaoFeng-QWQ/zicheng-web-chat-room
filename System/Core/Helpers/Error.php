@@ -2,6 +2,8 @@
 
 namespace ChatRoom\Core\Helpers;
 
+use Exception;
+
 /**
  * 错误处理
  * 
@@ -31,27 +33,7 @@ class Error
     public function http($code, $msg, $title = null)
     {
         echo sprintf(self::ERROR_HTML, $title ?? '页面错误：', $msg);
-        \http_response_code($code);
-    }
-
-    /**
-     * 获取错误堆栈
-     *
-     * @return array
-     */
-    function getStackTrace(): array
-    {
-        $stack = debug_backtrace(DEBUG_BACKTRACE_PROVIDE_OBJECT, 2);
-        $stackTrace = [];
-
-        foreach ($stack as $frame) {
-            if (isset($frame['file']) && isset($frame['line'])) {
-                $stackTrace[] = [
-                    'file' => $frame['file'],
-                    'line' => $frame['line']
-                ];
-            }
-        }
-        return $stackTrace;
+        http_response_code($code);
+        throw new Exception($msg);
     }
 }

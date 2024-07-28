@@ -3,7 +3,8 @@
 namespace ChatRoom\Core\Controller;
 
 use PDO;
-use Psr\Log\LoggerInterface;
+use Exception;
+use PDOException;
 use ChatRoom\Core\Helpers\User;
 use ChatRoom\Core\Helpers\Helpers;
 use ChatRoom\Core\Database\SqlLite;
@@ -23,9 +24,8 @@ class ChatController
     const MESSAGE_SEND_FAILED = '发送消息失败';
     const MESSAGE_FETCH_FAILED = '获取消息失败';
     const MESSAGE_INVALID_REQUEST = '无效请求';
-    public function __construct(LoggerInterface $logger)
+    public function __construct()
     {
-        $this->logger = $logger;
         $this->user_helpers = new User;
         $this->Helpers = new Helpers;
     }
@@ -43,11 +43,8 @@ class ChatController
             $db = SqlLite::getInstance()->getConnection();
             $stmt = $db->prepare('INSERT INTO messages (user_name, content, type, created_at) VALUES (?, ?, ?, ?)');
             return $stmt->execute([$user['username'], $message, 'user', date('Y-m-d H:i:s')]);
-        } catch (\Exception $e) {
-            $this->logger->error("Send Message Database operation failed: " . $e->getMessage(), [
-                'stack_trace' => $e->getTraceAsString()
-            ]);
-            return false;
+        } catch (Exception $e) {
+            throw new Exception($e->getMessage());
         }
     }
 
@@ -83,11 +80,8 @@ class ChatController
 
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
-        } catch (\PDOException $e) {
-            $this->logger->error("Get Messages Database operation failed: " . $e->getMessage(), [
-                'stack_trace' => $e->getTraceAsString()
-            ]);
-            return false;
+        } catch (PDOException $e) {
+            throw new Exception($e->getMessage());
         }
     }
 
@@ -195,11 +189,8 @@ class ChatController
 
             $stmt = $db->query($query);
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
-        } catch (\PDOException $e) {
-            $this->logger->error("Get All Messages Database operation failed: " . $e->getMessage(), [
-                'stack_trace' => $e->getTraceAsString()
-            ]);
-            return false;
+        } catch (PDOException $e) {
+            throw new Exception($e->getMessage());
         }
     }
 

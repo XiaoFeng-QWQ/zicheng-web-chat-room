@@ -2,9 +2,7 @@
 
 use Monolog\Logger;
 use ChatRoom\Core\Helpers\Helpers;
-use Monolog\Handler\StreamHandler;
 use Gregwar\Captcha\PhraseBuilder;
-use Monolog\Formatter\LineFormatter;
 use ChatRoom\Core\Controller\UserController;
 
 header('Content-Type: application/json');
@@ -19,43 +17,8 @@ $method = $_GET['method'] ?? null;
 if (!$method) {
     respondWithJson(400, METHOD_NOT_PROVIDED_MESSAGE);
 }
-// 设置日志目录和日志文件名
-$logDirectory = FRAMEWORK_DIR . '/Writable/logs';
-ensureDirectoryExists($logDirectory);
-$logFileName = sprintf('%s/UserController[%s].log', $logDirectory, date('Y-m-d'));
-// 创建日志记录器
-$logger = createLogger("UserController.$method", $logFileName, LOG_LEVEL);
 
 // 工具函数
-/**
- * 确保目录存在
- */
-function ensureDirectoryExists($directory)
-{
-    if (!is_dir($directory)) {
-        mkdir($directory, 0777, true);
-    }
-}
-/**
- * 创建日志记录器
- *
- * @param [type] $channel
- * @param [type] $logFileName
- * @param [type] $logLevel
- * @return
- */
-function createLogger($channel, $logFileName, $logLevel)
-{
-    $logger = new Logger($channel);
-    $output = "[%datetime%] %channel%.%level_name%: %message%\n%context.stack_trace%\n";
-    $dateFormat = 'Y-m-d\TH:i:s.uP';
-    $formatter = new LineFormatter($output, $dateFormat, true, true);
-    $streamHandler = new StreamHandler($logFileName, $logLevel);
-    $streamHandler->setFormatter($formatter);
-    $logger->pushHandler($streamHandler);
-
-    return $logger;
-}
 /**
  * 使用 JSON 或纯文本响应并设置 HTTP 状态码
  * 内置exit()
@@ -76,19 +39,6 @@ function respondWithJson($statusCode, $message)
     }
     exit();
 }
-/**
- * 日志记录错误
- *
- * @param [type] $logger
- * @param [type] $errors
- * @return void
- */
-function logErrors($logger, $errors)
-{
-    foreach ($errors as $error) {
-        $logger->error($error);
-    }
-}
 
 // 处理 API 请求
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -98,7 +48,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $username = $input['username'] ?? '';
     $password = $input['password'] ?? '';
     $confirmPassword = $method === 'register' ? $input['confirm_password'] ?? '' : null;
-    $userController = new UserController($logger);
+    $userController = new UserController();
 
     switch ($method) {
         case 'register':
