@@ -34,6 +34,5 @@ class Error
     {
         echo sprintf(self::ERROR_HTML, $title ?? '页面错误：', $msg);
         http_response_code($code);
-        throw new Exception($msg);
     }
 }
