@@ -62,7 +62,7 @@ require_once __DIR__ . "/head.php";
     <div class="col-md-4">
         <div class="card mb-4">
             <div class="card-header">
-                <i class="fas fa-bullhorn"></i> 系统日志
+                <i class="fas fa-bullhorn"></i> 管理员留言
             </div>
             <div class="card-body">
                 <div class="list-group">

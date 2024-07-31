@@ -38,6 +38,10 @@ body {
     font-weight: bold;
 }
 
+#settings .list-group-item {
+    cursor: pointer;
+}
+
 .footer {
     background-color: #343a40;
     color: #fff;

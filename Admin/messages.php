@@ -10,8 +10,19 @@ require_once __DIR__ . "/head.php";
             </div>
             <div class="card-body">
                 <h5 class="card-title">消息列表</h5>
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <input type="text" id="search-input" class="form-control" placeholder="搜索消息...">
+                    </div>
+                    <div class="col-md-4">
+                        <input type="text" id="filter-sender" class="form-control" placeholder="输入发送者...">
+                    </div>
+                    <div class="col-md-4">
+                        <input type="date" id="filter-date" class="form-control">
+                    </div>
+                </div>
                 <div class="table-responsive">
-                    <table class="table table-striped">
+                    <table class="table table-striped" id="message-table">
                         <thead>
                             <tr>
                                 <th>ID</th>

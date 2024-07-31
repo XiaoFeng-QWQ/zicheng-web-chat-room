@@ -10,8 +10,24 @@ require_once __DIR__ . "/head.php";
             </div>
             <div class="card-body">
                 <h5 class="card-title">用户列表</h5>
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <input type="text" id="search-user-input" class="form-control" placeholder="搜索用户...">
+                    </div>
+                    <div class="col-md-4">
+                        <select id="filter-status" class="form-control">
+                            <option value="">筛选状态</option>
+                            <option value="正常">正常</option>
+                            <option value="禁用">禁用</option>
+                            <!-- 更多状态选项 -->
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <input type="date" id="filter-reg-date" class="form-control">
+                    </div>
+                </div>
                 <div class="table-responsive">
-                    <table class="table table-striped">
+                    <table class="table table-striped" id="user-table">
                         <thead>
                             <tr>
                                 <th>ID</th>
@@ -29,7 +45,7 @@ require_once __DIR__ . "/head.php";
                                 <td>user001</td>
                                 <td>user001@example.com</td>
                                 <td>2024-07-01</td>
-                                <td><span class="badge bg-success">活跃</span></td>
+                                <td><span class="badge bg-success">正常</span></td>
                                 <td>
                                     <button class="btn btn-sm btn-primary"><i class="fas fa-edit"></i></button>
                                     <button class="btn btn-sm btn-danger"><i class="fas fa-user-slash"></i></button>
@@ -38,20 +54,20 @@ require_once __DIR__ . "/head.php";
                             <!-- 更多用户行 -->
                         </tbody>
                     </table>
+                    <nav aria-label="Page navigation">
+                        <ul class="pagination justify-content-center">
+                            <li class="page-item disabled">
+                                <a class="page-link" href="#" tabindex="-1" aria-disabled="true">上一页</a>
+                            </li>
+                            <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                            <li class="page-item"><a class="page-link" href="#">2</a></li>
+                            <li class="page-item"><a class="page-link" href="#">3</a></li>
+                            <li class="page-item">
+                                <a class="page-link" href="#">下一页</a>
+                            </li>
+                        </ul>
+                    </nav>
                 </div>
-                <nav aria-label="Page navigation">
-                    <ul class="pagination justify-content-center">
-                        <li class="page-item disabled">
-                            <a class="page-link" href="#" tabindex="-1" aria-disabled="true">上一页</a>
-                        </li>
-                        <li class="page-item active"><a class="page-link" href="#">1</a></li>
-                        <li class="page-item"><a class="page-link" href="#">2</a></li>
-                        <li class="page-item"><a class="page-link" href="#">3</a></li>
-                        <li class="page-item">
-                            <a class="page-link" href="#">下一页</a>
-                        </li>
-                    </ul>
-                </nav>
             </div>
         </div>
     </div>

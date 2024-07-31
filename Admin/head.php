@@ -15,11 +15,8 @@ if (!defined('FRAMEWORK_DATABASE_PATH')) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>子辰聊天室 - 管理仪表板</title>
-
-    <!-- Bootstrap CSS -->
     <link href="https://cdn.bootcdn.net/ajax/libs/bootstrap/5.1.0/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Font Awesome for icons -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.6.0/css/all.min.css" rel="stylesheet">
     <link href="https://cdn.bootcdn.net/ajax/libs/nprogress/0.2.0/nprogress.min.css" rel="stylesheet">
     <link rel="stylesheet" href="/StaticResources/css/module.rest.css">
     <link rel="stylesheet" href="/Admin/css/style.css">
