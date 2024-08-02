@@ -1,4 +1,6 @@
 <?php
+
+use ChatRoom\Core\Helpers\User;
 // 检查 $_SESSION['userinfo'] 是否存在且为数组
 if (!isset($_SESSION['userinfo']) || !is_array($_SESSION['userinfo'])) {
     header('Location: /user/login'); // 重定向到登录页面
@@ -28,6 +30,13 @@ if (!isset($_SESSION['userinfo']) || !is_array($_SESSION['userinfo'])) {
                 <img src="/StaticResources/image/logo.png" alt="logo" class="logo img-fluid me-2">
                 子辰在线聊天室V<?php echo FRAMEWORK_VERSION ?>
             </a>
+            <li class="nav-item" style="list-style: none;">
+                <?php
+                $user = new User;
+
+                echo '您的IP是:' . $user->getIp() . '请注意言行举止!';
+                ?>
+            </li>
             <li class="nav-item dropdown" style="list-style: none;">
                 <a class="nav-link dropdown-toggle" id="navbarScrollingDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                     其他链接

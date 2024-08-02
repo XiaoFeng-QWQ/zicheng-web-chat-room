@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS "messages" (
 	"type"	TEXT DEFAULT 'user',
 	"content"	TEXT NOT NULL,
 	"user_name"	TEXT NOT NULL,
+    "user_ip" TEXT,
 	"created_at"	DATETIME DEFAULT CURRENT_TIMESTAMP,
 	FOREIGN KEY("user_name") REFERENCES "users"("username"),
 	PRIMARY KEY("id" AUTOINCREMENT)
@@ -22,6 +23,7 @@ CREATE TABLE IF NOT EXISTS "users" (
 	"username"	TEXT NOT NULL UNIQUE,
 	"password"	TEXT NOT NULL,
 	"email"	TEXT,
+    "register_ip" TEXT,
 	"login_token"	VARCHAR(255),
 	"group_id"	INTEGER NOT NULL DEFAULT 2,
 	"avatar_url"	TEXT,

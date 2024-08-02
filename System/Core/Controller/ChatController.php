@@ -11,7 +11,6 @@ use ChatRoom\Core\Database\SqlLite;
 
 class ChatController
 {
-    private $logger;
     private $user_helpers;
     public $Helpers;
     // 状态消息常量
@@ -41,8 +40,8 @@ class ChatController
     {
         try {
             $db = SqlLite::getInstance()->getConnection();
-            $stmt = $db->prepare('INSERT INTO messages (user_name, content, type, created_at) VALUES (?, ?, ?, ?)');
-            return $stmt->execute([$user['username'], $message, 'user', date('Y-m-d H:i:s')]);
+            $stmt = $db->prepare('INSERT INTO messages (user_name, content, type, created_at, user_ip) VALUES (?, ?, ?, ?, ?)');
+            return $stmt->execute([$user['username'], $message, 'user', date('Y-m-d H:i:s'), $this->user_helpers->getIp()]);
         } catch (Exception $e) {
             throw new Exception($e->getMessage());
         }

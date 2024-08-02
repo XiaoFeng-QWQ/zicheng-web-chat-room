@@ -16,6 +16,7 @@ class UserController
      */
     private $reservedNames;
     public $Helpers;
+    private $userHelpers;
 
     /**
      * UserController
@@ -31,6 +32,7 @@ class UserController
         $this->reservedNames = ['admin', 'system', 'root'];
 
         $this->Helpers = new Helpers;
+        $this->userHelpers = new User;
     }
 
     /**
@@ -66,14 +68,14 @@ class UserController
 
             $passwordHash = password_hash($password, PASSWORD_DEFAULT);
             $db = SqlLite::getInstance()->getConnection();
-            $stmt = $db->prepare('INSERT INTO users (username, password, created_at) VALUES (?, ?, ?)');
-            $isSuccessful = $stmt->execute([$username, $passwordHash, date('Y-m-d H:i:s')]);
+            $stmt = $db->prepare('INSERT INTO users (username, password, created_at, register_ip) VALUES (?, ?, ?, ?)');
+            $isSuccessful = $stmt->execute([$username, $passwordHash, date('Y-m-d H:i:s'), $this->userHelpers->getIp()]);
 
             if ($isSuccessful) {
 
                 $_SESSION['userinfo'] = $this->validateUsername->getUserInfo($username);
                 // 插入回归消息
-                $this->insertSystemMessage('admin', '欢迎' . $username . '来到聊天室！', 'system');
+                $this->insertSystemMessage('admin', "欢迎{$username}来到聊天室！", 'system');
                 return $this->Helpers->jsonResponse('注册成功', 200);
             } else {
                 return $this->Helpers->jsonResponse('注册失败，请重试', 500);
@@ -115,7 +117,7 @@ class UserController
             $_SESSION['userinfo'] = $user; // 存储用户信息到会话
 
             // 插入回归消息
-            $this->insertSystemMessage('admin', '欢迎' . $username . '来到聊天室！', 'system');
+            $this->insertSystemMessage('admin', "欢迎{$username}来到聊天室！", 'system');
 
             return $this->Helpers->jsonResponse('登录成功', 200);
         } catch (Exception $e) {
