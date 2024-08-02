@@ -32,7 +32,6 @@ class Error
      */
     public function http($code, $msg, $title = null)
     {
-        echo sprintf(self::ERROR_HTML, $title ?? '页面错误：', $msg);
-        http_response_code($code);
+        throw new Exception($msg);
     }
 }

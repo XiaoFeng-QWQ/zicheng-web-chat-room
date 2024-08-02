@@ -57,7 +57,7 @@ function formatExceptionOutput($exception)
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>抱歉，程序崩了！</title>
+    <title>程序出了点问题……</title>
     <link href="https://cdn.bootcdn.net/ajax/libs/bootstrap/5.1.0/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.bootcdn.net/ajax/libs/prism-themes/1.9.0/prism-a11y-dark.min.css" rel="stylesheet">
     <style>
