@@ -1,7 +1,10 @@
 <?php
 require_once __DIR__ . "/head.php";
-?>
 
+// 查询消息数据
+$statement = $db->query('SELECT id, user_name, content, created_at FROM messages');
+$messages = $statement->fetchAll(PDO::FETCH_ASSOC);
+?>
 <div class="row">
     <div class="col-md-12">
         <div class="card mb-4">
@@ -21,51 +24,58 @@ require_once __DIR__ . "/head.php";
                         <input type="date" id="filter-date" class="form-control">
                     </div>
                 </div>
-                <div class="table-responsive">
-                    <table class="table table-striped" id="message-table">
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>发送者</th>
-                                <th>内容</th>
-                                <th>时间</th>
-                                <th>操作</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <!-- 这里可以用PHP循环输出实际的消息数据 -->
-                            <tr>
-                                <td>1</td>
-                                <td>用户A</td>
-                                <td>这是一条测试消息</td>
-                                <td>2024-07-20 10:00:00</td>
-                                <td>
-                                    <button class="btn btn-sm btn-primary"><i class="fas fa-edit"></i></button>
-                                    <button class="btn btn-sm btn-danger"><i class="fas fa-trash"></i></button>
-                                </td>
-                            </tr>
-                            <!-- 更多消息行 -->
-                        </tbody>
-                    </table>
-                    <nav aria-label="Page navigation">
-                        <ul class="pagination justify-content-center">
-                            <li class="page-item disabled">
-                                <a class="page-link" href="#" tabindex="-1" aria-disabled="true">上一页</a>
-                            </li>
-                            <li class="page-item active"><a class="page-link" href="#">1</a></li>
-                            <li class="page-item"><a class="page-link" href="#">2</a></li>
-                            <li class="page-item"><a class="page-link" href="#">3</a></li>
-                            <li class="page-item">
-                                <a class="page-link" href="#">下一页</a>
-                            </li>
-                        </ul>
-                    </nav>
+                <div class="select-all-container d-flex align-items-center">
+                    <input type="checkbox" id="msg-select-all" class="form-check-input">
+                    <label for="select-all">全选</label>
+                    <button id="msg-delete-selected" class="btn btn-danger btn-sm ms-2">
+                        <i class="fas fa-trash-alt"></i> 删除选中
+                    </button>
+                    <button id="refresh-list" class="btn btn-secondary btn-sm ms-auto" onclick="loadMessages()">
+                        <i class="fas fa-sync-alt"></i> 刷新列表
+                    </button>
                 </div>
+                <table id="message-table" class="table">
+                    <thead>
+                        <tr>
+                            <th>选中</th>
+                            <th>ID</th>
+                            <th>用户名</th>
+                            <th>发布IP</th>
+                            <th>内容</th>
+                            <th>创建时间</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <div id="loading" class="text-center my-3" style="display: none;">
+                            <div class="spinner-border" role="status" aria-hidden="true"></div>
+                            <p>加载中…</p>
+                        </div>
+                    </tbody>
+                </table>
+                <ul class="pagination"></ul>
             </div>
         </div>
     </div>
 </div>
-
+<!-- 删除确认弹窗 -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">确认删除</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                确定要删除选中的消息吗？
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-danger" id="confirm-delete">删除</button>
+            </div>
+        </div>
+    </div>
+</div>
 <?php
 require_once __DIR__ . '/footer.php';
 ?>

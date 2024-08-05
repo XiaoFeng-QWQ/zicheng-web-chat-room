@@ -72,11 +72,6 @@ class App
             'cache' => [
                 null
             ]
-        ],
-        '/api/captcha' => [
-            'file' => [
-                '/api/captcha.php'
-            ],
         ]
     ];
 }

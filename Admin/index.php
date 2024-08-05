@@ -1,5 +1,21 @@
 <?php
 require_once __DIR__ . "/head.php";
+
+// 用户统计数据
+$userCountQuery = $db->query('SELECT COUNT(*) as count FROM users');
+$userCount = $userCountQuery->fetch(PDO::FETCH_ASSOC)['count'];
+
+// 消息总数
+$messageCountQuery = $db->query('SELECT COUNT(*) as count FROM messages');
+$messageCount = $messageCountQuery->fetch(PDO::FETCH_ASSOC)['count'];
+
+// 今日消息统计
+$todayMessageCountQuery = $db->query("SELECT COUNT(*) as count FROM messages WHERE date(created_at) = date('now')");
+$todayMessageCount = $todayMessageCountQuery->fetch(PDO::FETCH_ASSOC)['count'];
+
+// 今日新注册用户数
+$todayNewUserCountQuery = $db->query("SELECT COUNT(*) as count FROM users WHERE date(created_at) = date('now')");
+$todayNewUserCount = $todayNewUserCountQuery->fetch(PDO::FETCH_ASSOC)['count'];
 ?>
 
 <div class="row">
@@ -18,7 +34,7 @@ require_once __DIR__ . "/head.php";
                         <div class="card bg-success text-white">
                             <div class="card-body">
                                 <h5 class="card-title"><i class="fas fa-comments"></i> 今日消息</h5>
-                                <p class="card-text display-4">143</p>
+                                <p class="card-text display-4"><?php echo htmlspecialchars($todayMessageCount); ?></p>
                             </div>
                         </div>
                     </div>
@@ -26,7 +42,7 @@ require_once __DIR__ . "/head.php";
                         <div class="card bg-info text-white">
                             <div class="card-body">
                                 <h5 class="card-title"><i class="fas fa-comments"></i> 消息总数</h5>
-                                <p class="card-text display-4">277</p>
+                                <p class="card-text display-4"><?php echo htmlspecialchars($messageCount); ?></p>
                             </div>
                         </div>
                     </div>
@@ -34,7 +50,7 @@ require_once __DIR__ . "/head.php";
                         <div class="card bg-warning text-dark">
                             <div class="card-body">
                                 <h5 class="card-title"><i class="fas fa-user-plus"></i> 新注册</h5>
-                                <p class="card-text display-4">7</p>
+                                <p class="card-text display-4"><?php echo htmlspecialchars($todayNewUserCount); ?></p>
                             </div>
                         </div>
                     </div>
@@ -42,7 +58,7 @@ require_once __DIR__ . "/head.php";
                         <div class="card bg-primary text-white">
                             <div class="card-body">
                                 <h5 class="card-title"><i class="fas fa-users"></i> 总用户数</h5>
-                                <p class="card-text display-4">209</p>
+                                <p class="card-text display-4"><?php echo htmlspecialchars($userCount); ?></p>
                             </div>
                         </div>
                     </div>

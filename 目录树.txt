@@ -1,4 +1,4 @@
-子辰在线聊天室 V:1.2.5(测试)
+子辰在线聊天室-1.5.0(测试)
 |   .gitignore
 |   .htaccess
 |   composer.json
@@ -15,10 +15,15 @@
 |       launch.json
 |       
 +---Admin
+|   |   database_connection.php
+|   |   delete_message.php
 |   |   footer.php
+|   |   generate_captcha.php
+|   |   get_messages.php
 |   |   head.php
 |   |   index.php
 |   |   login.php
+|   |   login_verify.php
 |   |   messages.php
 |   |   settings.php
 |   |   users.php
@@ -32,6 +37,7 @@
 |   |       install.sql
 |   |       
 |   +---js
+|   |       getMessages.js
 |   |       script.js
 |   |       
 |   \---settings
@@ -47,7 +53,6 @@
 |       |   index.php
 |       |   
 |       +---api
-|       |       captcha.php
 |       |       chat.php
 |       |       user.php
 |       |       

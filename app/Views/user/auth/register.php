@@ -27,7 +27,7 @@ require_once FRAMEWORK_APP_PATH . '/Views/module/user.auth.head.php'
             <label for="captcha" class="form-label">验证码:</label>
             <div class="captcha-container">
                 <input type="text" class="form-control" id="captcha" name="captcha" required>
-                <img src="/api/captcha" alt="验证码消失啦" onclick="this.src='/api/captcha?'+Math.random()">
+                <img src="/Admin/generate_captcha.php" alt="验证码消失啦" onclick="this.src='/Admin/generate_captcha.php?'+Math.random()">
             </div>
         </div>
         <button type="submit" class="btn btn-primary w-100">注册并登录</button>

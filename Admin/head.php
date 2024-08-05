@@ -1,12 +1,36 @@
 <?php
 // 引入基本常量
 require_once __DIR__ . '/../config.global.php';
+require_once __DIR__ . '/../vendor/autoload.php';
 
+// 检查是否安装
 if (!defined('FRAMEWORK_DATABASE_PATH')) {
-    // 滚去给我安装😡！
     header('Location: /Admin/install/index.php');
     exit;
 }
+
+// 启动会话
+session_start();
+
+require_once __DIR__ . '/database_connection.php';
+
+// 验证登录状态和Token
+// 查询数据库中的login_token和group_id
+$stmt = $db->prepare('SELECT login_token, group_id FROM users WHERE user_id = :user_id');
+$stmt->execute(['user_id' => $_SESSION['user_id']]);
+$user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+// 检查数据库中的login_token是否与会话和cookie中的一致，以及用户是否为管理员
+if ($user['login_token'] !== $_SESSION['login_token'] || $user['login_token'] !== $cookieLoginToken || $user['group_id'] != 1) {
+    // 若不一致或不是管理员，登出并重定向到登录页面
+    session_unset();
+    session_destroy();
+    setcookie('login_token', '', time() - 3600, '/');
+    header('Location: /Admin/login.php');
+    exit;
+}
+
+
 ?>
 <!DOCTYPE html>
 <html lang="zh-CN">
@@ -45,8 +69,8 @@ if (!defined('FRAMEWORK_DATABASE_PATH')) {
                             <a class="nav-link" href="settings.php"><i class="fas fa-cog"></i> 系统设置</a>
                         </li>
                     </ul>
-                    <div class="d-flex">
-                        <a href="#" class="btn btn-outline-light"><i class="fas fa-sign-out-alt"></i> 退出</a>
+                    <div class="nav-item">
+                        <a href="/" target="_blank" rel="noopener noreferrer" class="nav-link">访问前台</a>
                     </div>
                 </div>
             </div>

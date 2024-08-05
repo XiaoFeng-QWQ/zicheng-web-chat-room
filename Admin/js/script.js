@@ -12,6 +12,7 @@ $(document).on('pjax:send', NProgress.start);
 $(document).on('pjax:end', function () {
     NProgress.done();
     bindEvents();
+    loadMessages('1')
 });
 
 /**
@@ -32,6 +33,7 @@ function bindEvents() {
     // 加载默认内容（是这样的：首先获取链接后面的，如果没有就获取contentName）
     let defaultSettingsContentName = window.location.hash ? window.location.hash.substring(1) : $('#settingsContainer').attr('contentName');
     $('#settingsContainer .card-body').load('settings/' + defaultSettingsContentName);
+    msgBindEvents()
 }
 
 /**
@@ -44,10 +46,10 @@ function filterMessages() {
     const rows = $('#message-table tbody tr');
 
     rows.each(function () {
-        const id = $(this).find('td').eq(0).text().toLowerCase();
-        const sender = $(this).find('td').eq(1).text().toLowerCase();
-        const content = $(this).find('td').eq(2).text().toLowerCase();
-        const time = $(this).find('td').eq(3).text().toLowerCase();
+        const id = $(this).find('td').eq(1).text().toLowerCase();
+        const sender = $(this).find('td').eq(2).text().toLowerCase();
+        const content = $(this).find('td').eq(3).text().toLowerCase();
+        const time = $(this).find('td').eq(4).text().toLowerCase();
 
         const matchesSearch = content.includes(searchInput);
         const matchesSender = filterSender === "" || sender.includes(filterSender);
