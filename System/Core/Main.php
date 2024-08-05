@@ -14,7 +14,7 @@ namespace ChatRoom\Core;
 class Main
 {
     public Route $route;
-    
+
     public function __construct()
     {
         $this->route = new Route(); // 初始化 $route 属性

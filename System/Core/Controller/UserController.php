@@ -75,7 +75,7 @@ class UserController
 
                 $_SESSION['userinfo'] = $this->validateUsername->getUserInfo($username);
                 // 插入回归消息
-                $this->insertSystemMessage('admin', "欢迎{$username}来到聊天室！", 'system');
+                $this->insertSystemMessage('system', "欢迎{$username}来到聊天室！", 'system');
                 return $this->Helpers->jsonResponse('注册成功', 200);
             } else {
                 return $this->Helpers->jsonResponse('注册失败，请重试', 500);
@@ -117,7 +117,7 @@ class UserController
             $_SESSION['userinfo'] = $user; // 存储用户信息到会话
 
             // 插入回归消息
-            $this->insertSystemMessage('admin', "欢迎{$username}来到聊天室！", 'system');
+            $this->insertSystemMessage('system', "欢迎{$username}来到聊天室！", 'system');
 
             return $this->Helpers->jsonResponse('登录成功', 200);
         } catch (Exception $e) {

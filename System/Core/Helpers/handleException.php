@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 use Monolog\Logger;
 use Monolog\Handler\StreamHandler;
@@ -43,13 +43,47 @@ function handleException($e)
 }
 
 /**
+ * 获取文件中指定行的代码片段
+ * @param string $file
+ * @param int $line
+ * @param int $padding
+ * @return string
+ */
+function getCodeSnippet($file, $line, $padding = 5)
+{
+    if (!is_readable($file)) {
+        return '';
+    }
+
+    $lines = file($file);
+    $start = max(0, $line - $padding - 1);
+    $end = min(count($lines), $line + $padding);
+
+    $snippet = '';
+    for ($i = $start; $i < $end; $i++) {
+        $lineNumber = $i + 1;
+        $lineContent = htmlspecialchars($lines[$i]);
+        if ($lineNumber === $line) {
+            $snippet .= '<span class="error-line">' . $lineNumber . ': ' . $lineContent . '</span>';
+        } else {
+            $snippet .= $lineNumber . ': ' . $lineContent;
+        }
+    }
+
+    return $snippet;
+}
+
+/**
  * 格式化异常输出
  * @param Exception $exception
  * @return string
  */
 function formatExceptionOutput($exception)
 {
+    // 设置字符编码
     header('Content-Type: text/html; charset=UTF-8');
+
+    $codeSnippet = getCodeSnippet($exception->getFile(), $exception->getLine());
 
     $output = '
 <!DOCTYPE html>
@@ -88,6 +122,10 @@ function formatExceptionOutput($exception)
         pre code {
             white-space: pre-wrap;
         }
+        .error-line {
+            background-color: #ffcccc;
+            display: block;
+        }
     </style>
 </head>
 <body>
@@ -105,8 +143,28 @@ function formatExceptionOutput($exception)
             <pre><code class="language-php">' . htmlspecialchars($exception->getTraceAsString()) . '</code></pre>
         </div>
         <div class="error-section">
+            <h3>错误代码片段:</h3>
+            <pre><code class="language-php">' . $codeSnippet . '</code></pre>
+        </div>
+        <div class="error-section">
             <h3>原始信息:</h3>
             <pre><code class="language-php">' . htmlspecialchars(var_export($exception, true)) . '</code></pre>
+        </div>
+        <div class="error-section">
+            <h3>请求URL:</h3>
+            <pre><code class="language-php">' . htmlspecialchars($_SERVER['REQUEST_URI']) . '</code></pre>
+        </div>
+        <div class="error-section">
+            <h3>请求参数:</h3>
+            <pre><code class="language-php">' . htmlspecialchars(var_export($_REQUEST, true)) . '</code></pre>
+        </div>
+        <div class="error-section">
+            <h3>会话数据:</h3>
+            <pre><code class="language-php">' . htmlspecialchars(var_export($_SESSION, true)) . '</code></pre>
+        </div>
+        <div class="error-section">
+            <h3>环境信息:</h3>
+            <pre><code class="language-php">服务器信息:' . htmlspecialchars(mb_convert_encoding(php_uname(), 'GB18030')) . PHP_EOL . 'PHP版本:' . phpversion() . '</code></pre>
         </div>
         <p>日志已记录到 ' . FRAMEWORK_DIR . '/Writable/logs/' . '</p>
         ';
