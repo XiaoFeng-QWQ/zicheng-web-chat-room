@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . '/login_verify.php';
+require_once __DIR__ . '/helper/login_verify.php';
 
 use Gregwar\Captcha\CaptchaBuilder;
 
@@ -103,7 +103,7 @@ $_SESSION['captcha'] = $builder->getPhrase();
                 <div>
                     <label for="captcha" class="form-label">验证码</label>
                     <input type="text" class="form-control" id="captcha" name="captcha" required>
-                    <img src="generate_captcha.php" alt="captcha" id="captchaImage" class="captcha-image mt-2">
+                    <img src="/Admin/helper/generate_captcha.php" alt="captcha" id="captchaImage" class="captcha-image mt-2">
                 </div>
                 <span class="refresh-captcha" id="refreshCaptcha">刷新验证码</span>
             </div>
@@ -115,7 +115,7 @@ $_SESSION['captcha'] = $builder->getPhrase();
     <script>
         $(document).ready(function() {
             $('#refreshCaptcha').click(function() {
-                $('#captchaImage').attr('src', 'generate_captcha.php?' + Date.now());
+                $('#captchaImage').attr('src', '/Admin/helper/generate_captcha.php?' + Date.now());
             });
         });
     </script>

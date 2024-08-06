@@ -9,7 +9,7 @@ use Monolog\Formatter\LineFormatter;
  * @param mixed $e
  * @return void
  */
-function handleException($e)
+function HandleException($e)
 {
     // 获取当前时间并格式化为文件名
     $timestamp = date('Y-m-d');
@@ -64,9 +64,9 @@ function getCodeSnippet($file, $line, $padding = 5)
         $lineNumber = $i + 1;
         $lineContent = htmlspecialchars($lines[$i]);
         if ($lineNumber === $line) {
-            $snippet .= '<span class="error-line">' . $lineNumber . ': ' . $lineContent . '</span>';
+            $snippet .= "<span class=\"error-line\">$lineNumber: $lineContent</span>";
         } else {
-            $snippet .= $lineNumber . ': ' . $lineContent;
+            $snippet .= "$lineNumber: $lineContent";
         }
     }
 

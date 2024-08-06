@@ -21,7 +21,7 @@ function hideLoading() {
  */
 function loadMessages(page) {
     showLoading();
-    $.get('get_messages.php', { page }, function (response) {
+    $.get('message/get_messages.php', { page }, function (response) {
         hideLoading();
         const { messages, totalPages: newTotalPages, currentPage: newCurrentPage } = response;
         currentPage = newCurrentPage;
@@ -109,7 +109,7 @@ function msgBindEvents() {
         const selectedMessages = $('.select-checkbox:checked').not('#select-all');
         selectedMessages.each(function () {
             const id = $(this).closest('tr').find('.delete-button').data('id');
-            $.post('delete_message.php', { id }, function (response) {
+            $.post('message/delete_message.php', { id }, function (response) {
                 if (response.success) {
                     $(this).closest('tr').remove();
                     loadMessages(1);

@@ -1,36 +1,11 @@
 <?php
-// 引入基本常量
-require_once __DIR__ . '/../config.global.php';
-require_once __DIR__ . '/../vendor/autoload.php';
+require_once __DIR__ . "/../helper/common.php";
 
 // 检查是否安装
 if (!defined('FRAMEWORK_DATABASE_PATH')) {
     header('Location: /Admin/install/index.php');
     exit;
 }
-
-// 启动会话
-session_start();
-
-require_once __DIR__ . '/database_connection.php';
-
-// 验证登录状态和Token
-// 查询数据库中的login_token和group_id
-$stmt = $db->prepare('SELECT login_token, group_id FROM users WHERE user_id = :user_id');
-$stmt->execute(['user_id' => $_SESSION['user_id']]);
-$user = $stmt->fetch(PDO::FETCH_ASSOC);
-
-// 检查数据库中的login_token是否与会话和cookie中的一致，以及用户是否为管理员
-if ($user['login_token'] !== $_SESSION['login_token'] || $user['login_token'] !== $cookieLoginToken || $user['group_id'] != 1) {
-    // 若不一致或不是管理员，登出并重定向到登录页面
-    session_unset();
-    session_destroy();
-    setcookie('login_token', '', time() - 3600, '/');
-    header('Location: /Admin/login.php');
-    exit;
-}
-
-
 ?>
 <!DOCTYPE html>
 <html lang="zh-CN">
@@ -70,7 +45,9 @@ if ($user['login_token'] !== $_SESSION['login_token'] || $user['login_token'] !=
                         </li>
                     </ul>
                     <div class="nav-item">
-                        <a href="/" target="_blank" rel="noopener noreferrer" class="nav-link">访问前台</a>
+                        <a href="/" target="_blank" rel="noopener noreferrer" class="nav-link">
+                            <i class="fa-solid fa-arrow-up-right-from-square"></i> 访问前台
+                        </a>
                     </div>
                 </div>
             </div>
@@ -78,4 +55,4 @@ if ($user['login_token'] !== $_SESSION['login_token'] || $user['login_token'] !=
     </header>
     <div id="NProgress"></div>
 
-    <main class="container mt-5 flex-shrink-0" style="padding-top: 50px;">
+    <main class="container mt-5 flex-shrink-0" style="padding-top: 20px;max-width: 99%;">

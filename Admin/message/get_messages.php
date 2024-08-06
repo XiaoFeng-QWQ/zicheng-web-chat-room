@@ -1,6 +1,5 @@
 <?php
-session_start();
-require_once __DIR__ . '/database_connection.php'; // 请确保正确的数据库连接脚本路径
+require_once __DIR__ . '/../helper/common.php';
 header('Content-Type: application/json');
 
 $page = isset($_GET['page']) ? intval($_GET['page']) : 1;

@@ -193,9 +193,9 @@ require_once __DIR__ . '/install.php';
                                 echo '<div class="alert alert-success">' . MSG_SESSION_DESTROY_SUCCESS . '</div>';
                                 echo sprintf('<div class="alert alert-success">' . MSG_INSTALL_SUCCESS . '</div>', addslashes($fullPath));
                             } catch (PDOException $e) {
-                                handleException($e);
+                                HandleException($e);
                             } catch (Exception $e) {
-                                handleException($e);
+                                HandleException($e);
                             }
                         } else {
                             echo '<div class="alert alert-danger">' . MSG_DB_WRITE_FAILURE . '</div>';

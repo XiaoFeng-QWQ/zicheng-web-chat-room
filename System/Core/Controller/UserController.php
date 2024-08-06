@@ -81,7 +81,7 @@ class UserController
                 return $this->Helpers->jsonResponse('注册失败，请重试', 500);
             }
         } catch (PDOException $e) {
-            handleException($e);
+            HandleException($e);
             return $this->Helpers->jsonResponse("内部服务器错误。请联系管理员。", 500);
         }
     }
@@ -121,7 +121,7 @@ class UserController
 
             return $this->Helpers->jsonResponse('登录成功', 200);
         } catch (Exception $e) {
-            handleException($e);
+            HandleException($e);
             return $this->Helpers->jsonResponse("内部服务器错误。请联系管理员。", 500);
         }
     }
@@ -141,7 +141,7 @@ class UserController
             $stmt = $db->prepare('INSERT INTO messages (user_name, content, type, created_at) VALUES (?, ?, ?, ?)');
             $stmt->execute([$user_name, $message, $type, date('Y-m-d H:i:s')]);
         } catch (PDOException $e) {
-            handleException($e);
+            HandleException($e);
         }
     }
 }

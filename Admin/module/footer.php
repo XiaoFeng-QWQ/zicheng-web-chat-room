@@ -3,7 +3,7 @@
 <footer class="footer mt-auto py-3 bg-dark">
     <div class="container text-center">
         <span class="text-light">
-            &copy; 2024 子辰聊天室. All rights reserved. | 后端尚未完全完善，当前部分地方仅用于演示。
+            <i class="fas fa-copyright"></i> 2024 子辰聊天室. All rights reserved. | 后端尚未完全完善，当前部分地方仅用于演示。
         </span>
     </div>
 </footer>

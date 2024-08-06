@@ -28,11 +28,11 @@ define('MSG_SESSION_DESTROY_SUCCESS', '销毁临时会话成功。');
 define('MSG_INSTALL_SUCCESS', '安装成功！请在 站点目录下的 config.global.php 文件中设置 define(\'FRAMEWORK_DATABASE_PATH\', \'%s\');');
 
 // 处理异常
-function handleException($e)
+function HandleException($e)
 {
     echo sprintf('<div class="alert alert-danger" role="alert">哎呀！安装程序出错了：%s</div>', htmlspecialchars($e->getMessage()));
 }
-set_exception_handler('handleException');
+set_exception_handler('HandleException');
 
 function readme()
 {
