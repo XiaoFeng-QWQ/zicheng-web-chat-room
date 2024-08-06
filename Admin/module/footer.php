@@ -13,8 +13,8 @@
 <script src="https://cdn.bootcdn.net/ajax/libs/nprogress/0.2.0/nprogress.min.js"></script>
 <script src="https://cdn.bootcdn.net/ajax/libs/jquery.pjax/2.0.1/jquery.pjax.min.js"></script>
 <script src="https://cdn.bootcdn.net/ajax/libs/bootstrap/5.1.0/js/bootstrap.bundle.min.js"></script>
-<script src="js/getMessages.js"></script>
-<script src="js/script.js"></script>
+<script src="js/getMessages.js?<?php echo FRAMEWORK_VERSION ?>"></script>
+<script src="js/script.js?<?php echo FRAMEWORK_VERSION ?>"></script>
 </body>
 
 </html>
