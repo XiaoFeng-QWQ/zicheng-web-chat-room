@@ -70,6 +70,11 @@ CREATE TABLE IF NOT EXISTS "admin_login_attempts" (
     UNIQUE("ip_address")
 );
 
+-- 初始化组表
+INSERT INTO "groups" ("group_id", "group_name", "created_at") VALUES 
+(1, '管理员', '0000-00-00 00:00:00'),
+(2, '普通用户', '0000-00-00 00:00:00');
+
 -- Create unique indices
 DROP INDEX IF EXISTS "admin_login_attempts_index";
 CREATE UNIQUE INDEX IF NOT EXISTS "admin_login_attempts_index" ON "admin_login_attempts" ("id", "ip_address");
