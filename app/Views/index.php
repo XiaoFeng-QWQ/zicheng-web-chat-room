@@ -28,15 +28,18 @@ if (!isset($_SESSION['userinfo']) || !is_array($_SESSION['userinfo'])) {
         <div class="container-fluid">
             <a class="navbar-brand d-flex align-items-center" href="#">
                 <img src="/StaticResources/image/logo.png" alt="logo" class="logo img-fluid me-2">
-                子辰在线聊天室V<?php echo FRAMEWORK_VERSION ?>
+                子辰在线聊天室 V<?php echo FRAMEWORK_VERSION ?>
             </a>
-            <div class="collapse navbar-collapse">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
                     <li class="nav-item">
                         <span class="nav-link">
                             <?php
                             $user = new User;
-                            echo '您的IP是:' . $user->getIp() . '请注意言行举止!';
+                            echo '您的IP是:' . $user->getIp() . ' 请注意言行举止!';
                             ?>
                         </span>
                     </li>
@@ -55,15 +58,11 @@ if (!isset($_SESSION['userinfo']) || !is_array($_SESSION['userinfo'])) {
                             </li>
                         </ul>
                     </li>
-                    <?php
-                    if ($_SESSION['userinfo']['group_id'] === 1) :
-                    ?>
+                    <?php if ($_SESSION['userinfo']['group_id'] === 1) : ?>
                         <li class="nav-item">
                             <a class="nav-link" href="/Admin/index.php" target="_blank" rel="noopener noreferrer">后台管理</a>
                         </li>
-                    <?php
-                    endif;
-                    ?>
+                    <?php endif; ?>
                     <li class="nav-item">
                         <button id="logout" class="btn btn-danger nav-link">离开聊天室</button>
                     </li>

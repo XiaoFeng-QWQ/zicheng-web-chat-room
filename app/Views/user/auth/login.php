@@ -27,7 +27,7 @@ require_once FRAMEWORK_APP_PATH . '/Views/module/user.auth.head.php'
             </div>
         </div>
         <button type="submit" class="btn btn-primary w-100">登录</button>
-        <div class="register mt-3 text-center">
+        <div class="register mt-3 text-end">
             没有账号？<a href="register">点击注册</a>
         </div>
     </form>

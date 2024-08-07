@@ -5,7 +5,17 @@ if (isset($_SESSION['userinfo']) && is_array($_SESSION['userinfo'])) {
     exit(); // 终止脚本执行
 }
 
-require_once FRAMEWORK_APP_PATH . '/Views/module/user.auth.head.php'
+require_once FRAMEWORK_APP_PATH . '/Views/module/user.auth.head.php';
+
+function readUserAgreement()
+{
+    $Parsedown = new Parsedown();
+    $userAgreementFile = FRAMEWORK_DIR . '/StaticResources/MarkDown/UserAgreement.md';
+    if (file_exists($userAgreementFile)) {
+        return $Parsedown->text(file_get_contents($userAgreementFile));
+    }
+    return '用户协议文件不存在。';
+}
 ?>
 
 <div class="user-auth-container">
@@ -31,14 +41,36 @@ require_once FRAMEWORK_APP_PATH . '/Views/module/user.auth.head.php'
             </div>
         </div>
         <button type="submit" class="btn btn-primary w-100">注册并登录</button>
-        <div class="register mt-3 text-center">
-            已有账号？<a href="login">点击登录</a>
+        <div class="form-check d-flex align-items-center">
+            <input class="form-check-input" type="checkbox" id="UserAgreementCheckbox" value="option1">
+            <label class="form-check-label ms-2" for="UserAgreementCheckbox">
+                已阅读并同意<a href="#UserAgreement" id="UserAgreement">《用户协议》</a>
+            </label>
+            <div class="register ms-auto">
+                <a href="login">已有账号？点击登录</a>
+            </div>
         </div>
     </form>
     <hr>
     <!-- 消息框 -->
     <div class="mt-3" id="messageBox">
         <!-- 错误或成功消息将在这里显示 -->
+    </div>
+</div>
+<div class="modal fade" id="UserAgreementModal" tabindex="-1" aria-labelledby="UserAgreementModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="UserAgreementModalLabel">用户协议</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="关闭"></button>
+            </div>
+            <div class="modal-body">
+                <?php echo readUserAgreement(); ?>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">确定</button>
+            </div>
+        </div>
     </div>
 </div>
 <!-- 电脑端右侧图片显示部分 -->

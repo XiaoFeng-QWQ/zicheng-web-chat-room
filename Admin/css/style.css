@@ -48,6 +48,27 @@ body {
     margin-right: 5px;
 }
 
+.table-fixed-header {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.table-fixed-header thead th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background-color: #fff;
+    /* 确保背景色与页面一致 */
+    box-shadow: 0 2px 2px -1px rgba(0, 0, 0, 0.4);
+    /* 添加阴影效果，提升表头的可视化 */
+}
+
+.table-fixed-header th,
+.table-fixed-header td {
+    padding: 8px 16px;
+    border: 1px solid #ddd;
+}
+
 #loading {
     display: flex;
     width: 100%;

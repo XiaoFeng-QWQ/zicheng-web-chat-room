@@ -44,6 +44,16 @@ function readme()
     return MSG_README_NOT_FOUND;
 }
 
+function usageTerms()
+{
+    $Parsedown = new Parsedown();
+    $usageTerms_file = FRAMEWORK_DIR . '/StaticResources/MarkDown/usageTerms.md';
+    if (file_exists($usageTerms_file)) {
+        return $Parsedown->text(file_get_contents($usageTerms_file));
+    }
+    return '使用条款文件不存在。';
+}
+
 // 获取步骤
 $step = $_GET['step'] ?? '';
 
@@ -68,6 +78,7 @@ if (empty($_SESSION['csrf_token'])) {
  */
 $progressSteps = [
     '' => 0,
+    '0' => 10,
     '1' => 25,
     '2' => 50,
     '3' => 75,

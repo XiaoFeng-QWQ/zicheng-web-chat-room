@@ -34,25 +34,27 @@ $messages = $statement->fetchAll(PDO::FETCH_ASSOC);
                         <i class="fas fa-sync-alt"></i> 刷新列表
                     </button>
                 </div>
-                <table id="message-table" class="table">
-                    <thead>
-                        <tr>
-                            <th>选中</th>
-                            <th>ID</th>
-                            <th>用户名</th>
-                            <th>发布IP</th>
-                            <th>内容</th>
-                            <th>创建时间</th>
-                            <th>操作</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <div id="loading" class="text-center my-3" style="display: none;">
-                            <div class="spinner-border" role="status" aria-hidden="true"></div>
-                            <p>加载中…</p>
-                        </div>
-                    </tbody>
-                </table>
+                <div class="table-responsive">
+                    <table id="message-table" class="table table-fixed-header">
+                        <thead>
+                            <tr>
+                                <th>选中</th>
+                                <th>ID</th>
+                                <th>用户名</th>
+                                <th>发布IP</th>
+                                <th>内容</th>
+                                <th>创建时间</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <div id="loading" class="text-center my-3" style="display: none;">
+                                <div class="spinner-border" role="status" aria-hidden="true"></div>
+                                <p>加载中…</p>
+                            </div>
+                        </tbody>
+                    </table>
+                </div>
                 <ul class="pagination"></ul>
             </div>
         </div>

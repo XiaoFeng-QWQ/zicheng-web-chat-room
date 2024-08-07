@@ -63,7 +63,6 @@ body {
 }
 
 .user-auth-container input {
-    width: calc(100% - 1rem);
     padding: 0.8rem;
     margin-top: 0.5rem;
     border: 1px solid #ddd;
@@ -157,10 +156,5 @@ body {
     .container {
         margin: 1rem;
         /* 小屏幕上增加外边距，使内容不要紧靠屏幕边缘 */
-    }
-
-    .user-auth-container input {
-        width: 100%;
-        /* 小屏幕上输入框全宽 */
     }
 }

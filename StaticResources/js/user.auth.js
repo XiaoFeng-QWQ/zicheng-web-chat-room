@@ -36,6 +36,12 @@ function bindFormEvents() {
     $('#registerForm').on('submit', function (event) {
         handleFormSubmit(event, registerUser);
     });
+
+    // 用户协议
+    $('#UserAgreement').on('click', function () {
+        const UserAgreementModal = new bootstrap.Modal($('#UserAgreementModal'), {});
+        UserAgreementModal.show();
+    });
 }
 
 /**
@@ -81,7 +87,12 @@ function loginUser(username, password, 我TM是占位符, captcha, button) {
  * @param {jQuery} button - 触发请求的按钮
  */
 function registerUser(username, password, confirmPassword, captcha, button) {
-    ajaxRequest('/api/user?method=register', { username, password, confirm_password: confirmPassword, captcha }, button, '首页', '/');
+    // 判断复选框是否被勾选
+    if ($('#UserAgreementCheckbox').prop('checked')) {
+        ajaxRequest('/api/user?method=register', { username, password, confirm_password: confirmPassword, captcha }, button, '首页', '/');
+    } else {
+        handleError('请勾选同意《用户协议》');
+    }
 }
 
 /**
@@ -145,7 +156,7 @@ function handleResponse(response, action, redirectUrl) {
 function handleError(errorThrown) {
     console.error('Error:', errorThrown);
     const messageBox = $('#messageBox');
-    messageBox.text('发生错误，请稍后再试。');
+    messageBox.text(errorThrown);
     messageBox.removeClass().addClass('alert alert-danger');
 }
 

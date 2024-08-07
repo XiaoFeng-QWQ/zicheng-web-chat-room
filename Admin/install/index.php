@@ -11,7 +11,8 @@ require_once __DIR__ . '/install.php';
     <link href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.1.3/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.bootcdn.net/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
     <style>
-        #readme {
+        #readme,
+        #usageTerms {
             overflow: auto;
             max-height: 65vh;
         }
@@ -65,7 +66,16 @@ require_once __DIR__ . '/install.php';
                 <?php echo readme(); ?>
             </div>
             <div class="text-center mt-3">
-                <a href="?step=1" class="btn btn-primary">那我们开始吧！</a>
+                <a href="?step=0" class="btn btn-primary">下一步</a>
+            </div>
+        </div>
+        <div class="step <?php echo ($step == '0') ? 'active' : ''; ?>">
+            <h2 class="text-center">使用条款</h2>
+            <div id="usageTerms" class="mt-4 p-3 border border-primary rounded">
+                <?php echo usageTerms(); ?>
+            </div>
+            <div class="text-center mt-3">
+                <a href="?step=1" class="btn btn-primary">我同意</a>
             </div>
         </div>
         <div class="step <?php echo ($step == '1') ? 'active' : ''; ?>">
