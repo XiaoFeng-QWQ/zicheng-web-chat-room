@@ -6,10 +6,11 @@ use Monolog\Formatter\LineFormatter;
 
 /**
  * 系统异常处理
- * @param mixed $e
+ *
+ * @param Exception $e 异常对象
  * @return void
  */
-function HandleException($e)
+function handleException($e)
 {
     // 获取当前时间并格式化为文件名
     $timestamp = date('Y-m-d');
@@ -44,9 +45,10 @@ function HandleException($e)
 
 /**
  * 获取文件中指定行的代码片段
- * @param string $file
- * @param int $line
- * @param int $padding
+ *
+ * @param string $file 文件路径
+ * @param int $line 行号
+ * @param int $padding 上下文行数
  * @return string
  */
 function getCodeSnippet($file, $line, $padding = 5)
@@ -75,7 +77,8 @@ function getCodeSnippet($file, $line, $padding = 5)
 
 /**
  * 格式化异常输出
- * @param Exception $exception
+ *
+ * @param Exception $exception 异常对象
  * @return string
  */
 function formatExceptionOutput($exception)
@@ -105,6 +108,7 @@ function formatExceptionOutput($exception)
             padding: 20px;
             max-width: 800px;
             margin: 20px auto;
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
         }
         .error-header {
             font-size: 24px;
@@ -121,10 +125,14 @@ function formatExceptionOutput($exception)
         }
         pre code {
             white-space: pre-wrap;
+            word-break: break-word;
         }
         .error-line {
             background-color: #ffcccc;
             display: block;
+        }
+        .error-footer {
+            text-align: right;
         }
     </style>
 </head>
@@ -173,7 +181,7 @@ function formatExceptionOutput($exception)
     $output .= '
         <div class="error-footer">
             <hr>
-            <p style="position: relative;left: 520px;">ZiChen ChatRooM V:' . FRAMEWORK_VERSION . '</p>
+            <p>ZiChen ChatRooM V:' . FRAMEWORK_VERSION . '</p>
         </div>
     </div>
     <script src="https://cdn.bootcdn.net/ajax/libs/prism/9000.0.1/prism.min.js"></script>
