@@ -2,8 +2,6 @@
 
 namespace ChatRoom\Core\Helpers;
 
-use Exception;
-
 /**
  * 错误处理
  * 
@@ -12,16 +10,6 @@ use Exception;
  */
 class Error
 {
-    private const ERROR_HTML = '
-    <h2>%s</h2>
-    <blockquote>
-        <br>
-        %s 
-        <hr> 
-        Powered By XiaoFeng-QWQ
-    </blockquote>
-    ';
-
     /**
      * http
      *
@@ -32,6 +20,13 @@ class Error
      */
     public function http($code, $msg, $title = null)
     {
-        throw new Exception($msg);
+        exit("
+        <h2>$title</h2>
+        <blockquote>
+            <br>
+            $msg
+            <hr> 
+            Powered By XiaoFeng-QWQ
+        </blockquote>");
     }
 }

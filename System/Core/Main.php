@@ -10,7 +10,6 @@ namespace ChatRoom\Core;
  * @version 2.0
  * @author XiaoFeng-QWQ <1432777209@qq.com>
  */
-
 class Main
 {
     public Route $route;
@@ -27,6 +26,9 @@ class Main
      */
     public function run(): void
     {
+        if (defined('FRAMEWORK_DEBUG') && FRAMEWORK_DEBUG) {
+            exit($this->route->processRoutes());
+        }
         if (!defined('FRAMEWORK_DATABASE_PATH')) {
             // 滚去给我安装😡！
             header('Location: /Admin/install/index.php');
