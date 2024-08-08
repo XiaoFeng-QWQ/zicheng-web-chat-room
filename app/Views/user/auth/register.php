@@ -37,7 +37,7 @@ function readUserAgreement()
             <label for="captcha" class="form-label">验证码:</label>
             <div class="captcha-container">
                 <input type="text" class="form-control" id="captcha" name="captcha" required>
-                <img src="/Admin/helper/generate_captcha.php" alt="验证码消失啦" onclick="this.src='/Admin/helper/generate_captcha.php?'+Math.random()">
+                <img src="/api/captcha" alt="验证码消失啦" onclick="this.src='/api/captcha?'+Math.random()">
             </div>
         </div>
         <button type="submit" class="btn btn-primary w-100">注册并登录</button>

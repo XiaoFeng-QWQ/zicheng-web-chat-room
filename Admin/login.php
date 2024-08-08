@@ -103,7 +103,7 @@ $_SESSION['captcha'] = $builder->getPhrase();
                 <div>
                     <label for="captcha" class="form-label">验证码</label>
                     <input type="text" class="form-control" id="captcha" name="captcha" required>
-                    <img src="/Admin/helper/generate_captcha.php" alt="captcha" id="captchaImage" class="captcha-image mt-2">
+                    <img src="/api/captcha" alt="captcha" id="captchaImage" class="captcha-image mt-2" onclick="this.src='/api/captcha?'+Math.random()">
                 </div>
                 <span class="refresh-captcha" id="refreshCaptcha">刷新验证码</span>
             </div>
@@ -112,13 +112,6 @@ $_SESSION['captcha'] = $builder->getPhrase();
     </div>
     <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <script src="https://cdn.bootcdn.net/ajax/libs/bootstrap/5.1.0/js/bootstrap.bundle.min.js"></script>
-    <script>
-        $(document).ready(function() {
-            $('#refreshCaptcha').click(function() {
-                $('#captchaImage').attr('src', '/Admin/helper/generate_captcha.php?' + Date.now());
-            });
-        });
-    </script>
 </body>
 
 </html>

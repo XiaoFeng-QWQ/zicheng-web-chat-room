@@ -14,3 +14,5 @@ $_SESSION['captcha'] = $builder->getPhrase();
 // 输出验证码图像
 header('Content-type: image/jpeg');
 $builder->output();
+
+// 你说得对，虽然在1.6.6.1[测试]版本中修复通过内置路由验证码无法正常输出问题，但是这个文件尽量还是别删

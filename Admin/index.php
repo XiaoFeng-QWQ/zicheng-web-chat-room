@@ -41,6 +41,7 @@ $logs = $log->getLogs(5);
                 </div>
                 <div class="card-body">
                     <ul class="list-group list-group-flush">
+                        <li class="list-group-item">2024-08-09: [1.6.6.1]修复通过内置路由验证码无法正常输出问题。</li>
                         <li class="list-group-item">2024-08-06: [1.6.0]完善后台主页、优化后台文件目录。</li>
                     </ul>
                 </div>
