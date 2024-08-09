@@ -17,35 +17,36 @@ require_once __DIR__ . '/database_connection.php';
 /**
  * 初始化变量
  */
-/**
- * 获取登录Token
- * @var mixed
- */
-$cookieLoginToken = $_COOKIE['login_token'] ?? '';
+$cookieLoginToken = isset($_COOKIE['admin_login_info']) ? json_decode($_COOKIE['admin_login_info'], true)['login_token'] ?? '' : '';
 
 /**
  * 验证权限
  */
-// 验证登录状态和Token
+// 验证会话中的用户ID
+$userId = $_SESSION['admin_login_info']['user_id'] ?? null;
+if ($userId === null) {
+    logoutAndRedirect();
+}
 // 查询数据库中的login_token和group_id
-$stmt = $db->prepare('SELECT login_token, group_id FROM users WHERE user_id = :user_id');
-$stmt->execute(['user_id' => $_SESSION['user_id'] ?? null]);
+$stmt = $db->prepare('SELECT admin_login_token, group_id FROM users WHERE user_id = :user_id');
+$stmt->execute(['user_id' => $userId]);
 $user = $stmt->fetch(PDO::FETCH_ASSOC);
-
 // 检查数据库中的login_token是否与会话和cookie中的一致，以及用户是否为管理员
 if (
-    $user === false
-    ||
-    $user['login_token'] !== $_SESSION['login_token']
-    ||
-    $user['login_token'] !== $cookieLoginToken
-    ||
+    $user === false ||
+    $user['admin_login_token'] !== $_SESSION['admin_login_info']['login_token'] ?? null ||
+    $user['admin_login_token'] !== $cookieLoginToken ?? null ||
     $user['group_id'] != 1
 ) {
-    // 若不一致或不是管理员，登出并重定向到登录页面
-    session_unset();
-    session_destroy();
-    setcookie('login_token', '', time() - 3600, '/');
+    logoutAndRedirect();
+}
+/**
+ * 登出并重定向到登录页面
+ */
+function logoutAndRedirect()
+{
+    unset($_SESSION['admin_login_info']);
+    setcookie('admin_login_info', '', time() - 3600, '/'); // 删除cookie
 
     // 确保没有之前的输出，以便能够成功重定向
     ob_clean();

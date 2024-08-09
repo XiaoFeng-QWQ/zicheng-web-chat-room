@@ -4,29 +4,20 @@ use ChatRoom\Core\Database\SqlLite;
 use ChatRoom\Core\Helpers\User;
 
 // 创建 UserHelper 实例
-$UserHelpers = new User;
+$UserHelpers = new User();
 
 // 检查用户是否已登录
-if (!isset($_SESSION['userinfo']) || !is_array($_SESSION['userinfo'])) {
+if (empty($_SESSION['user_login_info']) || !is_array($_SESSION['user_login_info'])) {
     // 销毁用户会话并重定向到登录页面
-    if (session_status() === PHP_SESSION_ACTIVE) {
-        unset($_SESSION['userinfo']); // 销毁特定的会话变量
-    }
-    header('Location: /'); // 重定向到登录页面
-    exit();
+    terminateSessionAndRedirect();
 }
 
-$username = $_SESSION['userinfo']['username']; // 确保username从session中获取
+$username = $_SESSION['user_login_info']['username'] ?? '';
 $user = $UserHelpers->getUserInfo($username);
 
 // 检查用户信息是否有效
 if (empty($user)) {
-    // 销毁用户会话并重定向到登录页面
-    if (session_status() === PHP_SESSION_ACTIVE) {
-        unset($_SESSION['userinfo']); // 销毁特定的会话变量
-    }
-    header('Location: /');
-    exit();
+    terminateSessionAndRedirect();
 }
 
 // 插入系统消息到数据库
@@ -41,10 +32,24 @@ $stmt->execute([
     date('Y-m-d H:i:s')
 ]);
 
-// 销毁用户会话并重定向到登录页面
-if (session_status() === PHP_SESSION_ACTIVE) {
-    unset($_SESSION['userinfo']); // 销毁特定的会话变量
-}
+// 更新用户的登录令牌为 null
+$updateStmt = $db->prepare('UPDATE users SET user_login_token = :login_token WHERE user_id = :user_id');
+$updateStmt->execute([
+    'login_token' => null,
+    'user_id' => $user['user_id']
+]);
 
-header('Location: /');
-exit();
+// 销毁用户会话并重定向到登录页面
+terminateSessionAndRedirect();
+
+/**
+ * 销毁用户会话并重定向到登录页面
+ */
+function terminateSessionAndRedirect()
+{
+    if (session_status() === PHP_SESSION_ACTIVE) {
+        unset($_SESSION['user_login_info']); // 销毁特定的会话变量
+    }
+    header('Location: /'); // 重定向到登录页面
+    exit();
+}

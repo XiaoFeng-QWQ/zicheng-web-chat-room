@@ -17,6 +17,8 @@ CREATE TABLE IF NOT EXISTS "users" (
 	"group_id"	INTEGER NOT NULL DEFAULT 2,
 	"avatar_url"	TEXT,
 	"created_at"	DATETIME DEFAULT CURRENT_TIMESTAMP,
+    "user_login_token" VARCHAR(255),
+    "admin_login_token" VARCHAR(255),
 	FOREIGN KEY("group_id") REFERENCES "groups"("group_id"),
 	PRIMARY KEY("user_id" AUTOINCREMENT)
 );

@@ -38,8 +38,8 @@ if (version_compare(phpversion(), '8.2', '<')) {
 require __DIR__ . '/vendor/autoload.php';
 require_once __DIR__ . '/config.global.php';
 
-// 检查请求头，避免在非HTML请求时输出HTML(1.6.6.1修复通过内置路由验证码无法正常输出问题)
-if (isset($_SERVER['HTTP_ACCEPT']) && strpos($_SERVER['HTTP_ACCEPT'], 'text/html') !== false) {
+// 检查请求头，避免在非图片请求时注册自定义异常处理器
+if (isset($_SERVER['HTTP_ACCEPT']) && strpos($_SERVER['HTTP_ACCEPT'], 'image/') === false) {
     require __DIR__ . '/System/Core/Helpers/handleException.php';
     // 注册自定义异常处理器
     set_exception_handler('HandleException');

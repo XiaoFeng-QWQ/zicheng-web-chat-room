@@ -83,15 +83,33 @@ class User
 
     /**
      * 获取用户IP
-     * @return array|bool|string
+     * @return string
      */
     public function getIp()
     {
-        if (getenv("HTTP_CLIENT_IP") && strcasecmp(getenv("HTTP_CLIENT_IP"), "unknown")) $ip = getenv("HTTP_CLIENT_IP");
-        else if (getenv("HTTP_X_FORWARDED_FOR") && strcasecmp(getenv("HTTP_X_FORWARDED_FOR"), "unknown")) $ip = getenv("HTTP_X_FORWARDED_FOR");
-        else if (getenv("REMOTE_ADDR") && strcasecmp(getenv("REMOTE_ADDR"), "unknown")) $ip = getenv("REMOTE_ADDR");
-        else if (isset($_SERVER['REMOTE_ADDR']) && $_SERVER['REMOTE_ADDR'] && strcasecmp($_SERVER['REMOTE_ADDR'], "unknown")) $ip = $_SERVER['REMOTE_ADDR'];
-        else $ip = "unknown";
+        $ip = 'unknown';
+
+        // 优先获取 HTTP_CLIENT_IP
+        if (!empty($_SERVER['HTTP_CLIENT_IP']) && filter_var($_SERVER['HTTP_CLIENT_IP'], FILTER_VALIDATE_IP)) {
+            $ip = $_SERVER['HTTP_CLIENT_IP'];
+        }
+        // 如果 HTTP_CLIENT_IP 不存在，尝试获取 HTTP_X_FORWARDED_FOR
+        elseif (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+            $ipList = explode(',', $_SERVER['HTTP_X_FORWARDED_FOR']);
+            // 取第一个有效IP
+            foreach ($ipList as $ipItem) {
+                $ipItem = trim($ipItem);
+                if (filter_var($ipItem, FILTER_VALIDATE_IP)) {
+                    $ip = $ipItem;
+                    break;
+                }
+            }
+        }
+        // 如果上面的都不存在，尝试获取 REMOTE_ADDR
+        elseif (!empty($_SERVER['REMOTE_ADDR']) && filter_var($_SERVER['REMOTE_ADDR'], FILTER_VALIDATE_IP)) {
+            $ip = $_SERVER['REMOTE_ADDR'];
+        }
+
         return $ip;
     }
 }

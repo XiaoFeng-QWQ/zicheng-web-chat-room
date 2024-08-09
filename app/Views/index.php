@@ -1,8 +1,8 @@
 <?php
 
 use ChatRoom\Core\Helpers\User;
-// 检查 $_SESSION['userinfo'] 是否存在且为数组
-if (!isset($_SESSION['userinfo']) || !is_array($_SESSION['userinfo'])) {
+// 检查 $_SESSION['user_login_info'] 是否存在且为数组
+if (!isset($_SESSION['user_login_info']) || !is_array($_SESSION['user_login_info'])) {
     header('Location: /user/login'); // 重定向到登录页面
     exit(); // 终止脚本执行
 }
@@ -19,7 +19,7 @@ if (!isset($_SESSION['userinfo']) || !is_array($_SESSION['userinfo'])) {
     <link href="https://gcore.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
     <link rel="stylesheet" href="/StaticResources/css/index.chat.css?v=<?php echo FRAMEWORK_VERSION ?>">
     <script>
-        const sessionUsername = "<?php echo $_SESSION['userinfo']['username']; ?>"; // 获取用户名
+        const sessionUsername = "<?php echo $_SESSION['user_login_info']['username']; ?>"; // 获取用户名
     </script>
 </head>
 
@@ -57,7 +57,7 @@ if (!isset($_SESSION['userinfo']) || !is_array($_SESSION['userinfo'])) {
                             </li>
                         </ul>
                     </li>
-                    <?php if ($_SESSION['userinfo']['group_id'] === 1) : ?>
+                    <?php if ($_SESSION['user_login_info']['group_id'] === 1) : ?>
                         <li class="nav-item">
                             <a class="nav-link" href="/Admin/index.php" target="_blank" rel="noopener noreferrer">后台管理</a>
                         </li>

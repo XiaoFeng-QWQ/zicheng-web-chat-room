@@ -73,9 +73,10 @@ class UserController
 
             if ($isSuccessful) {
 
-                $_SESSION['userinfo'] = $this->validateUsername->getUserInfo($username);
-                // 插入回归消息
-                $this->insertSystemMessage('system', "欢迎{$username}来到聊天室！", 'system');
+                $this->updateLoginInfo(
+                    $this->validateUsername->getUserInfo($username)
+                );
+
                 return $this->Helpers->jsonResponse('注册成功', 200);
             } else {
                 return $this->Helpers->jsonResponse('注册失败，请重试', 500);
@@ -112,12 +113,7 @@ class UserController
                 return $this->Helpers->jsonResponse('密码错误', 400);
             }
 
-            // 权限验证通过后，移除密码信息并保存其他用户信息到SESSION
-            unset($user['password']); // 移除密码信息
-            $_SESSION['userinfo'] = $user; // 存储用户信息到会话
-
-            // 插入回归消息
-            $this->insertSystemMessage('system', "欢迎{$username}来到聊天室！", 'system');
+            $this->updateLoginInfo($user);
 
             return $this->Helpers->jsonResponse('登录成功', 200);
         } catch (Exception $e) {
@@ -143,5 +139,31 @@ class UserController
         } catch (PDOException $e) {
             HandleException($e);
         }
+    }
+
+    /**
+     * 更新登录信息
+     * @param array $user 用户信息数组
+     * @return void
+     */
+    private function updateLoginInfo($user)
+    {
+        // 生成登录令牌
+        $loginToken = bin2hex(random_bytes(64));
+        $db = SqlLite::getInstance()->getConnection();
+        // 更新数据库中的登录令牌
+        $updateStmt = $db->prepare('UPDATE users SET user_login_token = :login_token WHERE user_id = :user_id');
+        $updateStmt->execute([
+            'login_token' => $loginToken,
+            'user_id' => $user['user_id']
+        ]);
+        unset($user['password']);
+        unset($user['admin_login_token']);
+        $user['user_login_token'] = $loginToken;
+        $_SESSION['user_login_info'] = $user; // 存储用户信息到会话
+        setcookie('user_login_info', json_encode($user), time() + 86400 * 30, "/");
+        // 插入回归消息
+        $this->insertSystemMessage('system', "欢迎{$user['username']}来到聊天室！", 'system');
+        unset($_SESSION['captcha']);
     }
 }

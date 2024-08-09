@@ -15,7 +15,6 @@ use ChatRoom\Core\Helpers\SystemLog;
 
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $ip_address = $_SERVER['REMOTE_ADDR'];
     $username = trim($_POST['username']);
     $password = trim($_POST['password']);
     $captcha = trim($_POST['captcha']);
@@ -23,6 +22,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // 实例化User和SystemLog类
     $UserHelpers = new User();
     $log = new SystemLog($db);
+    $ip_address = $UserHelpers->getIp();
 
     // 验证验证码
     if (isset($_SESSION['captcha']) && PhraseBuilder::comparePhrases($_SESSION['captcha'], $captcha)) {
@@ -46,22 +46,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $loginToken = bin2hex(random_bytes(64));
 
                     // 更新数据库中的登录令牌
-                    $updateStmt = $db->prepare('UPDATE users SET login_token = :login_token WHERE user_id = :user_id');
+                    $updateStmt = $db->prepare('UPDATE users SET admin_login_token = :login_token WHERE user_id = :user_id');
                     $updateStmt->execute([
                         'login_token' => $loginToken,
                         'user_id' => $user['user_id']
                     ]);
 
-                    // 设置会话和cookie
-                    $_SESSION['user_logged_in'] = true;
-                    $_SESSION['login_token'] = $loginToken;
-                    $_SESSION['user_id'] = $user['user_id'];
-                    unset($user['captcha']);
-                    setcookie('login_token', $loginToken, time() + 86400 * 30, "/"); // 30天过期
+                    $login_info = [
+                        'logged_in' => true,
+                        'login_token' => $loginToken,
+                        'user_id' => $user['user_id']
+                    ];
+
+                    // 设置会话
+                    $_SESSION['admin_login_info'] = $login_info;
+                    // 将数组转换为JSON字符串，然后存储在cookie中
+                    setcookie('admin_login_info', json_encode($login_info), time() + 86400 * 30, "/"); // 30天过期
 
                     // 清除登录尝试记录
                     $db->prepare('DELETE FROM admin_login_attempts WHERE ip_address = :ip_address')->execute(['ip_address' => $ip_address]);
                     $log->insertLog('INFO', "管理员 $username 在IP $ip_address 登录成功");
+                    // 清除验证码
+                    unset($_SESSION['captcha']);
 
                     // 重定向到管理仪表板
                     header('Location: /Admin/');
