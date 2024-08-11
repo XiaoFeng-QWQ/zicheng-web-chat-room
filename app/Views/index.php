@@ -1,11 +1,16 @@
 <?php
 
+use ChatRoom\Core\Helpers\SystemSetting;
+use ChatRoom\Core\Database\SqlLite;
 use ChatRoom\Core\Helpers\User;
 // 检查 $_SESSION['user_login_info'] 是否存在且为数组
 if (!isset($_SESSION['user_login_info']) || !is_array($_SESSION['user_login_info'])) {
     header('Location: /user/login'); // 重定向到登录页面
     exit(); // 终止脚本执行
 }
+$db = SqlLite::getInstance()->getConnection();
+
+$SystemSetting = new SystemSetting($db);
 
 ?>
 <!DOCTYPE html>
@@ -13,21 +18,22 @@ if (!isset($_SESSION['user_login_info']) || !is_array($_SESSION['user_login_info
 
 <head>
     <meta charset="UTF-8">
-    <title>子辰在线聊天室</title>
+    <title><?= $SystemSetting->getSetting('site_name') ?></title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="<?= $SystemSetting->getSetting('site_description') ?>">
     <link href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.3.3/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://gcore.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
     <link rel="stylesheet" href="/StaticResources/css/index.chat.css?v=<?php echo FRAMEWORK_VERSION ?>">
     <script>
-        const sessionUsername = "<?php echo $_SESSION['user_login_info']['username']; ?>"; // 获取用户名
+        const sessionUsername = "<?= $_SESSION['user_login_info']['username']; ?>"; // 获取用户名
     </script>
 </head>
 
 <body>
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
         <div class="container-fluid">
-            <a class="navbar-brand d-flex align-items-center" href="#">
-                子辰在线聊天室 V<?php echo FRAMEWORK_VERSION ?>
+            <a class="navbar-brand d-flex align-items-center">
+                <?= $SystemSetting->getSetting('site_name') ?>
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
@@ -47,14 +53,24 @@ if (!isset($_SESSION['user_login_info']) || !is_array($_SESSION['user_login_info
                             其他链接
                         </a>
                         <ul class="dropdown-menu" aria-labelledby="navbarScrollingDropdown">
-                            <li>
-                                <a class="dropdown-item" href="https://image.dfggmc.top/imgs/2024/07/b4fa5d91c72ca548.jpg" target="_blank" rel="noopener noreferrer">
-                                    联系站长
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item" href="https://gitee.com/XiaoFengQWQ/zichen-web-chat-room" target="_blank" rel="noopener noreferrer">Gitee开源地址</a>
-                            </li>
+                            <?php
+                            // 获取导航链接的设置
+                            $navLinks = $SystemSetting->getSetting('nav_link');
+
+                            // 遍历导航链接并生成列表项
+                            if ($navLinks) {
+                                foreach ($navLinks as $item) {
+                                    // 使用双引号插入变量
+                                    echo "
+                                    <li>
+                                        <a class=\"dropdown-item\" href=\"{$item['link']}\" target=\"_blank\" rel=\"noopener noreferrer\">
+                                            {$item['name']}
+                                        </a>
+                                    </li>
+                                    ";
+                                }
+                            }
+                            ?>
                         </ul>
                     </li>
                     <?php if ($_SESSION['user_login_info']['group_id'] === 1) : ?>
@@ -63,7 +79,7 @@ if (!isset($_SESSION['user_login_info']) || !is_array($_SESSION['user_login_info
                         </li>
                     <?php endif; ?>
                     <li class="nav-item">
-                        <button id="logout" class="btn btn-danger nav-link">离开聊天室</button>
+                        <button id="logout" class="btn btn-danger nav-link">退出登录</button>
                     </li>
                 </ul>
             </div>
@@ -101,7 +117,7 @@ if (!isset($_SESSION['user_login_info']) || !is_array($_SESSION['user_login_info
                 </div>
                 <div class="modal-body">
                     <img src="https://image.dfggmc.top/imgs/2024/07/b4fa5d91c72ca548.jpg" alt="">
-                    你确定要离开聊天室吗？
+                    确定要离开“<?= $SystemSetting->getSetting('site_name') ?>”吗？
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>

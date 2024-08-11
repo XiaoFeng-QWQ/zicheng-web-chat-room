@@ -14,10 +14,13 @@ require_once __DIR__ . '/../../config.global.php';
 require_once __DIR__ . '/../../vendor/autoload.php';
 require_once __DIR__ . '/database_connection.php';
 
+use ChatRoom\Core\Helpers\SystemSetting;
+
 /**
  * 初始化变量
  */
 $cookieLoginToken = isset($_COOKIE['admin_login_info']) ? json_decode($_COOKIE['admin_login_info'], true)['login_token'] ?? '' : '';
+$SystemSetting = new SystemSetting($db);
 
 /**
  * 验证权限

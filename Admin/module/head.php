@@ -19,6 +19,7 @@ if (!defined('FRAMEWORK_DATABASE_PATH')) {
     <link href="https://cdn.bootcdn.net/ajax/libs/nprogress/0.2.0/nprogress.min.css" rel="stylesheet">
     <link rel="stylesheet" href="/StaticResources/css/module.rest.css">
     <link rel="stylesheet" href="/Admin/css/style.css">
+    <script src="https://cdn.bootcdn.net/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 </head>
 
 <body class="d-flex flex-column min-vh-100">

@@ -67,6 +67,7 @@ CREATE TABLE IF NOT EXISTS "system_logs" (
 	"created_at"	DATETIME DEFAULT CURRENT_TIMESTAMP,
 	PRIMARY KEY("log_id" AUTOINCREMENT)
 );
+
 INSERT INTO "groups" ("group_id","group_name","created_at") VALUES (1,'管理员','0000-00-00 00:00:00'),
  (2,'普通用户','0000-00-00 00:00:00');
 DROP INDEX IF EXISTS "admin_login_attempts_index";
@@ -74,6 +75,18 @@ CREATE UNIQUE INDEX IF NOT EXISTS "admin_login_attempts_index" ON "admin_login_a
 	"id",
 	"ip_address"
 );
+INSERT INTO "system_sets" ("id","name","value") VALUES (3,'enable_user_registration','true'),
+ (4,'nav_link','[
+    {
+        "name": "作者博客",
+        "link": "https://blog.zicheng.icu"
+    },
+    {
+        "name": "Gitee开源地址",
+        "link": "https://gitee.com/XiaoFengQWQ/zichen-web-chat-room"
+    }
+]');
+
 DROP INDEX IF EXISTS "groups_index";
 CREATE UNIQUE INDEX IF NOT EXISTS "groups_index" ON "groups" (
 	"group_id"

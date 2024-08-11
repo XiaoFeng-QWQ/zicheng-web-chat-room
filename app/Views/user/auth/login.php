@@ -1,15 +1,20 @@
 <?php
-// 检查 $_SESSION['userinfo'] 是否存在且为数组
-if (isset($_SESSION['userinfo']) && is_array($_SESSION['userinfo'])) {
+// 检查 $_SESSION['user_login_info'] 是否存在且为数组
+if (isset($_SESSION['user_login_info']) && is_array($_SESSION['user_login_info'])) {
     header('Location: /'); // 重定向到首页
     exit(); // 终止脚本执行
 }
 
-require_once FRAMEWORK_APP_PATH . '/Views/module/user.auth.head.php'
+require_once FRAMEWORK_APP_PATH . '/Views/module/user.auth.head.php';
+
+use ChatRoom\Core\Database\SqlLite;
+use ChatRoom\Core\Helpers\SystemSetting;
+
+$setting = new SystemSetting(SqlLite::getInstance()->getConnection());
 ?>
 
 <div class="user-auth-container">
-    <h1 class="h4 mb-4 fw-normal text-center">登录到子辰在线聊天室V<?php echo FRAMEWORK_VERSION ?></h1>
+    <h1 class="h4 mb-4 fw-normal text-center">登录到<?= $setting->getSetting('site_name') ?></h1>
     <form id="loginForm" action="/api/user?method=login" method="POST">
         <div>
             <label for="username" class="form-label">用户名:</label>

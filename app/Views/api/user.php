@@ -1,8 +1,10 @@
 <?php
 
 use Monolog\Logger;
-use ChatRoom\Core\Helpers\Helpers;
 use Gregwar\Captcha\PhraseBuilder;
+use ChatRoom\Core\Helpers\Helpers;
+use ChatRoom\Core\Database\SqlLite;
+use ChatRoom\Core\Helpers\SystemSetting;
 use ChatRoom\Core\Controller\UserController;
 
 header('Content-Type: application/json');
@@ -11,9 +13,13 @@ define('LOG_LEVEL', Logger::ERROR);
 define('CAPTCHA_ERROR', '验证码错误');
 define('INVALID_METHOD_MESSAGE', '无效的方法。');
 define('METHOD_NOT_PROVIDED_MESSAGE', '方法未提供。');
+define('DISABLE_USER_REGIDTRATION', '新用户注册已禁用');
 define('INVALID_REQUEST_METHOD_MESSAGE', '无效的请求方法。');
 // 获取 HTTP 请求参数
 $method = $_GET['method'] ?? null;
+
+// 获取配置
+$setting = new SystemSetting(SqlLite::getInstance()->getConnection());
 if (!$method) {
     respondWithJson(400, METHOD_NOT_PROVIDED_MESSAGE);
 }
@@ -42,6 +48,7 @@ function respondWithJson($statusCode, $message)
 
 // 处理 API 请求
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+
     // 读取和解析输入的 JSON 数据
     $input = json_decode(file_get_contents('php://input'), true);
     $captcha = $input['captcha'] ?? '';
@@ -52,13 +59,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     switch ($method) {
         case 'register':
-            if (isset($_SESSION['captcha']) && PhraseBuilder::comparePhrases($_SESSION['captcha'], $captcha)) {
-                unset($_SESSION['captcha']);
-                exit($userController->register($username, $password, $confirmPassword));
-            } else {
-                unset($_SESSION['captcha']);
-                respondWithJson(400, CAPTCHA_ERROR);
+            if ($setting->getSetting('enable_user_registration') === true) {
+                if (isset($_SESSION['captcha']) && PhraseBuilder::comparePhrases($_SESSION['captcha'], $captcha)) {
+                    unset($_SESSION['captcha']);
+                    exit($userController->register($username, $password, $confirmPassword));
+                } else {
+                    unset($_SESSION['captcha']);
+                    respondWithJson(400, CAPTCHA_ERROR);
+                }
             }
+            respondWithJson(403, DISABLE_USER_REGIDTRATION);
         case 'login':
             if (isset($_SESSION['captcha']) && PhraseBuilder::comparePhrases($_SESSION['captcha'], $captcha)) {
                 unset($_SESSION['captcha']);

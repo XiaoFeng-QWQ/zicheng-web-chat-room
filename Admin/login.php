@@ -14,7 +14,7 @@ $_SESSION['captcha'] = $builder->getPhrase();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>子辰聊天室 - 管理员登录</title>
+    <title>管理员登录</title>
     <link href="https://cdn.bootcdn.net/ajax/libs/bootstrap/5.1.0/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body {
@@ -110,6 +110,24 @@ $_SESSION['captcha'] = $builder->getPhrase();
             <button type="submit" class="btn btn-primary">登录</button>
         </form>
     </div>
+    <span style="
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 0.9rem;
+    color: #6c757d;
+    padding: 10px;
+    width: 100%;
+    text-align: center;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+">
+        &copy; 2024 Powered By:
+        <a href="http://blog.zicheng.icu" target="_blank" rel="noopener noreferrer" style="margin-left: 5px; color: #007bff; text-decoration: none;">
+            小枫_QWQ |
+        </a>&nbsp系统版本[<?= FRAMEWORK_VERSION ?>]
+    </span>
     <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <script src="https://cdn.bootcdn.net/ajax/libs/bootstrap/5.1.0/js/bootstrap.bundle.min.js"></script>
 </body>

@@ -41,24 +41,31 @@ $logs = $log->getLogs(5);
                 </div>
                 <div class="card-body">
                     <ul class="list-group list-group-flush">
+                        <li class="list-group-item">2024-08-11: [1.7.0.0]完善站点设置功能。</li>
                         <li class="list-group-item">2024-08-09: [1.6.7.0]优化部分逻辑。</li>
                         <li class="list-group-item">2024-08-09: [1.6.6.1]修复通过内置路由验证码无法正常输出问题。</li>
-                        <li class="list-group-item">2024-08-06: [1.6.0]完善后台主页、优化后台文件目录。</li>
                     </ul>
                 </div>
             </div>
         </div>
     </div>
     <div class="col-md-8">
-        <!-- 子辰聊天室概览 -->
+        <!-- 概览 -->
         <div class="card mb-4">
             <div class="card-header">
-                <i class="fas fa-chart-line"></i> 子辰聊天室概览
+                <i class="fas fa-chart-line"></i> <?= $SystemSetting->getSetting('site_name') ?>概览
             </div>
             <div class="card-body">
                 <h5 class="card-title">欢迎来到聊天室管理仪表板</h5>
                 <p class="card-text">
                     您可以在此处管理用户、消息列表和设置。当前版本：<span class="badge bg-primary"><?php echo FRAMEWORK_VERSION ?></span>
+                    <?php
+                    if (defined('FRAMEWORK_DEBUG') && FRAMEWORK_DEBUG):
+                    ?>
+                        | <span class="badge bg-danger">调试模式已启用</span>
+                    <?php
+                    endif;
+                    ?>
                 </p>
                 <div class="row mt-4">
                     <div class="col-md-3 col-sm-6 mb-3">
@@ -131,7 +138,6 @@ $logs = $log->getLogs(5);
     </div>
 </div>
 
-<script src="https://cdn.bootcdn.net/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script>
     (function() {
         // 将PHP数组转换为JavaScript数组

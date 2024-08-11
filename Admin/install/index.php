@@ -177,7 +177,7 @@ require_once __DIR__ . '/install.php';
                             $_SESSION['database_path'] = $fullPath;
 
                             try {
-                                $pdo = new PDO('sqlite:' . $fullPath);
+                                $pdo = new PDO("sqlite:$fullPath");
                                 $install_sql = file_get_contents(__DIR__ . '/install.sql');
                                 if ($pdo->exec($install_sql) === false) {
                                     throw new Exception(MSG_SQL_IMPORT_FAILURE);
