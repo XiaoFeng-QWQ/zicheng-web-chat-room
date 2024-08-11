@@ -1,4 +1,6 @@
-子辰在线聊天室-1.5.0(测试)
+卷 其他 的文件夹 PATH 列表
+卷序列号为 0AC3-BB8F
+E:.
 |   .gitignore
 |   .htaccess
 |   composer.json
@@ -15,21 +17,21 @@
 |       launch.json
 |       
 +---Admin
-|   |   database_connection.php
-|   |   delete_message.php
-|   |   footer.php
-|   |   generate_captcha.php
-|   |   get_messages.php
-|   |   head.php
 |   |   index.php
 |   |   login.php
-|   |   login_verify.php
 |   |   messages.php
 |   |   settings.php
 |   |   users.php
 |   |   
 |   +---css
 |   |       style.css
+|   |       
+|   +---helper
+|   |       common.php
+|   |       database_connection.php
+|   |       display_toast.php
+|   |       generate_captcha.php
+|   |       login_verify.php
 |   |       
 |   +---install
 |   |       index.php
@@ -40,11 +42,21 @@
 |   |       getMessages.js
 |   |       script.js
 |   |       
+|   +---message
+|   |       delete_message.php
+|   |       get_messages.php
+|   |       
+|   +---module
+|   |       footer.php
+|   |       head.php
+|   |       
 |   \---settings
-|           backup.html
-|           index.html
-|           update.html
-|           user.html
+|           backup.php
+|           diy.php
+|           index.php
+|           update.php
+|           update_settings.php
+|           user.php
 |           
 +---App
 |   |   .htaccess
@@ -53,6 +65,7 @@
 |       |   index.php
 |       |   
 |       +---api
+|       |       captcha.php
 |       |       chat.php
 |       |       user.php
 |       |       
@@ -75,14 +88,20 @@
 |   |       
 |   +---image
 |   |       favicon.png
-|   |       logo.loading.svg
 |   |       logo.png
 |   |       logo.svg
 |   |       logo.user.register.svg
 |   |       
-|   \---js
-|           index.chat.js
-|           user.auth.js
+|   +---js
+|   |       index.chat.js
+|   |       user.auth.js
+|   |       
+|   +---MarkDown
+|   |       usageTerms.md
+|   |       UserAgreement.md
+|   |       
+|   \---media
+|           Windows Notify System Generic.wav
 |           
 +---System
 |   |   .htaccess
@@ -105,12 +124,12 @@
 |   |           Error.php
 |   |           handleException.php
 |   |           Helpers.php
+|   |           SystemLog.php
+|   |           SystemSetting.php
 |   |           User.php
 |   |           
 |   +---Data
 |   \---Font
-|           JetBrainsMono-Italic.ttf
-|           
 +---vendor
 |   |   .htaccess
 |   |   autoload.php
