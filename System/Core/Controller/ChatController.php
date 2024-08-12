@@ -108,7 +108,9 @@ class ChatController
      */
     private function handlePostRequest()
     {
+        // 安全地处理和检查输入
         $message = htmlspecialchars(trim($_POST['message']), ENT_QUOTES, 'UTF-8');
+
         if (empty($message)) {
             $this->response(self::STATUS_WARNING, self::MESSAGE_EMPTY);
             return;
@@ -120,11 +122,18 @@ class ChatController
             return;
         }
 
-        // 获取当前 SESSION 的用户信息
-        $user = $_SESSION['user_login_token'] ?? null;
+        // 获取当前用户信息
+        $user = $_SESSION['user_login_info'] ?? null;
+        $userCookieInfo = json_decode($_COOKIE['user_login_info'] ?? '{}', true);
 
-        // 检查SESSION 的用户信息是否无效或不是数组
-        if (empty($user)) {
+        // 检查SESSION和Cookie的用户信息是否有效
+        if (empty($user) || empty($userCookieInfo)) {
+            $this->response(self::STATUS_ERROR, self::MESSAGE_NOT_LOGGED_IN);
+            return;
+        }
+
+        // 校验SESSION与Cookie中的用户信息是否一致
+        if ($user !== $userCookieInfo) {
             $this->response(self::STATUS_ERROR, self::MESSAGE_NOT_LOGGED_IN);
             return;
         }
@@ -132,14 +141,14 @@ class ChatController
         // 从数据库获取用户信息
         $userInfo = $this->user_helpers->getUserInfo($user['username']);
 
-        // 检查用户信息是否为 null
+        // 检查数据库中的用户信息是否有效
         if (empty($userInfo)) {
             $this->response(self::STATUS_ERROR, self::MESSAGE_NOT_LOGGED_IN);
             return;
         }
 
         // 检查用户浏览器信息和数据库是否一致
-        if ($user['user_login_token'] === $userInfo['user_login_token'] && $user['user_id'] === $userInfo['user_id']){
+        if ($user['user_login_token'] !== $userInfo['user_login_token'] || $user['user_id'] !== $userInfo['user_id']) {
             $this->response(self::STATUS_ERROR, self::MESSAGE_NOT_LOGGED_IN);
             return;
         }
