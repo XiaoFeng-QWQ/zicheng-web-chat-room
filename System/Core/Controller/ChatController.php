@@ -121,7 +121,7 @@ class ChatController
         }
 
         // 获取当前 SESSION 的用户信息
-        $user = $_SESSION['userinfo'] ?? null;
+        $user = $_SESSION['user_login_token'] ?? null;
 
         // 检查SESSION 的用户信息是否无效或不是数组
         if (empty($user)) {
@@ -134,6 +134,12 @@ class ChatController
 
         // 检查用户信息是否为 null
         if (empty($userInfo)) {
+            $this->response(self::STATUS_ERROR, self::MESSAGE_NOT_LOGGED_IN);
+            return;
+        }
+
+        // 检查用户浏览器信息和数据库是否一致
+        if ($user['user_login_token'] === $userInfo['user_login_token'] && $user['user_id'] === $userInfo['user_id']){
             $this->response(self::STATUS_ERROR, self::MESSAGE_NOT_LOGGED_IN);
             return;
         }
