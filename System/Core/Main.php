@@ -7,7 +7,7 @@ namespace ChatRoom\Core;
  * 入口类
  * 
  * @copyright 2024 XiaoFeng-QWQ
- * @version 2.0
+ * @version FRAMEWORK_VERSION
  * @author XiaoFeng-QWQ <1432777209@qq.com>
  */
 class Main

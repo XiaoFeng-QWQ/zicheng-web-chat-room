@@ -1,6 +1,13 @@
 <?php
 
 /**
+ *     _____   _ ________                     ________          __  ____  ____  ____  __  ___
+ *    /__  /  (_) ____/ /_  ___  ____  ____ _/ ____/ /_  ____ _/ /_/ __ \/ __ \/ __ \/  |/  /
+ *      / /  / / /   / __ \/ _ \/ __ \/ __ `/ /   / __ \/ __ `/ __/ /_/ / / / / / / / /|_/ / 
+ *     / /__/ / /___/ / / /  __/ / / / /_/ / /___/ / / / /_/ / /_/ _, _/ /_/ / /_/ / /  / /  
+ *    /____/_/\____/_/ /_/\___/_/ /_/\__, /\____/_/ /_/\__,_/\__/_/ |_|\____/\____/_/  /_/   
+ *                                  /____/                                                   
+ *                                                          Powered By:XiaoFeng_QWQ V:1.7.0.1
  * -----------------------------------
  * 注意事项：
  * - 文件路径必须遵守以下规则：
@@ -13,6 +20,7 @@
  * - `System` 目录下的所有文件使用大驼峰命名法。
  * - `App` 和 `StaticResources` 目录下的文件使用点号分隔的命名方式，目录使用大驼峰命名法。
  * - 项目根目录使用大驼峰命名法。
+ * - 函数名使用小驼峰，函数内部变量也是
  * -----------------------------------
  */
 // 必须在调用 session_start() 之前设置 session.cookie_lifetime
@@ -39,7 +47,7 @@ require __DIR__ . '/vendor/autoload.php';
 require_once __DIR__ . '/config.global.php';
 
 // 检查请求头，避免在非图片请求时注册自定义异常处理器
-if (isset($_SERVER['HTTP_ACCEPT']) && strpos($_SERVER['HTTP_ACCEPT'], 'image/') === false) {
+if (strpos($_SERVER['HTTP_ACCEPT'], 'text') !== false) {
     require __DIR__ . '/System/Core/Helpers/handleException.php';
     // 注册自定义异常处理器
     set_exception_handler('HandleException');

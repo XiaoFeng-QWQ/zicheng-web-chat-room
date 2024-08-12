@@ -4,6 +4,7 @@ namespace ChatRoom\Core\Helpers;
 
 use PDO;
 use Exception;
+use Parsedown;
 use ChatRoom\Core\Database\SqlLite;
 
 /**
@@ -11,105 +12,122 @@ use ChatRoom\Core\Database\SqlLite;
  */
 class User
 {
+    private Parsedown $parsedown;
+    private string $userAgreementFile;
+
+    public function __construct()
+    {
+        $this->parsedown = new Parsedown();
+        $this->userAgreementFile = FRAMEWORK_DIR . '/StaticResources/MarkDown/UserAgreement.md';
+    }
+
     /**
      * 验证用户名
      *
      * @param string $username
      * @return bool
      */
-    public function validateUsername($username)
+    public function validateUsername(string $username): bool
     {
         // 检查用户名是否为空和长度是否在3到20字符之间
-        if (empty($username) || strlen($username) < 3 || strlen($username) > 20) {
+        if (strlen($username) < 3 || strlen($username) > 20) {
             return false;
         }
 
-        // 检查用户名是否只包含字母数字和下划线
-        return preg_match('/^[a-zA-Z0-9_]+$/', $username);
+        // 检查用户名是否只包含字母、数字和下划线
+        return (bool) preg_match('/^[a-zA-Z0-9_]+$/', $username);
     }
 
     /**
      * 获取用户信息，返回用户信息数组
      *
-     * @param [type] $username 默认通过用户名查询
-     * @param [type] $user_id 如果传入，使用用户id查询
+     * @param string|null $username
+     * @param int|null $userId
      * @return array
+     * @throws Exception
      */
-    public function getUserInfo($username, $user_id = null)
+    public function getUserInfo(?string $username = null, ?int $userId = null): array
     {
         $db = SqlLite::getInstance()->getConnection();
-        try {
-            if ($user_id !== null) {
-                // 通过用户ID查询
-                $stmt = $db->prepare("SELECT * FROM users WHERE user_id = ?");
-                $stmt->execute([$user_id]);
-            } else {
-                // 通过用户名查询
-                $stmt = $db->prepare("SELECT * FROM users WHERE username = ?");
-                $stmt->execute([$username]);
-            }
-            $userInfo = $stmt->fetch(PDO::FETCH_ASSOC);
 
-            if ($userInfo) {
-                // 如果找到了用户信息，则返回它
-                return $userInfo;
+        try {
+            if ($userId !== null) {
+                // 通过用户ID查询
+                $stmt = $db->prepare("SELECT * FROM users WHERE user_id = :user_id");
+                $stmt->bindParam(':user_id', $userId, PDO::PARAM_INT);
+            } elseif ($username !== null) {
+                // 通过用户名查询
+                $stmt = $db->prepare("SELECT * FROM users WHERE username = :username");
+                $stmt->bindParam(':username', $username, PDO::PARAM_STR);
             } else {
-                // 如果没有找到用户信息
                 return [];
             }
+
+            $stmt->execute();
+            $userInfo = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            return $userInfo ?: [];
         } catch (Exception $e) {
-            // 我抛出了一个错误
-            throw new Exception($e->getMessage());
+            // 捕获并抛出异常
+            throw new Exception("Error retrieving user information: " . $e->getMessage());
         }
+    }
+
+    /**
+     * 获取用户协议文件内容
+     *
+     * @return string
+     */
+    public function readUserAgreement(): string
+    {
+        if (file_exists($this->userAgreementFile)) {
+            $fileContents = file_get_contents($this->userAgreementFile);
+            return $this->parsedown->text($fileContents);
+        }
+
+        return '用户协议文件不存在。';
     }
 
     /**
      * 检查用户名是否已被使用
+     *
      * @param string $username
      * @return bool
      */
-    public function isUsernameTaken($username)
+    public function isUsernameTaken(string $username): bool
     {
-        // 获取数据库连接
         $db = SqlLite::getInstance()->getConnection();
-        // 预处理语句，防止SQL注入
-        $stmt = $db->prepare('SELECT COUNT(*) FROM users WHERE username = ?');
-        $stmt->execute([$username]);
-        // 获取查询结果的行数
-        $count = $stmt->fetchColumn();
-        // 返回是否有相同用户名存在
-        return $count > 0;
+        $stmt = $db->prepare('SELECT COUNT(*) FROM users WHERE username = :username');
+        $stmt->bindParam(':username', $username, PDO::PARAM_STR);
+        $stmt->execute();
+
+        return $stmt->fetchColumn() > 0;
     }
 
     /**
      * 获取用户IP
+     *
      * @return string
      */
-    public function getIp()
+    public function getIp(): string
     {
-        $ip = 'unknown';
-
-        // 优先获取 HTTP_CLIENT_IP
         if (!empty($_SERVER['HTTP_CLIENT_IP']) && filter_var($_SERVER['HTTP_CLIENT_IP'], FILTER_VALIDATE_IP)) {
-            $ip = $_SERVER['HTTP_CLIENT_IP'];
+            return $_SERVER['HTTP_CLIENT_IP'];
         }
-        // 如果 HTTP_CLIENT_IP 不存在，尝试获取 HTTP_X_FORWARDED_FOR
-        elseif (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
-            $ipList = explode(',', $_SERVER['HTTP_X_FORWARDED_FOR']);
-            // 取第一个有效IP
-            foreach ($ipList as $ipItem) {
-                $ipItem = trim($ipItem);
-                if (filter_var($ipItem, FILTER_VALIDATE_IP)) {
-                    $ip = $ipItem;
-                    break;
+
+        if (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+            foreach (explode(',', $_SERVER['HTTP_X_FORWARDED_FOR']) as $ip) {
+                $ip = trim($ip);
+                if (filter_var($ip, FILTER_VALIDATE_IP)) {
+                    return $ip;
                 }
             }
         }
-        // 如果上面的都不存在，尝试获取 REMOTE_ADDR
-        elseif (!empty($_SERVER['REMOTE_ADDR']) && filter_var($_SERVER['REMOTE_ADDR'], FILTER_VALIDATE_IP)) {
-            $ip = $_SERVER['REMOTE_ADDR'];
+
+        if (!empty($_SERVER['REMOTE_ADDR']) && filter_var($_SERVER['REMOTE_ADDR'], FILTER_VALIDATE_IP)) {
+            return $_SERVER['REMOTE_ADDR'];
         }
 
-        return $ip;
+        return 'unknown';
     }
 }

@@ -5,27 +5,23 @@ namespace ChatRoom\Core;
 /**
  * 路由类
  * 
- * @copyright 2024 XiaoFeng-QWQ
- * @version 2.0
- * @author XiaoFeng-QWQ <1432777209@qq.com>
  */
 
 use ChatRoom\Core\Config\App;
 use ChatRoom\Core\Helpers\Error;
-use Exception;
 
 class Route
 {
-    private array $route_rules;
-    private App $app_config;
+    private array $routeRules;
+    private App $appConfig;
     private string $currentUri;
     private Error $error;
 
     public function __construct()
     {
-        $this->app_config = new App();
+        $this->appConfig = new App();
         $this->currentUri = filter_var($_SERVER['REQUEST_URI'], FILTER_SANITIZE_URL);
-        $this->route_rules = $this->app_config->route_rules;
+        $this->routeRules = $this->appConfig->routeRules;
         $this->error = new Error();
     }
 
@@ -53,7 +49,7 @@ class Route
     private function findHandler(string $uri): ?array
     {
         $uriWithoutQuery = strtok($uri, '?');
-        foreach ($this->route_rules as $pattern => $handler) {
+        foreach ($this->routeRules as $pattern => $handler) {
             $pattern = preg_quote($pattern, '/');
             if (preg_match("/^$pattern$/", $uriWithoutQuery)) {
                 return $handler;

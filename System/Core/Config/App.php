@@ -11,7 +11,7 @@ class App
      * 路由规则
      * @var array
      */
-    public array $route_rules = [
+    public array $routeRules = [
         // 基本路由
         '/' => [
             'file' => [

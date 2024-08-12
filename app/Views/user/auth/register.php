@@ -6,25 +6,6 @@ if (isset($_SESSION['user_login_info']) && is_array($_SESSION['user_login_info']
 }
 
 require_once FRAMEWORK_APP_PATH . '/Views/module/user.auth.head.php';
-
-/**
- * 获取用户协议文件内容
- * @return string
- */
-function readUserAgreement()
-{
-    $Parsedown = new Parsedown();
-    $userAgreementFile = FRAMEWORK_DIR . '/StaticResources/MarkDown/UserAgreement.md';
-    if (file_exists($userAgreementFile)) {
-        return $Parsedown->text(file_get_contents($userAgreementFile));
-    }
-    return '用户协议文件不存在。';
-}
-
-use ChatRoom\Core\Database\SqlLite;
-use ChatRoom\Core\Helpers\SystemSetting;
-
-$setting = new SystemSetting(SqlLite::getInstance()->getConnection());
 ?>
 
 <div class="user-auth-container">
@@ -74,7 +55,7 @@ $setting = new SystemSetting(SqlLite::getInstance()->getConnection());
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="关闭"></button>
             </div>
             <div class="modal-body">
-                <?php echo readUserAgreement(); ?>
+                <?= $UserHelpers->readUserAgreement() ?>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">确定</button>
