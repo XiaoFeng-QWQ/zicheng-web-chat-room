@@ -1,4 +1,4 @@
-◊”≥Ω¡ƒÃÏ “1.7.0.0[≤‚ ‘]
+◊”≥Ω¡ƒÃÏ “1.8.0.0[≤‚ ‘]
 |   .gitignore
 |   .htaccess
 |   composer.json
@@ -48,13 +48,18 @@
 |   |       footer.php
 |   |       head.php
 |   |       
-|   \---settings
-|           backup.php
-|           diy.php
-|           index.php
-|           update.php
-|           update_settings.php
-|           user.php
+|   +---settings
+|   |       backup.php
+|   |       diy.php
+|   |       index.php
+|   |       update.php
+|   |       update_settings.php
+|   |       user.php
+|   |       
+|   \---user
+|           delete_user.php
+|           edit_user.php
+|           get_user_info.php
 |           
 +---App
 |   |   .htaccess
@@ -148,11 +153,135 @@
 |   |       
 |   +---erusev
 |   |   \---parsedown
-|   |           composer.json
-|   |           LICENSE.txt
-|   |           Parsedown.php
-|   |           README.md
-|   |           
+|   |       |   .gitattributes
+|   |       |   .travis.yml
+|   |       |   composer.json
+|   |       |   LICENSE.txt
+|   |       |   Parsedown.php
+|   |       |   phpunit.xml.dist
+|   |       |   README.md
+|   |       |   
+|   |       \---test
+|   |           |   CommonMarkTestStrict.php
+|   |           |   CommonMarkTestWeak.php
+|   |           |   ParsedownTest.php
+|   |           |   SampleExtensions.php
+|   |           |   TestParsedown.php
+|   |           |   
+|   |           \---data
+|   |                   aesthetic_table.html
+|   |                   aesthetic_table.md
+|   |                   aligned_table.html
+|   |                   aligned_table.md
+|   |                   atx_heading.html
+|   |                   atx_heading.md
+|   |                   automatic_link.html
+|   |                   automatic_link.md
+|   |                   block-level_html.html
+|   |                   block-level_html.md
+|   |                   code_block.html
+|   |                   code_block.md
+|   |                   code_span.html
+|   |                   code_span.md
+|   |                   compound_blockquote.html
+|   |                   compound_blockquote.md
+|   |                   compound_emphasis.html
+|   |                   compound_emphasis.md
+|   |                   compound_list.html
+|   |                   compound_list.md
+|   |                   deeply_nested_list.html
+|   |                   deeply_nested_list.md
+|   |                   email.html
+|   |                   email.md
+|   |                   emphasis.html
+|   |                   emphasis.md
+|   |                   em_strong.html
+|   |                   em_strong.md
+|   |                   escaping.html
+|   |                   escaping.md
+|   |                   fenced_code_block.html
+|   |                   fenced_code_block.md
+|   |                   horizontal_rule.html
+|   |                   horizontal_rule.md
+|   |                   html_comment.html
+|   |                   html_comment.md
+|   |                   html_entity.html
+|   |                   html_entity.md
+|   |                   image_reference.html
+|   |                   image_reference.md
+|   |                   image_title.html
+|   |                   image_title.md
+|   |                   implicit_reference.html
+|   |                   implicit_reference.md
+|   |                   inline_link.html
+|   |                   inline_link.md
+|   |                   inline_link_title.html
+|   |                   inline_link_title.md
+|   |                   inline_title.html
+|   |                   inline_title.md
+|   |                   lazy_blockquote.html
+|   |                   lazy_blockquote.md
+|   |                   lazy_list.html
+|   |                   lazy_list.md
+|   |                   line_break.html
+|   |                   line_break.md
+|   |                   multiline_lists.html
+|   |                   multiline_lists.md
+|   |                   multiline_list_paragraph.html
+|   |                   multiline_list_paragraph.md
+|   |                   nested_block-level_html.html
+|   |                   nested_block-level_html.md
+|   |                   ordered_list.html
+|   |                   ordered_list.md
+|   |                   paragraph_list.html
+|   |                   paragraph_list.md
+|   |                   reference_title.html
+|   |                   reference_title.md
+|   |                   self-closing_html.html
+|   |                   self-closing_html.md
+|   |                   separated_nested_list.html
+|   |                   separated_nested_list.md
+|   |                   setext_header.html
+|   |                   setext_header.md
+|   |                   simple_blockquote.html
+|   |                   simple_blockquote.md
+|   |                   simple_table.html
+|   |                   simple_table.md
+|   |                   span-level_html.html
+|   |                   span-level_html.md
+|   |                   sparse_dense_list.html
+|   |                   sparse_dense_list.md
+|   |                   sparse_html.html
+|   |                   sparse_html.md
+|   |                   sparse_list.html
+|   |                   sparse_list.md
+|   |                   special_characters.html
+|   |                   special_characters.md
+|   |                   strikethrough.html
+|   |                   strikethrough.md
+|   |                   strong_em.html
+|   |                   strong_em.md
+|   |                   tab-indented_code_block.html
+|   |                   tab-indented_code_block.md
+|   |                   table_inline_markdown.html
+|   |                   table_inline_markdown.md
+|   |                   text_reference.html
+|   |                   text_reference.md
+|   |                   unordered_list.html
+|   |                   unordered_list.md
+|   |                   untidy_table.html
+|   |                   untidy_table.md
+|   |                   url_autolinking.html
+|   |                   url_autolinking.md
+|   |                   whitespace.html
+|   |                   whitespace.md
+|   |                   xss_attribute_encoding.html
+|   |                   xss_attribute_encoding.md
+|   |                   xss_bad_url.html
+|   |                   xss_bad_url.md
+|   |                   xss_text_encoding.html
+|   |                   xss_text_encoding.md
+|   |                   
 |   +---gregwar
 |   |   \---captcha
 |   |       |   .gitignore
