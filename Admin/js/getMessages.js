@@ -59,7 +59,7 @@ function loadMessages(page) {
  * @param {number} totalPages 
  */
 function updatePagination(totalPages) {
-    const pagination = $('.pagination');
+    const pagination = $('.messagesPagination');
     pagination.empty();
 
     const prevDisabled = currentPage === 1 ? 'disabled' : '';
@@ -79,7 +79,7 @@ function updatePagination(totalPages) {
  * 事件绑定
  */
 function msgBindEvents() {
-    $('.pagination').on('click', 'a', function (e) {
+    $('.messagesPagination').on('click', 'a', function (e) {
         e.preventDefault();
         const page = parseInt($(this).text());
         if (!isNaN(page)) {

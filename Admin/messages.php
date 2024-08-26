@@ -55,7 +55,7 @@ $messages = $statement->fetchAll(PDO::FETCH_ASSOC);
                         </tbody>
                     </table>
                 </div>
-                <ul class="pagination"></ul>
+                <ul class="messagesPagination"></ul>
             </div>
         </div>
     </div>
