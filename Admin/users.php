@@ -1,5 +1,27 @@
 <?php
 require_once __DIR__ . "/module/head.php";
+
+use ChatRoom\Core\Helpers\User;
+
+$userHelper = new User();
+
+// 分页参数
+$limit = 10; // 每页显示10条记录
+$page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+$offset = ($page - 1) * $limit;
+
+try {
+    // 获取用户总数和分页后的数据
+    $totalUsers = $userHelper->getUserCount();
+    $usersData = $userHelper->getUsersWithPagination($limit, $offset);
+
+    // 计算总页数
+    $totalPages = ceil($totalUsers / $limit);
+} catch (Exception $e) {
+    echo "无法获取用户列表: " . $e->getMessage();
+    $usersData = [];
+    $totalPages = 1;
+}
 ?>
 
 <div class="row">
@@ -34,36 +56,46 @@ require_once __DIR__ . "/module/head.php";
                                 <th>用户名</th>
                                 <th>邮箱</th>
                                 <th>注册时间</th>
-                                <th>状态</th>
+                                <th>是否为管理员</th>
                                 <th>操作</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <!-- 这里可以用PHP循环输出实际的用户数据 -->
-                            <tr>
-                                <td>1</td>
-                                <td>user001</td>
-                                <td>user001@example.com</td>
-                                <td>2024-07-01</td>
-                                <td><span class="badge bg-success">正常</span></td>
-                                <td>
-                                    <button class="btn btn-sm btn-primary"><i class="fas fa-edit"></i></button>
-                                    <button class="btn btn-sm btn-danger"><i class="fas fa-user-slash"></i></button>
-                                </td>
-                            </tr>
-                            <!-- 更多用户行 -->
+                            <?php if (empty($usersData)): ?>
+                                <tr>
+                                    <td colspan="6" class="text-center">暂无用户数据</td>
+                                </tr>
+                            <?php else: ?>
+                                <?php foreach ($usersData as $user): ?>
+                                    <tr>
+                                        <td><?php echo htmlspecialchars($user['user_id']); ?></td>
+                                        <td><?php echo htmlspecialchars($user['username']); ?></td>
+                                        <td><?php echo htmlspecialchars($user['email'] ?? '无'); ?></td>
+                                        <td><?php echo htmlspecialchars($user['created_at']); ?></td>
+                                        <td>
+                                            <?php echo $user['group_id'] == 1 ? '是' : '否'; ?>
+                                        </td>
+                                        <td>
+                                            <button class="btn btn-sm btn-primary" onclick="editUser(<?php echo $user['user_id']; ?>)"><i class="fas fa-edit"></i></button>
+                                            <button class="btn btn-sm btn-danger" onclick="deleteUser(<?php echo $user['user_id']; ?>)"><i class="fas fa-user-slash"></i></button>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
                         </tbody>
                     </table>
                     <nav aria-label="Page navigation">
                         <ul class="pagination justify-content-center">
-                            <li class="page-item disabled">
-                                <a class="page-link" href="#" tabindex="-1" aria-disabled="true">上一页</a>
+                            <li class="page-item <?php echo $page <= 1 ? 'disabled' : ''; ?>">
+                                <a class="page-link" href="?page=<?php echo $page - 1; ?>">上一页</a>
                             </li>
-                            <li class="page-item active"><a class="page-link" href="#">1</a></li>
-                            <li class="page-item"><a class="page-link" href="#">2</a></li>
-                            <li class="page-item"><a class="page-link" href="#">3</a></li>
-                            <li class="page-item">
-                                <a class="page-link" href="#">下一页</a>
+                            <?php for ($i = 1; $i <= $totalPages; $i++): ?>
+                                <li class="page-item <?php echo $page == $i ? 'active' : ''; ?>">
+                                    <a class="page-link" href="?page=<?php echo $i; ?>"><?php echo $i; ?></a>
+                                </li>
+                            <?php endfor; ?>
+                            <li class="page-item <?php echo $page >= $totalPages ? 'disabled' : ''; ?>">
+                                <a class="page-link" href="?page=<?php echo $page + 1; ?>">下一页</a>
                             </li>
                         </ul>
                     </nav>
@@ -72,7 +104,106 @@ require_once __DIR__ . "/module/head.php";
         </div>
     </div>
 </div>
+<script>
+    function editUser(userId) {
+        // 使用 jQuery 的 AJAX 请求获取用户信息
+        $.ajax({
+            url: `/Admin/user/get_user_info.php?user_id=${userId}`,
+            type: 'GET',
+            dataType: 'json',
+            success: function(userInfo) {
+                // 动态生成模态框 HTML 结构
+                const modalHtml = `
+                <!-- 编辑用户信息弹窗 -->
+                <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="editModalLabel">编辑用户ID为${userInfo.data.user_id}</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <form method="POST" id="editUserForm">
+                                    <div class="mb-3">
+                                        <label for="username" class="form-label">用户名</label>
+                                        <input type="text" class="form-control" id="username" name="username" value="${userInfo.data.username}" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="email" class="form-label">邮箱</label>
+                                        <input type="email" class="form-control" id="email" name="email" value="${userInfo.data.email}" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="group_id" class="form-label">用户组ID (1为管理员, 2为普通用户)</label>
+                                        <input type="number" class="form-control" id="group_id" name="group_id" value="${userInfo.data.group_id}" required>
+                                    </div>
+                                </form>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                                <button type="submit" class="btn btn-primary" form="editUserForm">保存更改</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                `;
 
+                // 将生成的 HTML 插入到页面中
+                $('body').append(modalHtml);
+
+                // 显示模态框
+                const editModal = new bootstrap.Modal($('#editModal')[0]);
+                editModal.show();
+
+                // 表单提交事件处理
+                $('#editUserForm').on('submit', function(event) {
+                    event.preventDefault();
+                    // 使用 jQuery 的 AJAX 请求提交表单数据
+                    $.ajax({
+                        url: `/Admin/user/edit_user.php?user_id=${userInfo.data.user_id}`,
+                        type: 'POST',
+                        data: $(this).serialize(),
+                        dataType: 'json',
+                        success: function(data) {
+                            alert(data.success ? '用户信息更新成功' : `用户信息更新失败: ${data.message} ${data.error}`);
+                            if (data.success) location.reload();
+                        },
+                        error: function(xhr, status, error) {
+                            console.error('Error updating user:', error);
+                            alert(`无法更新用户信息: ${error}`);
+                        }
+                    });
+                });
+
+                // 模态框关闭后，清理模态框 HTML 以防止重复添加
+                $('#editModal').on('hidden.bs.modal', function() {
+                    $(this).remove();
+                });
+            },
+            error: function(xhr, status, error) {
+                console.error('Error fetching user info:', error);
+                alert(`无法获取用户信息: ${error}`);
+            }
+        });
+    }
+
+    function deleteUser(userId) {
+        if (confirm("确定要删除此用户吗？")) {
+            $.ajax({
+                url: `/Admin/user/delete_user.php?user_id=${userId}`,
+                type: 'POST',
+                dataType: 'json',
+                success: function(data) {
+                    alert(data.success ? '用户删除成功' : `删除用户失败: ${data.message}`);
+                    if (data.success) location.reload();
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error deleting user:', error);
+                    alert(`无法删除用户: ${error}`);
+                }
+            });
+        }
+    }
+</script>
 <?php
 require_once __DIR__ . '/module/footer.php';
 ?>

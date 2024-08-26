@@ -21,6 +21,7 @@ if (!is_array($navLinkSetting)) {
 
 <form action="/Admin/settings/update_settings.php" method="post">
     <h2>自定义设置</h2>
+    <hr>
     <div id="nav-links-container">
         <?php foreach ($navLinkSetting as $index => $link): ?>
             <div class="nav-link-item mb-3" data-index="<?= $index ?>">

@@ -7,6 +7,7 @@ $systemSetting = new SystemSetting($db);
 ?>
 <form action="/Admin/settings/update_settings.php" method="post">
     <h2>基本设置</h2>
+    <hr>
     <div class="mb-3">
         <label for="site_name" class="form-label">网站名称</label>
         <input type="text" class="form-control" id="site_name" name="site_name" value="<?= htmlspecialchars($systemSetting->getSetting('site_name')) ?>">

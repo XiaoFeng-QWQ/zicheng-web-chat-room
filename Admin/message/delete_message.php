@@ -1,10 +1,10 @@
 <?php
 require_once __DIR__ . '/../helper/common.php';
 
+header('Content-Type: application/json');
+
 use ChatRoom\Core\Helpers\SystemLog;
 use ChatRoom\Core\Helpers\User;
-
-header('Content-Type: application/json');
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $id = intval($_POST['id']);

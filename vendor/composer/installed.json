@@ -4,9 +4,14 @@
             "name": "erusev/parsedown",
             "version": "1.7.4",
             "version_normalized": "1.7.4.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/erusev/parsedown.git",
+                "reference": "cb17b6477dfff935958ba01325f2e8a2bfa6dab3"
+            },
             "dist": {
                 "type": "zip",
-                "url": "https://mirrors.tencent.com/repository/composer/erusev/parsedown/1.7.4/erusev-parsedown-1.7.4.zip",
+                "url": "https://api.github.com/repos/erusev/parsedown/zipball/cb17b6477dfff935958ba01325f2e8a2bfa6dab3",
                 "reference": "cb17b6477dfff935958ba01325f2e8a2bfa6dab3",
                 "shasum": ""
             },
@@ -19,12 +24,13 @@
             },
             "time": "2019-12-30T22:54:17+00:00",
             "type": "library",
-            "installation-source": "dist",
+            "installation-source": "source",
             "autoload": {
                 "psr-0": {
                     "Parsedown": ""
                 }
             },
+            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
@@ -41,6 +47,10 @@
                 "markdown",
                 "parser"
             ],
+            "support": {
+                "issues": "https://github.com/erusev/parsedown/issues",
+                "source": "https://github.com/erusev/parsedown/tree/1.7.x"
+            },
             "install-path": "../erusev/parsedown"
         },
         {
@@ -274,7 +284,13 @@
                 "type": "zip",
                 "url": "https://api.github.com/repos/symfony/finder/zipball/fbb0ba67688b780efbc886c1a0a0948dcf7205d6",
                 "reference": "fbb0ba67688b780efbc886c1a0a0948dcf7205d6",
-                "shasum": ""
+                "shasum": "",
+                "mirrors": [
+                    {
+                        "url": "https://mirrors.aliyun.com/composer/dists/%package%/%reference%.%type%",
+                        "preferred": true
+                    }
+                ]
             },
             "require": {
                 "php": ">=8.2"

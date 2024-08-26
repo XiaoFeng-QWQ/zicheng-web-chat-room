@@ -9,11 +9,22 @@
         {
             "name": "erusev/parsedown",
             "version": "1.7.4",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/erusev/parsedown.git",
+                "reference": "cb17b6477dfff935958ba01325f2e8a2bfa6dab3"
+            },
             "dist": {
                 "type": "zip",
-                "url": "https://mirrors.tencent.com/repository/composer/erusev/parsedown/1.7.4/erusev-parsedown-1.7.4.zip",
+                "url": "https://api.github.com/repos/erusev/parsedown/zipball/cb17b6477dfff935958ba01325f2e8a2bfa6dab3",
                 "reference": "cb17b6477dfff935958ba01325f2e8a2bfa6dab3",
-                "shasum": ""
+                "shasum": "",
+                "mirrors": [
+                    {
+                        "url": "https://mirrors.aliyun.com/composer/dists/%package%/%reference%.%type%",
+                        "preferred": true
+                    }
+                ]
             },
             "require": {
                 "ext-mbstring": "*",
@@ -28,6 +39,7 @@
                     "Parsedown": ""
                 }
             },
+            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
@@ -44,6 +56,10 @@
                 "markdown",
                 "parser"
             ],
+            "support": {
+                "issues": "https://github.com/erusev/parsedown/issues",
+                "source": "https://github.com/erusev/parsedown/tree/1.7.x"
+            },
             "time": "2019-12-30T22:54:17+00:00"
         },
         {
@@ -58,7 +74,13 @@
                 "type": "zip",
                 "url": "https://api.github.com/repos/Gregwar/Captcha/zipball/229d3cdfe33d6f1349e0aec94a26e9205a6db08e",
                 "reference": "229d3cdfe33d6f1349e0aec94a26e9205a6db08e",
-                "shasum": ""
+                "shasum": "",
+                "mirrors": [
+                    {
+                        "url": "https://mirrors.aliyun.com/composer/dists/%package%/%reference%.%type%",
+                        "preferred": true
+                    }
+                ]
             },
             "require": {
                 "ext-gd": "*",
@@ -115,7 +137,13 @@
                 "type": "zip",
                 "url": "https://api.github.com/repos/Seldaek/monolog/zipball/a30bfe2e142720dfa990d0a7e573997f5d884215",
                 "reference": "a30bfe2e142720dfa990d0a7e573997f5d884215",
-                "shasum": ""
+                "shasum": "",
+                "mirrors": [
+                    {
+                        "url": "https://mirrors.aliyun.com/composer/dists/%package%/%reference%.%type%",
+                        "preferred": true
+                    }
+                ]
             },
             "require": {
                 "php": ">=7.2",
@@ -217,7 +245,13 @@
                 "type": "zip",
                 "url": "https://api.github.com/repos/php-fig/log/zipball/d49695b909c3b7628b6289db5479a1c204601f11",
                 "reference": "d49695b909c3b7628b6289db5479a1c204601f11",
-                "shasum": ""
+                "shasum": "",
+                "mirrors": [
+                    {
+                        "url": "https://mirrors.aliyun.com/composer/dists/%package%/%reference%.%type%",
+                        "preferred": true
+                    }
+                ]
             },
             "require": {
                 "php": ">=5.3.0"
@@ -267,7 +301,13 @@
                 "type": "zip",
                 "url": "https://api.github.com/repos/symfony/finder/zipball/fbb0ba67688b780efbc886c1a0a0948dcf7205d6",
                 "reference": "fbb0ba67688b780efbc886c1a0a0948dcf7205d6",
-                "shasum": ""
+                "shasum": "",
+                "mirrors": [
+                    {
+                        "url": "https://mirrors.aliyun.com/composer/dists/%package%/%reference%.%type%",
+                        "preferred": true
+                    }
+                ]
             },
             "require": {
                 "php": ">=8.2"
