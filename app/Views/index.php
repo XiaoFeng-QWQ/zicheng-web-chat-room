@@ -29,7 +29,8 @@ $SystemSetting = new SystemSetting($db);
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="<?= $SystemSetting->getSetting('site_description') ?>">
     <link href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.3.3/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://gcore.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://cdn.bootcdn.net/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="https://cdn.bootcdn.net/ajax/libs/fancybox/3.5.7/jquery.fancybox.min.css" rel="stylesheet">
     <link rel="stylesheet" href="/StaticResources/css/index.chat.css?v=<?php echo FRAMEWORK_VERSION ?>">
     <script>
         const sessionUsername = "<?= $_SESSION['user_login_info']['username']; ?>"; // 获取用户名
@@ -103,7 +104,10 @@ $SystemSetting = new SystemSetting($db);
                         </div>
                     </div>
                     <form id="chat-form" class="card-footer d-flex">
-                        <input type="text" class="form-control me-2" id="message" maxlength="256" placeholder="聊点什么吧...(最大256)" required>
+                        <div id="select-image-file" class="position-relative" style="max-width: 30%;max-height: 50%;"></div>
+                        <textarea type="text" class="form-control me-2" id="message" rows="3" placeholder="聊点什么吧"></textarea>
+                        <input type="file" id="image" accept="image/*" class="d-none" />
+                        <button type="button" id="select-image" class="btn btn-secondary me-2">选择图片</button>
                         <button type="submit" id="send-button" class="btn btn-primary send">发送</button>
                     </form>
                 </div>
@@ -114,7 +118,7 @@ $SystemSetting = new SystemSetting($db);
             </div>
         </div>
     </div>
-    <!-- Bootstrap 模态窗结构 -->
+    <!-- 退出登录模态窗结构 -->
     <div class="modal fade" id="logoutModal" tabindex="-1" aria-labelledby="logoutModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -123,7 +127,6 @@ $SystemSetting = new SystemSetting($db);
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="关闭"></button>
                 </div>
                 <div class="modal-body">
-                    <img src="https://image.dfggmc.top/imgs/2024/07/b4fa5d91c72ca548.jpg" alt="">
                     确定要离开“<?= $SystemSetting->getSetting('site_name') ?>”吗？
                 </div>
                 <div class="modal-footer">
@@ -135,6 +138,7 @@ $SystemSetting = new SystemSetting($db);
     </div>
 
     <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/fancybox/3.5.7/jquery.fancybox.min.js"></script>
     <script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
     <script src="/StaticResources/js/index.chat.js?v=<?php echo FRAMEWORK_VERSION ?>"></script>
 </body>

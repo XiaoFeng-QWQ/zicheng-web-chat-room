@@ -72,6 +72,10 @@
     background-color: #bee3f8;
 }
 
+.chat-message.right .message-content img {
+    max-width: 100%;
+}
+
 /* 大屏幕设备（桌面） */
 @media (min-width: 992px) {
     .chat-message .message-content {

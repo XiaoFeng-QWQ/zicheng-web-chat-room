@@ -111,17 +111,6 @@ class ChatController
         // 安全地处理和检查输入
         $message = htmlspecialchars(trim($_POST['message']), ENT_QUOTES, 'UTF-8');
 
-        if (empty($message)) {
-            $this->response(self::STATUS_WARNING, self::MESSAGE_EMPTY);
-            return;
-        }
-
-        // 检查消息长度是否超过256字符
-        if (strlen($message) > 256) {
-            $this->response(self::STATUS_WARNING, '消息内容不能超过256字符');
-            return;
-        }
-
         // 获取当前用户信息
         $user = $_SESSION['user_login_info'] ?? null;
         $userCookieInfo = json_decode($_COOKIE['user_login_info'] ?? '{}', true);
@@ -150,6 +139,55 @@ class ChatController
         // 检查用户浏览器信息和数据库是否一致
         if ($user['user_login_token'] !== $userInfo['user_login_token'] || $user['user_id'] !== $userInfo['user_id']) {
             $this->response(self::STATUS_ERROR, self::MESSAGE_NOT_LOGGED_IN);
+            return;
+        }
+
+        // 检查上传的图片文件
+        if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
+            $image = $_FILES['image'];
+            // 验证图片类型和大小
+            $allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
+            // 图片最大2MB，单位：bytes
+            if (!in_array($image['type'], $allowedTypes) || $image['size'] > 2097152) {
+                $this->response(self::STATUS_WARNING, '无效的图片类型或图片太大');
+                return;
+            }
+            // 获取当前日期和时间戳
+            $year = date('Y');
+            $month = date('m');
+            $day = date('d');
+            $timestamp = time();
+            $userId = $userInfo['user_id'];
+
+            // 生成保存图片的目录路径
+            $uploadDir = FRAMEWORK_DIR . "/StaticResources/uploads/$year/$month/$day/u_{$userId}/";
+            // 如果目录不存在，则创建目录
+            if (!is_dir($uploadDir) && !mkdir($uploadDir, 0777, true)) {
+                $this->response(self::STATUS_ERROR, '无法创建上传目录');
+                return;
+            }
+            // 生成唯一的文件名并保存图片
+            $imageName = $timestamp . "_" . uniqid() . '.' . pathinfo($image['name'], PATHINFO_EXTENSION);
+            $imagePath = $uploadDir . $imageName;
+
+            if (!move_uploaded_file($image['tmp_name'], $imagePath)) {
+                $this->response(self::STATUS_ERROR, '图片上传失败');
+                return;
+            }
+            // 生成相对路径用于前端显示
+            $relativeImagePath = "/StaticResources/uploads/$year/$month/$day/u_{$userId}/$imageName";
+            // 将图片路径插入到消息内容中
+            $message .= '
+            <br>
+            <a href="' . $relativeImagePath . '"  data-fancybox>
+                <img class="img-rounded" src="' . $relativeImagePath . '" alt="用户上传的图片">
+            </a>
+            ';
+        }
+
+        // 检查是否有消息或图片发送
+        if (empty($message)) {
+            $this->response(self::STATUS_WARNING, '消息内容不能为空或选择的图片太大');
             return;
         }
 

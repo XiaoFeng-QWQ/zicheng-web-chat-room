@@ -199,11 +199,16 @@ function loadChatMessages() {
 /**
  * 发送消息
  * @param {string} message 消息内容
+ * @param {File} imageFile 图片文件
  */
-function sendMessage(message) {
-    // 截取超过 256 个字符的部分
-    if (message.length > 256) {
-        message = message.substring(0, 256);
+function sendMessage(message, imageFile) {
+    // 创建 FormData 对象
+    let formData = new FormData();
+    formData.append('message', message);
+
+    // 如果有图片文件，添加到 formData
+    if (imageFile) {
+        formData.append('image', imageFile);
     }
 
     // 禁用发送按钮
@@ -212,11 +217,15 @@ function sendMessage(message) {
     $.ajax({
         url: '/api/chat',
         type: 'POST',
-        contentType: 'application/x-www-form-urlencoded',
-        data: { message: message },
+        contentType: false, // 让 jQuery 不设置 contentType
+        processData: false, // 让 jQuery 不处理 data
+        data: formData,
         success: function (response) {
             if (response.status === 'success') {
                 loadChatMessages(); // 发送成功后重新加载聊天记录
+                $('#message').val(''); // 清空文本框
+                $('#select-image-file').html(''); // 清空图片预览
+                $('#image').val(''); // 清空文件输入框
                 if (!isUserScrolling) {
                     scrollToBottom(); // 若用户未滚动，则自动滚动到底部
                 } else {
@@ -269,13 +278,48 @@ function bindEventListeners() {
         lastScrollTop = scrollTop; // 更新上一次滚动位置
     });
 
-    $('#chat-form').on('submit', function (event) {
-        event.preventDefault();
-        const messageInput = $('#message');
-        let message = messageInput.val();
-        if (message.trim() === '') return;
-        messageInput.val(""); // 清空输入框
-        sendMessage(message);
+    $('#select-image').click(function () {
+        $('#image').click(); // 触发隐藏的文件选择器
+        $(this).hide(); // 隐藏选择图片按钮
+    });
+
+    $('#image').change(function (e) {
+        const file = e.target.files[0];
+        if (file) {
+            const imageTag = `
+                <div class="image-preview-wrapper position-relative">
+                    <a href="${URL.createObjectURL(file)}" data-fancybox>
+                        <img id="previewImage" src="${URL.createObjectURL(file)}" alt="Selected Image" style="max-width: 50%; max-height: 50%; cursor: pointer;">
+                    </a>
+                    <button type="button" id="remove-image" class="btn btn-danger btn-sm position-absolute" style="margin-left: 5px;bottom: 0;">取消</button>
+                </div>`;
+
+            // 显示图片在 select-image-file 区域
+            const imagePreviewContainer = $('#select-image-file');
+            imagePreviewContainer.html(imageTag); // 替换之前的图片
+
+            // 绑定取消按钮的事件
+            $('#remove-image').click(function () {
+                $('#image').val(''); // 清空文件输入框
+                imagePreviewContainer.html(''); // 移除图片预览
+                $('#select-image').show(); // 显示图片选择按钮
+            });
+        }
+    });
+
+    $('#chat-form').submit(function (event) {
+        event.preventDefault(); // 阻止表单默认提交
+
+        const message = $('#message').val();
+        const imageFile = $('#image')[0].files[0];
+
+        // 根据用户的输入和选择决定发送的内容
+        if (message.trim() || imageFile) {
+            sendMessage(message, imageFile);
+        } else {
+            alert("请输入消息或选择图片。");
+        }
+        $('#select-image').show(); // 显示图片选择按钮
     });
 
     $('#scroll-down-button').on('click', function () {
