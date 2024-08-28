@@ -53,6 +53,10 @@ body {
     border-collapse: collapse;
 }
 
+table img {
+    max-width: 100%;
+}
+
 .table-fixed-header thead th {
     position: sticky;
     top: 0;

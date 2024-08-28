@@ -54,8 +54,8 @@ $messages = $statement->fetchAll(PDO::FETCH_ASSOC);
                             </div>
                         </tbody>
                     </table>
+                    <ul class="messagesPagination pagination justify-content-center"></ul>
                 </div>
-                <ul class="messagesPagination"></ul>
             </div>
         </div>
     </div>
