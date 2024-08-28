@@ -25,11 +25,14 @@ body {
 .card {
     border: none;
     box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
-    transition: transform 0.3s ease;
+    /* 初始阴影 */
+    transition: box-shadow 0.3s ease;
+    /* 设置阴影的过渡效果 */
 }
 
 .card:hover {
-    transform: translateY(-5px);
+    box-shadow: 0 1rem 2rem rgba(0, 0, 0, 0.25);
+    /* 悬停时增加阴影的大小和强度 */
 }
 
 .card-header {
@@ -81,7 +84,7 @@ img {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    position: absolute;
+    position: fixed;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
