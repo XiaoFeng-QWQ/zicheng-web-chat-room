@@ -16,6 +16,7 @@ if (isset($_GET['user_id']) && !empty($_GET['user_id'])) {
     $userHelper = new User();
     try {
         $userHelper->deleteUser($deleteUser);
+        echo json_encode(['success' => true, 'message' => '成功']);
     } catch (Exception $e) {
         echo json_encode(['success' => false, 'message' => $e->getMessage()]);
     }

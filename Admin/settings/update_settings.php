@@ -51,13 +51,12 @@ try {
             throw new Exception('数据库文件备份失败。');
         }
         $updatedSettings[] = "备份数据库到：$backupFilePath";
-
     }
 
 
     // 设置更新成功后重定向回设置页面
     $settingsSummary = implode('，', $updatedSettings);
-    header("Location: /Admin/settings.php?success=true&msg=更新 $settingsSummary 成功");
+    header("Location: /Admin/settings.php?success=true&msg=更新设置成功");
     exit;
 } catch (Exception $e) {
     // 如果发生错误，重定向回设置页面并显示错误消息

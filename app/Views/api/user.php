@@ -1,6 +1,5 @@
 <?php
 
-use Monolog\Logger;
 use Gregwar\Captcha\PhraseBuilder;
 use ChatRoom\Core\Helpers\Helpers;
 use ChatRoom\Core\Database\SqlLite;
@@ -8,20 +7,14 @@ use ChatRoom\Core\Helpers\SystemSetting;
 use ChatRoom\Core\Controller\UserController;
 
 header('Content-Type: application/json');
-// 常量配置
-define('LOG_LEVEL', Logger::ERROR);
-define('CAPTCHA_ERROR', '验证码错误');
-define('INVALID_METHOD_MESSAGE', '无效的方法。');
-define('METHOD_NOT_PROVIDED_MESSAGE', '方法未提供。');
-define('DISABLE_USER_REGIDTRATION', '新用户注册已禁用');
-define('INVALID_REQUEST_METHOD_MESSAGE', '无效的请求方法。');
+
 // 获取 HTTP 请求参数
 $method = $_GET['method'] ?? null;
 
 // 获取配置
 $setting = new SystemSetting(SqlLite::getInstance()->getConnection());
 if (!$method) {
-    respondWithJson(400, METHOD_NOT_PROVIDED_MESSAGE);
+    respondWithJson(400, UserController::METHOD_NOT_PROVIDED_MESSAGE);
 }
 
 // 工具函数
@@ -46,7 +39,7 @@ function respondWithJson($statusCode, $message)
     exit();
 }
 
-// 处理 API 请求
+// 处理请求
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // 读取和解析输入的 JSON 数据
@@ -65,21 +58,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     exit($userController->register($username, $password, $confirmPassword));
                 } else {
                     unset($_SESSION['captcha']);
-                    respondWithJson(400, CAPTCHA_ERROR);
+                    respondWithJson(400, UserController::CAPTCHA_ERROR);
                 }
             }
-            respondWithJson(403, DISABLE_USER_REGIDTRATION);
+            respondWithJson(403, UserController::DISABLE_USER_REGIDTRATION);
         case 'login':
             if (isset($_SESSION['captcha']) && PhraseBuilder::comparePhrases($_SESSION['captcha'], $captcha)) {
                 unset($_SESSION['captcha']);
                 exit($userController->login($username, $password));
             } else {
                 unset($_SESSION['captcha']);
-                respondWithJson(400, CAPTCHA_ERROR);
+                respondWithJson(400, UserController::CAPTCHA_ERROR);
             }
         default:
-            respondWithJson(400, INVALID_METHOD_MESSAGE);
+            respondWithJson(400, UserController::INVALID_METHOD_MESSAGE);
     }
 } else {
-    respondWithJson(405, INVALID_REQUEST_METHOD_MESSAGE);
+    respondWithJson(405, UserController::INVALID_REQUEST_METHOD_MESSAGE);
 }

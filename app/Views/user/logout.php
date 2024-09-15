@@ -22,15 +22,6 @@ if (empty($user)) {
 
 // 插入系统消息到数据库
 $db = SqlLite::getInstance()->getConnection();
-$stmt = $db->prepare(
-    'INSERT INTO messages (user_name, content, type, created_at) VALUES (?, ?, ?, ?)'
-);
-$stmt->execute([
-    $username,
-    "用户 $username 暂时退出了……",
-    'system',
-    date('Y-m-d H:i:s')
-]);
 
 // 更新用户的登录令牌为 null
 $updateStmt = $db->prepare('UPDATE users SET user_login_token = :login_token WHERE user_id = :user_id');

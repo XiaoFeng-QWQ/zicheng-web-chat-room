@@ -1,9 +1,11 @@
 <?php
 
+
 namespace ChatRoom\Core\Controller;
 
 use Exception;
 use PDOException;
+use Monolog\Logger;
 use ChatRoom\Core\Helpers\User;
 use ChatRoom\Core\Helpers\Helpers;
 use ChatRoom\Core\Database\SqlLite;
@@ -17,6 +19,14 @@ class UserController
     private $reservedNames;
     public $Helpers;
     private $userHelpers;
+
+    // 状态常量
+    const LOG_LEVEL = Logger::ERROR;
+    const CAPTCHA_ERROR = '验证码错误';
+    const INVALID_METHOD_MESSAGE = '无效的方法。';
+    const METHOD_NOT_PROVIDED_MESSAGE = '方法未提供。';
+    const DISABLE_USER_REGIDTRATION = '新用户注册已禁用';
+    const INVALID_REQUEST_METHOD_MESSAGE = '无效的请求方法。';
 
     /**
      * UserController
@@ -76,6 +86,8 @@ class UserController
                 $this->updateLoginInfo(
                     $this->validateUsername->getUserInfo($username)
                 );
+
+                $this->insertSystemMessage('system', "欢迎新用户 $username 来到聊天室！", 'system');
 
                 return $this->Helpers->jsonResponse('注册成功', 200);
             } else {
@@ -162,8 +174,6 @@ class UserController
         $user['user_login_token'] = $loginToken;
         $_SESSION['user_login_info'] = $user; // 存储用户信息到会话
         setcookie('user_login_info', json_encode($user), time() + 86400 * 30, "/");
-        // 插入回归消息
-        $this->insertSystemMessage('system', "欢迎{$user['username']}来到聊天室！", 'system');
         unset($_SESSION['captcha']);
     }
 }

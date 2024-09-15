@@ -190,7 +190,7 @@ try {
         if (confirm("确定要删除此用户吗？")) {
             $.ajax({
                 url: `/Admin/user/delete_user.php?user_id=${userId}`,
-                type: 'POST',
+                type: 'GET',
                 dataType: 'json',
                 success: function(data) {
                     alert(data.success ? '用户删除成功' : `删除用户失败: ${data.message}`);
