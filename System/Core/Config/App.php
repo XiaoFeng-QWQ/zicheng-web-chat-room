@@ -78,6 +78,11 @@ class App
                 '/api/captcha.php'
             ],
             '' => []
+        ],
+        '/api/debug' => [
+            'file' => [
+                '/api/debug.php'
+            ]
         ]
     ];
 }
