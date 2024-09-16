@@ -14,75 +14,39 @@ class App
     public array $routeRules = [
         // 基本路由
         '/' => [
-            'file' => [
-                '/index.php'
-            ],
-            'cache' => [
-                null
-            ]
+            'file' => ['/index.php'],
+            'cache' => [null]
         ],
         '/index' => [
-            'file' => [
-                '/index.php'
-            ],
-            'cache' => [
-                null
-            ]
+            'file' => ['/index.php'],
+            'cache' => [null]
         ],
-        // 用户路由
         '/user/login' => [
-            'file' => [
-                '/user/auth/login.php'
-            ],
-            'cache' => [
-                null
-            ]
+            'file' => ['/user/auth/login.php'],
+            'cache' => [null]
         ],
         '/user/register' => [
-            'file' => [
-                '/user/auth/register.php'
-            ],
-            'cache' => [
-                null
-            ]
+            'file' => ['/user/auth/register.php'],
+            'cache' => [null]
         ],
         '/user/logout' => [
-            'file' => [
-                '/user/logout.php'
-            ],
-            'cache' => [
-                null
-            ]
+            'file' => ['/user/logout.php'],
+            'cache' => [null]
         ],
-        // API路由
         '/api/user' => [
-            // 用户
-            'file' => [
-                '/api/user.php'
-            ],
-            'cache' => [
-                null
-            ]
+            'file' => ['/api/user.php'],
+            'cache' => [null]
         ],
         '/api/chat' => [
-            // 聊天主要后端逻辑
-            'file' => [
-                '/api/chat.php'
-            ],
-            'cache' => [
-                null
-            ]
+            'file' => ['/api/chat.php'],
+            'cache' => [null]
         ],
         '/api/captcha' => [
-            'file' => [
-                '/api/captcha.php'
-            ],
-            '' => []
+            'file' => ['/api/captcha.php'],
+            'cache' => []
         ],
         '/api/debug' => [
-            'file' => [
-                '/api/debug.php'
-            ]
+            'file' => ['/api/debug.php']
         ]
     ];
 }

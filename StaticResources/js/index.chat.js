@@ -1,9 +1,11 @@
 let isUserScrolling = false;
 let offset = 0;
-const limit = 20;
 let lastFetched = null; // 用于存储上次获取消息的时间戳
 let lastScrollTop = 0; // 初始化上一次滚动位置
 let loadingMessages = false; // 是否正在加载消息
+// 创建通知音频对象
+const notificationSound = new Audio('/StaticResources/media/Windows10 Notify System Generic.wav');
+const errorNotificationSound = new Audio('/StaticResources/media/Windows10 Foreground.wav')
 
 /**
  * 隐藏加载指示器
@@ -116,6 +118,8 @@ function displayMessage(message, isSelf) {
             break;
     }
 
+    playNotificationSound(message, isSelf)
+
     return `
     <div class="${messageClass} ${alignmentClass}">
         <div class="message-content">
@@ -123,6 +127,22 @@ function displayMessage(message, isSelf) {
         </div>
     </div>
     `;
+}
+/**
+ * 播放通知音效
+ * @param {object} message 消息对象
+ * @param {boolean} isSelf 是否为自己发送的消息
+ */
+function playNotificationSound(message, isSelf) {
+    if (!isSelf) {
+        if (message.type === 'user') {
+            notificationSound.currentTime = 0; // 从头播放
+            notificationSound.play().catch(error => console.log("播放音频失败:", error));
+        } else {
+            errorNotificationSound.currentTime = 0; // 从头播放
+            errorNotificationSound.play().catch(error => console.log("播放音频失败:", error));
+        }
+    }
 }
 
 /**
@@ -151,15 +171,15 @@ function loadChatMessages() {
             const scrollPosition = chatBox.scrollTop() + chatBox.outerHeight();
             const isAtBottom = Math.ceil(scrollPosition) >= previousHeight - 10; // 增加一个容差
 
-            if (Array.isArray(response)) {
-                response.forEach(message => {
+            if (Array.isArray(response.messages)) {
+                response.messages.forEach(message => {
                     const isSelf = message.user_name === sessionUsername;
                     chatBox.append(displayMessage(message, isSelf));
                 });
 
-                if (response.length > 0) {
-                    offset += response.length;
-                    lastFetched = response[response.length - 1].created_at;
+                if (response.messages.length > 0) {
+                    offset += response.messages.length;
+                    lastFetched = response.messages[response.messages.length - 1].created_at;
                 }
             } else {
                 chatBox.append(displayMessage({
@@ -205,6 +225,7 @@ function sendMessage(message, imageFile) {
     // 创建 FormData 对象
     let formData = new FormData();
     formData.append('message', message);
+    const chatBox = $('#chat-box');
 
     // 如果有图片文件，添加到 formData
     if (imageFile) {
@@ -222,6 +243,17 @@ function sendMessage(message, imageFile) {
         data: formData,
         success: function (response) {
             if (response.status === 'success') {
+
+                if (response.isCommnd) {
+                    chatBox.append(displayMessage({
+                        type: 'system',
+                        user_name: '系统',
+                        content: `${response.message}`,
+                        created_at: new Date()
+                    }, false));
+                    return;
+                }
+
                 loadChatMessages(); // 发送成功后重新加载聊天记录
                 $('#message').val(''); // 清空文本框
                 $('#select-image-file').html(''); // 清空图片预览
@@ -232,17 +264,17 @@ function sendMessage(message, imageFile) {
                     $('#scroll-down-button').show(); // 若用户正在滚动，显示按钮
                 }
             } else {
-                const chatBox = $('#chat-box');
                 chatBox.append(displayMessage({
                     type: 'warning',
+                    user_name: '系统',
                     content: response.message,
                     created_at: new Date()
                 }, false));
                 scrollToBottom();
             }
+            loadingMessages = false;
         },
         error: function () {
-            const chatBox = $('#chat-box');
             chatBox.append(displayMessage({
                 type: 'error',
                 user_name: '系统',

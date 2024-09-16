@@ -60,6 +60,12 @@ class ChatController
     {
         try {
             $db = SqlLite::getInstance()->getConnection();
+
+            // 查询总消息数
+            $countQuery = 'SELECT COUNT(*) as total FROM messages';
+            $totalStmt = $db->query($countQuery);
+            $totalMessages = $totalStmt->fetch(PDO::FETCH_ASSOC)['total'];
+
             $query = '
             SELECT 
                 messages.id,
@@ -80,7 +86,10 @@ class ChatController
             $stmt->bindValue(':offset', (int)$offset, PDO::PARAM_INT);
 
             $stmt->execute();
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+            return [
+                'total' => $totalMessages, // 返回总数
+                'messages' => $stmt->fetchAll(PDO::FETCH_ASSOC) // 返回消息数组
+            ];
         } catch (PDOException $e) {
             throw new Exception($e->getMessage());
         }
@@ -90,22 +99,34 @@ class ChatController
     {
         try {
             $db = SqlLite::getInstance()->getConnection();
+
+            // 查询总消息数
+            $countQuery = 'SELECT COUNT(*) as total FROM messages';
+            $totalStmt = $db->query($countQuery);
+            $totalMessages = $totalStmt->fetch(PDO::FETCH_ASSOC)['total'];
+
+            // 查询消息
             $query = '
             SELECT 
-            messages.id,
-            messages.type,
-            messages.content,
-            messages.user_name,
-            users.group_id AS user_group_id,
-            messages.created_at AS created_at,
-            users.avatar_url,
-            groups.group_name
+                messages.id,
+                messages.type,
+                messages.content,
+                messages.user_name,
+                users.group_id AS user_group_id,
+                messages.created_at AS created_at,
+                users.avatar_url,
+                groups.group_name
             FROM messages
             LEFT JOIN users ON messages.user_name = users.username
             LEFT JOIN groups ON users.group_id = groups.group_id';
 
             $stmt = $db->query($query);
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $messages = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            return [
+                'total' => $totalMessages, // 返回总数
+                'messages' => $messages // 返回消息数组
+            ];
         } catch (PDOException $e) {
             throw new Exception($e->getMessage());
         }

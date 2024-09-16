@@ -85,9 +85,9 @@
 
     .system-msg {
         position: relative;
-        left: 50%;
+        left: 45%;
         margin-left: -100px;
-        max-width: 20%;
+        max-width: 30%;
         font-size: 0.9rem;
     }
 }

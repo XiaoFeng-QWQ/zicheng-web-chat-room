@@ -41,6 +41,7 @@ $logs = $log->getLogs(5);
                 </div>
                 <div class="card-body">
                     <ul class="list-group list-group-flush">
+                        <li class="list-group-item">2024-09-17:[1.10.0.0]添加指令系统、新消息通知音。微调部分代码</li>
                         <li class="list-group-item">2024-08-27: [1.9.0.0]支持发送图片消息。</li>
                         <li class="list-group-item">2024-08-26: [1.8.0.0]完善后台管理。</li>
                         <li class="list-group-item">2024-08-11: [1.7.0.0]完善站点设置功能。</li>
