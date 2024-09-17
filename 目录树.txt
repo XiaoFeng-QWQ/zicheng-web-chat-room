@@ -1,4 +1,4 @@
-×Ó³½ÁÄÌìÊÒ1.8.0.0[²âÊÔ]
+ï»¿å­è¾°èŠå¤©å®¤1.10.0.1[æµ‹è¯•]
 |   .gitignore
 |   .htaccess
 |   composer.json
@@ -8,7 +8,7 @@
 |   index.php
 |   LICENSE
 |   README.md
-|   Ä¿Â¼Ê÷.txt
+|   ç›®å½•æ ‘.txt
 |   
 +---.vscode
 |       .htaccess
@@ -70,6 +70,7 @@
 |       +---api
 |       |       captcha.php
 |       |       chat.php
+|       |       debug.php
 |       |       user.php
 |       |       
 |       +---module
@@ -97,15 +98,18 @@
 |   |       
 |   +---js
 |   |       index.chat.js
+|   |       jquery.min.js
 |   |       user.auth.js
 |   |       
 |   +---MarkDown
 |   |       usageTerms.md
 |   |       UserAgreement.md
 |   |       
-|   \---media
-|           Windows Notify System Generic.wav
-|           
+|   +---media
+|   |       Windows10 Foreground.wav
+|   |       Windows10 Notify System Generic.wav
+|   |       
+|   \---uploads
 +---System
 |   |   .htaccess
 |   |   
@@ -115,8 +119,10 @@
 |   |   |   
 |   |   +---Config
 |   |   |       App.php
+|   |   |       Chat.php
 |   |   |       
 |   |   +---Controller
+|   |   |       ChatCommandController.php
 |   |   |       ChatController.php
 |   |   |       UserController.php
 |   |   |       
