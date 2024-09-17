@@ -64,7 +64,6 @@ function displayMessage(message, isSelf) {
 
     switch (message.type) {
         case 'system':
-            alignmentClass = 'text-center';
             messageClass = 'alert alert-info system-msg';
             contentHtml = `
                 <p>${message.content}</p>
@@ -72,7 +71,6 @@ function displayMessage(message, isSelf) {
             `;
             break;
         case 'warning':
-            alignmentClass = 'text-center';
             messageClass = 'alert alert-warning system-msg';
             contentHtml = `
                 <p>${message.content}</p>
@@ -80,7 +78,6 @@ function displayMessage(message, isSelf) {
             `;
             break;
         case 'error':
-            alignmentClass = 'text-center';
             messageClass = 'alert alert-danger system-msg';
             contentHtml = `
                 <p>${message.content}</p>
@@ -88,7 +85,6 @@ function displayMessage(message, isSelf) {
             `;
             break;
         case 'info':
-            alignmentClass = 'text-center';
             messageClass = 'alert alert-primary system-msg';
             contentHtml = `
                 <p>${message.content}</p>
@@ -169,7 +165,7 @@ function loadChatMessages() {
             const chatBox = $('#chat-box');
             const previousHeight = chatBox[0].scrollHeight;
             const scrollPosition = chatBox.scrollTop() + chatBox.outerHeight();
-            const isAtBottom = Math.ceil(scrollPosition) >= previousHeight - 10; // 增加一个容差
+            const isAtBottom = Math.ceil(scrollPosition) >= previousHeight - 5; // 增加一个容差
 
             if (Array.isArray(response.messages)) {
                 response.messages.forEach(message => {
@@ -251,6 +247,11 @@ function sendMessage(message, imageFile) {
                         content: `${response.message}`,
                         created_at: new Date()
                     }, false));
+                    if (!isUserScrolling) {
+                        scrollToBottom(); // 若用户未滚动，则自动滚动到底部
+                    } else {
+                        $('#scroll-down-button').show(); // 若用户正在滚动，显示按钮
+                    }
                     return;
                 }
 
@@ -297,7 +298,9 @@ function bindEventListeners() {
     $('#chat-box').on('scroll', function () {
         const chatBox = $(this);
         const scrollTop = chatBox.scrollTop();
-        const isAtBottom = scrollTop + chatBox.outerHeight() >= chatBox[0].scrollHeight;
+        const previousHeight = chatBox[0].scrollHeight;
+        const scrollPosition = chatBox.scrollTop() + chatBox.outerHeight();
+        const isAtBottom = Math.ceil(scrollPosition) >= previousHeight - 5; // 增加一个容差
 
         if (scrollTop < lastScrollTop) {
             isUserScrolling = true;

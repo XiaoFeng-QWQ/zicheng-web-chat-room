@@ -131,4 +131,22 @@ class ChatController
             throw new Exception($e->getMessage());
         }
     }
+    /**
+     * 插入系统消息到聊天记录
+     *
+     * @param string $user_name
+     * @param string $message
+     * @param string $type
+     * @return void
+     */
+    public function insertSystemMessage($user_name, $message, $type)
+    {
+        try {
+            $db = SqlLite::getInstance()->getConnection();
+            $stmt = $db->prepare('INSERT INTO messages (user_name, content, type, created_at) VALUES (?, ?, ?, ?)');
+            $stmt->execute([$user_name, $message, $type, date('Y-m-d H:i:s')]);
+        } catch (PDOException $e) {
+            HandleException($e);
+        }
+    }
 }

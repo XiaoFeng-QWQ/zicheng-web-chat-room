@@ -3,13 +3,13 @@
 use ChatRoom\Core\Config\Chat;
 use ChatRoom\Core\Helpers\User;
 use ChatRoom\Core\Controller\ChatController;
-use ChatRoom\Core\Controller\ChatCommndController;
+use ChatRoom\Core\Controller\ChatCommandController;
 
 
 header('Content-Type: application/json');
 
 $chatController = new ChatController();
-$chatCommandController = new ChatCommndController();
+$chatCommandController = new ChatCommandController();
 
 $chatConfig = new Chat();
 
@@ -38,8 +38,8 @@ switch ($method) {
             respondWithJson(ChatController::STATUS_ERROR, ChatController::MESSAGE_NOT_LOGGED_IN);
         }
         // 从数据库获取用户信息
-        $user_helpers = new User;
-        $userInfo = $user_helpers->getUserInfo($user['username']);
+        $userHelpers = new User;
+        $userInfo = $userHelpers->getUserInfo($user['username']);
         // 检查用户信息是否有效
         if (empty($userInfo)) {
             respondWithJson(ChatController::STATUS_ERROR, ChatController::MESSAGE_NOT_LOGGED_IN);
@@ -91,44 +91,44 @@ switch ($method) {
             return;
         }
 
-        // 检查是否是命令，并由ChatCommndController执行相应操作
-        if (strpos($message, '/') === 0) { // 以'/'开头
-            $command = explode(' ', $message)[0]; // 获取指令名
-            if (array_key_exists($command, $chatConfig->ChatCommndList)) {
-                $action = $chatConfig->ChatCommndList[$command]['action'][0];
+        // 检查是否是命令，并由 ChatCommandController 执行相应操作
+        if (strpos($message, '/') === 0) { // 以 '/' 开头
+            $parts = explode(' ', $message);
+            $command = $parts[0]; // 获取指令名
+            $params = array_slice($parts, 1); // 获取参数列表
+
+            if (isset($chatConfig->chatCommandList[$command])) {
+                $commandConfig = $chatConfig->chatCommandList[$command];
+                $action = $commandConfig['action'][0];
+                $isAdminRequired = $commandConfig['isAdmin'];
 
                 // 检查用户权限
-                // 为true需要管理员否则不需要
-                $requiredPermission = $chatConfig->ChatCommndList[$command]['isAdmin'];
-                if ($requiredPermission && $userInfo['group_id'] != 1) {
+                if ($isAdminRequired && $userInfo['group_id'] != 1) {
                     respondWithJson(ChatController::STATUS_ERROR, '权限不足');
-                } else {
-                    // 执行对应的命令函数
-                    $response = "
-                    <style>
-                        .CommndTitle {
-                            color: #333;
-                            background: #f4f4f4;
-                            border: 2px solid #ddd;
-                            border-radius: 10px;
-                            padding: 7px;
-                            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-                            margin: auto;
-                            line-height: 1.6;
-                        }
-                        .CommndTitle::before {
-                            content: '✧ ';
-                            color: #a0a0a0;
-                        }
-                        .CommndTitle::after {
-                            content: ' ✧';
-                            color: #a0a0a0;
-                        }
-                    </style>
-                    <p class='CommndTitle'>---子辰指令系统V0.0.1---</p>";
-                    $response .= call_user_func([$chatCommandController, $action]);
-                    respondWithJson(ChatController::STATUS_SUCCESS, $response, true);
+                    return;
                 }
+
+                // 执行对应的命令函数
+                try {
+                    $response = "<style>.CommndTitle{color:#333;background:#f4f4f4;border:2px solid#ddd;border-radius:10px;padding:7px;box-shadow:0 4px 8px rgba(0,0,0,0.1);margin:auto;line-height:1.6;text-align: center}.CommndTitle::before{content:'✧ ';color:#a0a0a0}.CommndTitle::after{content:' ✧';color:#a0a0a0}</style><p class='CommndTitle'>---子辰指令系统V1.0.0----</p>";
+                    if (method_exists($chatCommandController, $action)) {
+                        $response .= call_user_func_array([$chatCommandController, $action], $params);
+                    } else {
+                        $response .= '命令配置错误 函数不存在';
+                    }
+                    // 发送消息前确认是否需要管理员权限
+                    if (!$isAdminRequired && !$commandConfig['iSelf']) {
+                        $chatController->sendMessage($userInfo, $message);
+                        $chatController->insertSystemMessage('system', $response, 'system');
+                        respondWithJson(ChatController::STATUS_SUCCESS, ChatController::MESSAGE_SUCCESS);
+                    }
+                    respondWithJson(ChatController::STATUS_SUCCESS, $response, true);
+                } catch (Exception $e) {
+                    respondWithJson(ChatController::STATUS_ERROR, '执行命令时发生错误: ' . $e->getMessage());
+                }
+                $chatController->sendMessage($userInfo, $message);
+            } else {
+                respondWithJson(ChatController::STATUS_ERROR, '未知命令');
             }
         }
 
