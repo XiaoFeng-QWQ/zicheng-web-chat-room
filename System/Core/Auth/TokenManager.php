@@ -27,42 +27,44 @@ class TokenManager
     public function generateToken(int $userId, string $expirationInterval = '+1 hour'): string
     {
         try {
-            // 开始事务
             $this->db->beginTransaction();
 
-            $token = bin2hex(random_bytes(32)); // 生成明文 token
-            $hashedToken = hash_hmac('sha256', $token, $this->secretKey); // 对 token 进行哈希处理
+            $token = bin2hex(random_bytes(32));
+            $hashedToken = hash_hmac('sha256', $token, $this->secretKey);
             $expiration = date('Y-m-d H:i:s', strtotime($expirationInterval));
             $createdAt = date('Y-m-d H:i:s');
 
-            // 定义 SQL 语句，插入或更新 token
-            $sql = "INSERT INTO user_tokens (user_id, token, expiration, created_at, updated_at)
-                VALUES (:user_id, :token, :expiration, :created_at, :updated_at)
-                ON CONFLICT(user_id)
-                DO UPDATE SET
-                    token = :token,
-                    expiration = :expiration,
-                    updated_at = :updated_at";
+            // 检查记录是否存在
+            $sqlCheck = "SELECT COUNT(*) FROM user_tokens WHERE user_id = :user_id";
+            $stmtCheck = $this->db->prepare($sqlCheck);
+            $stmtCheck->bindParam(':user_id', $userId, PDO::PARAM_INT);
+            $stmtCheck->execute();
+            $exists = $stmtCheck->fetchColumn() > 0;
 
-            $stmt = $this->db->prepare($sql);
-            $stmt->bindParam(':user_id', $userId, PDO::PARAM_INT);
-            $stmt->bindParam(':token', $hashedToken, PDO::PARAM_STR);
-            $stmt->bindParam(':expiration', $expiration, PDO::PARAM_STR);
-            $stmt->bindParam(':created_at', $createdAt, PDO::PARAM_STR);
-            $stmt->bindParam(':updated_at', $createdAt, PDO::PARAM_STR);
-
-            // 执行 SQL 语句
-            if ($stmt->execute()) {
-                // 提交事务
-                $this->db->commit();
-                return $token; // 返回未加密的明文 token
+            if ($exists) {
+                // 如果存在，执行更新
+                $sqlUpdate = "UPDATE user_tokens SET token = :token, expiration = :expiration, updated_at = :updated_at WHERE user_id = :user_id";
+                $stmtUpdate = $this->db->prepare($sqlUpdate);
+                $stmtUpdate->bindParam(':token', $hashedToken, PDO::PARAM_STR);
+                $stmtUpdate->bindParam(':expiration', $expiration, PDO::PARAM_STR);
+                $stmtUpdate->bindParam(':updated_at', $createdAt, PDO::PARAM_STR);
+                $stmtUpdate->bindParam(':user_id', $userId, PDO::PARAM_INT);
+                $stmtUpdate->execute();
             } else {
-                // 如果执行失败，回滚事务
-                $this->db->rollBack();
-                throw new Exception("Token 生成失败");
+                // 如果不存在，执行插入
+                $sqlInsert = "INSERT INTO user_tokens (user_id, token, expiration, created_at, updated_at) VALUES (:user_id, :token, :expiration, :created_at, :updated_at)";
+                $stmtInsert = $this->db->prepare($sqlInsert);
+                $stmtInsert->bindParam(':user_id', $userId, PDO::PARAM_INT);
+                $stmtInsert->bindParam(':token', $hashedToken, PDO::PARAM_STR);
+                $stmtInsert->bindParam(':expiration', $expiration, PDO::PARAM_STR);
+                $stmtInsert->bindParam(':created_at', $createdAt, PDO::PARAM_STR);
+                $stmtInsert->bindParam(':updated_at', $createdAt, PDO::PARAM_STR);
+                $stmtInsert->execute();
             }
+
+            $this->db->commit();
+            return $token;
         } catch (Exception $e) {
-            // 捕获异常并回滚事务
             $this->db->rollBack();
             throw new Exception("生成 token 时发生错误: " . $e->getMessage());
         }
