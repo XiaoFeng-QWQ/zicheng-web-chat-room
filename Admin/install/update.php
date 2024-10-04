@@ -27,33 +27,10 @@ if (defined('FRAMEWORK_DATABASE_PATH')) {
             }
 
             // 变量初始化
-
             $db = SqlLite::getInstance()->getConnection();
             $db->beginTransaction();
-            $columnsToRemove = ['login_token', 'user_login_token', 'admin_login_token'];
-            $indexes = [
-                'groups_index' => ['table' => 'groups', 'columns' => 'group_id, group_name'],
-                'messages_index' => ['table' => 'messages', 'columns' => 'id, content'],
-                'system_logs_index' => ['table' => 'system_logs', 'columns' => 'log_id, message'],
-                'system_sets_index' => ['table' => 'system_sets', 'columns' => 'name, id'],
-                'user_sets_index' => ['table' => 'user_sets', 'columns' => 'id, set_name'],
-                'user_tokens_index' => ['table' => 'user_tokens', 'columns' => 'id, user_id'],
-                'users_index' => ['table' => 'users', 'columns' => 'user_id, username'],
-            ];
 
             // 更新主操作
-            /**
-             * 批量处理
-             */
-            // 移除不需要的列
-            foreach ($columnsToRemove as $column) {
-                $db->exec("ALTER TABLE users DROP COLUMN $column;");
-            }
-            // 更新索引
-            foreach ($indexes as $indexName => $info) {
-                $db->exec("DROP INDEX IF EXISTS $indexName;");
-                $db->exec("CREATE UNIQUE INDEX $indexName ON {$info['table']} ({$info['columns']});");
-            }
 
             // 备份旧表并创建新表
             $db->exec("ALTER TABLE users RENAME TO users_old;");
@@ -91,7 +68,18 @@ if (defined('FRAMEWORK_DATABASE_PATH')) {
             );");
 
             $db->commit();
-            echo "数据库更新成功！但是您仍需要手动把messages表里面的user_name外键重置为没有！";
+            echo '<div class="container">';
+            echo '<div class="alert alert-success" role="alert">数据库更新成功！点击“下一步”更新索引。</div>';
+            echo '<button class="btn btn-primary" onclick="updateIndexes()">下一步</button>';
+            echo '</div>';
+            echo '<script>
+                    function updateIndexes() {
+                        fetch("update_indexes.php")
+                        .then(response => response.json())
+                        .then(data => alert(data.message))
+                        .catch(error => alert("更新索引失败: " + error));
+                    }
+                </script>';
         } catch (Exception $e) {
             if ($db->inTransaction()) {
                 $db->rollBack();
@@ -99,6 +87,7 @@ if (defined('FRAMEWORK_DATABASE_PATH')) {
             error_log("数据库更新失败: " . $e->getMessage());
             echo "数据库更新失败: " . $e->getMessage() . "<br>";
             echo "有可能您的数据库不完整或已完成更新，请手动更新！";
+            throw new Exception($e);
         }
     }
 ?>
