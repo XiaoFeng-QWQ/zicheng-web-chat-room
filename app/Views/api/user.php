@@ -41,7 +41,6 @@ function respondWithJson($statusCode, $message)
 
 // 处理请求
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-
     // 读取和解析输入的 JSON 数据
     $input = json_decode(file_get_contents('php://input'), true);
     $captcha = $input['captcha'] ?? '';
@@ -57,6 +56,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     unset($_SESSION['captcha']);
                     exit($userController->register($username, $password, $confirmPassword));
                 } else {
+                    // 验证码错误
                     unset($_SESSION['captcha']);
                     respondWithJson(400, UserController::CAPTCHA_ERROR);
                 }
@@ -67,6 +67,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 unset($_SESSION['captcha']);
                 exit($userController->login($username, $password));
             } else {
+                // 验证码错误
                 unset($_SESSION['captcha']);
                 respondWithJson(400, UserController::CAPTCHA_ERROR);
             }

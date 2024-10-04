@@ -27,7 +27,13 @@
 // 设置 PHPSESSID cookie 存活时长
 ini_set('session.cookie_lifetime', 86400 * 365); // 设置为1年（86400秒 * 365天）
 ini_set('session.gc_maxlifetime', 86400 * 365); // 垃圾回收最大生存时间（与cookie保持同步）
-session_start();
+ini_set('session.use_strict_mode', 1); // 开启会话前，确保使用严格模式和安全的会话配置
+session_start([
+    'cookie_httponly' => true, // 防止通过JavaScript访问会话
+    'cookie_secure' => isset($_SERVER['HTTPS']), // HTTPS连接时启用secure标志
+    'cookie_samesite' => 'Strict', // 防止CSRF攻击
+    'use_trans_sid' => false, // 禁用通过URL传递会话ID
+]);
 
 // 强制设置时区为国内
 date_default_timezone_set("Asia/Shanghai");
@@ -46,12 +52,9 @@ if (version_compare(phpversion(), '8.2', '<')) {
 require __DIR__ . '/vendor/autoload.php';
 require_once __DIR__ . '/config.global.php';
 
-// 检查请求头，避免在非图片请求时注册自定义异常处理器
-if (strpos($_SERVER['HTTP_ACCEPT'], 'text') !== false) {
-    require __DIR__ . '/System/Core/Helpers/handleException.php';
-    // 注册自定义异常处理器
-    set_exception_handler('HandleException');
-}
+require __DIR__ . '/System/Core/Helpers/handleException.php';
+// 注册自定义异常处理器
+set_exception_handler('HandleException');
 
 use ChatRoom\Core\Main;
 

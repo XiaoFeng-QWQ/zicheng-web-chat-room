@@ -1,12 +1,147 @@
 <?php
-require_once __DIR__ . '/helper/login_verify.php';
+require_once __DIR__ . '/../config.global.php';
+require_once __DIR__ . '/../vendor/autoload.php';
 
-use Gregwar\Captcha\CaptchaBuilder;
+date_default_timezone_set("Asia/Shanghai");
+session_start();
 
-// 生成新验证码并存储在会话中
-$builder = new CaptchaBuilder;
-$builder->build();
-$_SESSION['captcha'] = $builder->getPhrase();
+use ChatRoom\Core\Auth\TokenManager;
+use ChatRoom\Core\Helpers\User;
+use ChatRoom\Core\Helpers\Helpers;
+use ChatRoom\Core\Helpers\SystemLog;
+use ChatRoom\Core\Controller\UserController;
+use Gregwar\Captcha\PhraseBuilder;
+use ChatRoom\Core\Database\SqlLite;
+
+// 声明全局变量
+global $errorMessage;
+$errorMessage = '';
+
+// 处理表单提交逻辑
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $username = trim($_POST['username']);
+    $password = trim($_POST['password']);
+    $captcha = trim($_POST['captcha']);
+
+    // 验证验证码
+    if (isset($_SESSION['captcha']) && PhraseBuilder::comparePhrases($_SESSION['captcha'], $captcha)) {
+        try {
+            authenticateUser($username, $password);
+        } catch (Exception $e) {
+            $errorMessage = '系统错误: ' . $e->getMessage();
+        }
+    } else {
+        $errorMessage = '验证码错误';
+    }
+}
+
+// 处理用户认证逻辑
+function authenticateUser($username, $password)
+{
+    // 引入全局变量
+    global $errorMessage;
+    $db = SqlLite::getInstance()->getConnection();
+
+    $helpers = new Helpers;
+    $UserHelpers = new User();
+    $log = new SystemLog($db);
+    $tokenManager = new TokenManager;
+    $ip_address = $UserHelpers->getIp();
+
+    $userController = new UserController;
+
+    try {
+        // 检查IP是否被封禁
+        $stmt = $db->prepare('SELECT attempts, is_blocked FROM admin_login_attempts WHERE ip_address = :ip_address');
+        $stmt->execute(['ip_address' => $ip_address]);
+        $attempt = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if ($attempt && $attempt['is_blocked']) {
+            $errorMessage = '您的IP已被封禁，请联系管理员解封';
+        } else {
+            $loginMsg = $userController->login($username, $password, true);
+
+            if ($loginMsg === true) {
+                $user = $UserHelpers->getUserInfo($username);
+
+                if ($user['group_id'] === 1) {
+                    clearLoginAttempts($ip_address);
+                    $log->insertLog('INFO', "管理员 $username 在IP $ip_address 登录成功");
+
+                    // 清除会话中的验证码
+                    unset($_SESSION['captcha']);
+
+                    // 清理并存储用户信息
+                    unset($user['email'], $user['password'], $user['register_ip'], $user['admin_login_token']);
+                    $user['user_login_token'] = $tokenManager->generateToken($user['user_id'], '+1 year');
+                    $_SESSION['user_login_info'] = $user;
+                    setcookie('user_login_info', json_encode($user), time() + 86400 * 365, '/');
+
+                    // 重定向
+                    exit(header('Location: ' . $helpers->getGetParams('callBack', false)));
+                } else {
+                    $errorMessage = '权限不足';
+                }
+            } else {
+                handleFailedLogin($ip_address, $username, $log);
+                $errorMessage = $loginMsg;
+            }
+        }
+    } catch (Exception $e) {
+        throw new Exception($e);
+    }
+}
+
+// 清理登录尝试记录
+function clearLoginAttempts($ip_address)
+{
+    // 引入全局变量
+    $db = SqlLite::getInstance()->getConnection();
+
+    try {
+        $db->prepare('DELETE FROM admin_login_attempts WHERE ip_address = :ip_address')->execute(['ip_address' => $ip_address]);
+        return; // 如果操作成功，直接返回
+    } catch (PDOException $e) {
+        throw new Exception($e);
+    }
+}
+
+// 处理失败的登录尝试
+function handleFailedLogin($ip_address, $username, $log)
+{
+    // 引入全局变量
+    $db = SqlLite::getInstance()->getConnection();
+    $last_attempt = date('Y-m-d H:i:s');
+
+    try {
+        // 查询尝试记录
+        $stmt = $db->prepare('SELECT * FROM admin_login_attempts WHERE ip_address = :ip_address');
+        $stmt->execute(['ip_address' => $ip_address]);
+        $attempt = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if ($attempt) {
+            // 更新尝试记录
+            $stmt = $db->prepare('UPDATE admin_login_attempts SET attempts = attempts + 1, last_attempt = :last_attempt WHERE ip_address = :ip_address');
+            $stmt->execute(['ip_address' => $ip_address, 'last_attempt' => $last_attempt]);
+
+            if ($attempt['attempts'] + 1 >= 3) {
+                // 阻止IP地址
+                $stmt = $db->prepare('UPDATE admin_login_attempts SET is_blocked = 1 WHERE ip_address = :ip_address');
+                $stmt->execute(['ip_address' => $ip_address]);
+                $log->insertLog('WARNING', "IP $ip_address 登录失败过多已封禁");
+            }
+        } else {
+            // 插入新的尝试记录
+            $stmt = $db->prepare('INSERT INTO admin_login_attempts (ip_address, attempts, last_attempt) VALUES (:ip_address, 1, :last_attempt)');
+            $stmt->execute(['ip_address' => $ip_address, 'last_attempt' => $last_attempt]);
+        }
+
+        $log->insertLog('WARNING', "管理员 $username 在IP $ip_address 登录失败: 用户名或密码错误");
+        return;
+    } catch (PDOException $e) {
+        throw new Exception($e);
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="zh-CN">
@@ -69,7 +204,17 @@ $_SESSION['captcha'] = $builder->getPhrase();
             font-size: 14px;
         }
 
+        #captcha {
+            padding: 0.8rem;
+            margin-top: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+
         .captcha-image {
+            margin-left: 10px;
+            cursor: pointer;
             border-radius: 5px;
         }
 
@@ -84,10 +229,9 @@ $_SESSION['captcha'] = $builder->getPhrase();
 <body>
     <div class="login-container">
         <h1>管理员登录</h1>
-        <?php
-        if (isset($errorMessage)) : ?>
+        <?php if (!empty($errorMessage)) : ?>
             <div class="alert alert-danger" role="alert">
-                <?php echo htmlspecialchars($errorMessage); ?>
+                <?php echo htmlspecialchars($errorMessage, ENT_QUOTES, 'UTF-8'); ?>
             </div>
         <?php endif; ?>
         <form method="POST">
@@ -99,13 +243,12 @@ $_SESSION['captcha'] = $builder->getPhrase();
                 <label for="password" class="form-label">密码</label>
                 <input type="password" class="form-control" id="password" name="password" required>
             </div>
-            <div class="mb-3 captcha-container">
-                <div>
-                    <label for="captcha" class="form-label">验证码</label>
+            <div class="mb-3">
+                <label for="captcha" class="form-label">验证码</label>
+                <div class="captcha-container">
                     <input type="text" class="form-control" id="captcha" name="captcha" required>
                     <img src="/api/captcha" alt="captcha" id="captchaImage" class="captcha-image mt-2" onclick="this.src='/api/captcha?'+Math.random()">
                 </div>
-                <span class="refresh-captcha" id="refreshCaptcha">刷新验证码</span>
             </div>
             <button type="submit" class="btn btn-primary">登录</button>
         </form>
@@ -128,8 +271,8 @@ $_SESSION['captcha'] = $builder->getPhrase();
             小枫_QWQ |
         </a>&nbsp系统版本[<?= FRAMEWORK_VERSION ?>]
     </span>
-    <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-    <script src="https://cdn.bootcdn.net/ajax/libs/bootstrap/5.1.0/js/bootstrap.bundle.min.js"></script>
+    <script src="/StaticResources/js/jquery.min.js"></script>
+    <script src="/StaticResources/js/bootstrap.bundle.min.js"></script>
 </body>
 
 </html>

@@ -1,4 +1,4 @@
-﻿子辰聊天室1.10.0.1[测试]
+﻿子辰聊天室[1.0.0.0]【正式版本！】
 |   .gitignore
 |   .htaccess
 |   composer.json
@@ -29,12 +29,12 @@
 |   |       database_connection.php
 |   |       display_toast.php
 |   |       generate_captcha.php
-|   |       login_verify.php
 |   |       
 |   +---install
 |   |       index.php
 |   |       install.php
 |   |       install.sql
+|   |       update.php
 |   |       
 |   +---js
 |   |       getMessages.js
@@ -97,8 +97,13 @@
 |   |       logo.user.register.svg
 |   |       
 |   +---js
+|   |       bootstrap.bundle.min.js
+|   |       chart.umd.min.js
 |   |       index.chat.js
+|   |       jquery.fancybox.min.js
 |   |       jquery.min.js
+|   |       jquery.pjax.min.js
+|   |       nprogress.min.js
 |   |       user.auth.js
 |   |       
 |   +---MarkDown
@@ -117,6 +122,10 @@
 |   |   |   Main.php
 |   |   |   Route.php
 |   |   |   
+|   |   +---Auth
+|   |   |       CheckUserLoginStatus.php
+|   |   |       TokenManager.php
+|   |   |       
 |   |   +---Config
 |   |   |       App.php
 |   |   |       Chat.php
@@ -130,6 +139,7 @@
 |   |   |       SqlLite.php
 |   |   |       
 |   |   \---Helpers
+|   |           EMail.php
 |   |           Error.php
 |   |           handleException.php
 |   |           Helpers.php

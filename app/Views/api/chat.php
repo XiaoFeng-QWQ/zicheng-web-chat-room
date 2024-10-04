@@ -1,12 +1,14 @@
 <?php
+// 允许所有来源
+header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
+header("Access-Control-Allow-Headers: Content-Type, Authorization");
+header('Content-Type: application/json');
 
 use ChatRoom\Core\Config\Chat;
 use ChatRoom\Core\Helpers\User;
 use ChatRoom\Core\Controller\ChatController;
 use ChatRoom\Core\Controller\ChatCommandController;
-
-
-header('Content-Type: application/json');
 
 $chatController = new ChatController();
 $chatCommandController = new ChatCommandController();
@@ -24,6 +26,7 @@ function respondWithJson($status, $message = '', $isCommnd = false)
 
 switch ($method) {
     case 'POST':
+        $userHelpers = new User;
         // 安全地处理和检查输入
         $message = htmlspecialchars(trim($_POST['message'] ?? ''), ENT_QUOTES, 'UTF-8');
         // 获取当前用户信息
@@ -37,10 +40,7 @@ switch ($method) {
         if ($user !== $userCookieInfo) {
             respondWithJson(ChatController::STATUS_ERROR, ChatController::MESSAGE_NOT_LOGGED_IN);
         }
-        // 从数据库获取用户信息
-        $userHelpers = new User;
         $userInfo = $userHelpers->getUserInfo($user['username']);
-        // 检查用户信息是否有效
         if (empty($userInfo)) {
             respondWithJson(ChatController::STATUS_ERROR, ChatController::MESSAGE_NOT_LOGGED_IN);
         }
@@ -77,12 +77,7 @@ switch ($method) {
             $relativeImagePath = "/StaticResources/uploads/" . date('Y/m/d') . "/u_{$userInfo['user_id']}/$imageName";
 
             // 将图片路径插入到消息内容中
-            $message .= '
-            <br>
-            <a href="' . $relativeImagePath . '" data-fancybox>
-                <img class="img-rounded" src="' . $relativeImagePath . '" alt="用户上传的图片">
-            </a>
-            ';
+            $message .= '<a href="' . $relativeImagePath . '" data-fancybox><img class="img-rounded" src="' . $relativeImagePath . '" alt="用户上传的图片"></a>';
         }
 
         // 检查是否有消息或图片发送
@@ -110,9 +105,10 @@ switch ($method) {
 
                 // 执行对应的命令函数
                 try {
-                    $response = "<style>.CommndTitle{color:#333;background:#f4f4f4;border:2px solid#ddd;border-radius:10px;padding:7px;box-shadow:0 4px 8px rgba(0,0,0,0.1);margin:auto;line-height:1.6;text-align: center}.CommndTitle::before{content:'✧ ';color:#a0a0a0}.CommndTitle::after{content:' ✧';color:#a0a0a0}</style><p class='CommndTitle'>---子辰指令系统V1.0.0----</p>";
+                    $response = '';
                     if (method_exists($chatCommandController, $action)) {
                         $response .= call_user_func_array([$chatCommandController, $action], $params);
+                        $response .= PHP_EOL . "<p style='text-align: end;'>--子辰指令系统V1.0.1</p>";
                     } else {
                         $response .= '命令配置错误 函数不存在';
                     }

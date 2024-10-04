@@ -5,7 +5,7 @@ use ChatRoom\Core\Database\SqlLite;
 use ChatRoom\Core\Helpers\User;
 // 检查 $_SESSION['user_login_info'] 是否存在且为数组
 if (!isset($_SESSION['user_login_info']) || !is_array($_SESSION['user_login_info'])) {
-    header('Location: /user/login'); // 重定向到登录页面
+    header("Location: /user/login?callBack={$_SERVER['REQUEST_URI']}"); // 重定向到登录页面
     exit(); // 终止脚本执行
 }
 $db = SqlLite::getInstance()->getConnection();
@@ -105,7 +105,7 @@ $SystemSetting = new SystemSetting($db);
                     </div>
                     <form id="chat-form" class="card-footer d-flex">
                         <div id="select-image-file" class="position-relative" style="max-width: 30%;max-height: 50%;"></div>
-                        <textarea type="text" class="form-control me-2" id="message" rows="3" placeholder="聊点什么吧"></textarea>
+                        <textarea type="text" class="form-control me-2" id="message" rows="3" placeholder="聊点什么吧，Ctrl+Enter发送消息"></textarea>
                         <input type="file" id="image" accept="image/*" class="d-none" />
                         <button type="button" id="select-image" class="btn btn-secondary me-2">选择图片</button>
                         <button type="submit" id="send-button" class="btn btn-primary send">发送</button>
@@ -138,8 +138,8 @@ $SystemSetting = new SystemSetting($db);
     </div>
 
     <script src="/StaticResources/js/jquery.min.js"></script>
-    <script src="https://cdn.bootcdn.net/ajax/libs/fancybox/3.5.7/jquery.fancybox.min.js"></script>
-    <script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
+    <script src="/StaticResources/js/jquery.fancybox.min.js"></script>
+    <script src="/StaticResources/js/bootstrap.bundle.min.js"></script>
     <script src="/StaticResources/js/index.chat.js?v=<?php echo FRAMEWORK_VERSION ?>"></script>
 </body>
 

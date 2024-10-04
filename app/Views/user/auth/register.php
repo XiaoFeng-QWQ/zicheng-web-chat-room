@@ -40,7 +40,7 @@ require_once FRAMEWORK_APP_PATH . '/Views/module/user.auth.head.php';
                     已阅读并同意<a href="#UserAgreement" id="UserAgreement">《用户协议》</a>
                 </label>
                 <div class="register ms-auto">
-                    <a href="login">已有账号？点击登录</a>
+                    <a href="login<?= $helpers->getGetParams('callBack') ?>">已有账号？点击登录</a>
                 </div>
             </div>
         <?php
@@ -49,7 +49,7 @@ require_once FRAMEWORK_APP_PATH . '/Views/module/user.auth.head.php';
             <p>新用户注册已被禁用</p>
             <div class="form-check d-flex align-items-center">
                 <div class="register ms-auto">
-                    <a href="login">已有账号，点击登录</a>
+                    <a href="login<?= $helpers->getGetParams('callBack') ?>">已有账号，点击登录</a>
                 </div>
             </div>
         <?php

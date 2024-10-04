@@ -9,16 +9,19 @@ use Monolog\Logger;
 use ChatRoom\Core\Helpers\User;
 use ChatRoom\Core\Helpers\Helpers;
 use ChatRoom\Core\Database\SqlLite;
+use ChatRoom\Core\Auth\TokenManager;
 
 class UserController
 {
-    private $validateUsername;
+
+    public $Helpers;
+    private $userHelpers;
+    private $tokenManager;
+    private $reservedNames;
     /**
      * 系统保留名称
      */
-    private $reservedNames;
-    public $Helpers;
-    private $userHelpers;
+    private $validateUsername;
 
     // 状态常量
     const LOG_LEVEL = Logger::ERROR;
@@ -43,6 +46,7 @@ class UserController
 
         $this->Helpers = new Helpers;
         $this->userHelpers = new User;
+        $this->tokenManager = new TokenManager;
     }
 
     /**
@@ -83,9 +87,7 @@ class UserController
 
             if ($isSuccessful) {
 
-                $this->updateLoginInfo(
-                    $this->validateUsername->getUserInfo($username)
-                );
+                $this->updateLoginInfo($this->validateUsername->getUserInfo($username));
 
                 $this->insertSystemMessage('system', "欢迎新用户 $username 来到聊天室！", 'system');
 
@@ -101,36 +103,58 @@ class UserController
 
     /**
      * @param string $username
-     * @param string $password
+     * @param string $password 明文
+     * @param bool $return 是否返回纯文本
      */
-    public function login($username, $password)
+    public function login($username, $password, $return = false)
     {
         try {
             // 验证用户名
             if (!$this->validateUsername->validateUsername($username)) {
-                return $this->Helpers->jsonResponse("用户名不合法，必须长度在3到20字符之间和不能有中文和特殊字符", 400);
+                if ($return) {
+                    return "用户名不合法，必须长度在3到20字符之间和不能有中文和特殊字符";
+                } else {
+                    return $this->Helpers->jsonResponse("用户名不合法，必须长度在3到20字符之间和不能有中文和特殊字符", 400);
+                }
             }
             // 验证保留名称
             if (in_array($username, $this->reservedNames)) {
-                return $this->Helpers->jsonResponse("用户名不合法，系统保留名称", 400);
+                if ($return) {
+                    return "用户名不合法，系统保留名称";
+                } else {
+                    return $this->Helpers->jsonResponse("用户名不合法，系统保留名称", 400);
+                }
             }
-
             // 使用getUserInfo来获取用户信息
             $user = $this->validateUsername->getUserInfo($username);
-
             if (empty($user)) {
-                return $this->Helpers->jsonResponse('用户名不存在', 400);
+                if ($return) {
+                    return "用户名不存在";
+                } else {
+                    return $this->Helpers->jsonResponse('用户名不存在', 400);
+                }
             }
             if (!password_verify($password, $user['password'])) {
-                return $this->Helpers->jsonResponse('密码错误', 400);
+                if ($return) {
+                    return "密码错误";
+                } else {
+                    return $this->Helpers->jsonResponse('密码错误', 400);
+                }
             }
-
+            // 更新用户登录信息
             $this->updateLoginInfo($user);
-
-            return $this->Helpers->jsonResponse('登录成功', 200);
+            if ($return) {
+                return true;
+            } else {
+                return $this->Helpers->jsonResponse('登录成功', 200);
+            }
         } catch (Exception $e) {
-            HandleException($e);
-            return $this->Helpers->jsonResponse("内部服务器错误。请联系管理员。", 500);
+            throw new Exception($e);
+            if ($return) {
+                return "内部服务器错误。请联系管理员。";
+            } else {
+                return $this->Helpers->jsonResponse("内部服务器错误。请联系管理员。", 500);
+            }
         }
     }
 
@@ -158,22 +182,24 @@ class UserController
      * @param array $user 用户信息数组
      * @return void
      */
-    private function updateLoginInfo($user)
+    private function updateLoginInfo(array $user)
     {
-        // 生成登录令牌
-        $loginToken = bin2hex(random_bytes(64));
-        $db = SqlLite::getInstance()->getConnection();
-        // 更新数据库中的登录令牌
-        $updateStmt = $db->prepare('UPDATE users SET user_login_token = :login_token WHERE user_id = :user_id');
-        $updateStmt->execute([
-            'login_token' => $loginToken,
-            'user_id' => $user['user_id']
-        ]);
+        // 移除无用信息
+        unset($user['email']);
         unset($user['password']);
+        unset($user['register_ip']);
         unset($user['admin_login_token']);
-        $user['user_login_token'] = $loginToken;
+
+        $user['user_login_token'] = $this->tokenManager->generateToken($user['user_id'], '+1 year');
         $_SESSION['user_login_info'] = $user; // 存储用户信息到会话
-        setcookie('user_login_info', json_encode($user), time() + 86400 * 30, "/");
+        setcookie(
+            'user_login_info',
+            json_encode($user),
+            [
+                'expires' => time() + 86400 * 365,
+                'path' => '/'
+            ]
+        );
         unset($_SESSION['captcha']);
     }
 }

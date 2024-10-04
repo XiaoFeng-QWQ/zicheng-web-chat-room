@@ -52,6 +52,15 @@ function letterAvatar(name, size = 60, customColor) {
 }
 
 /**
+ * 将用户输入的文本转为适当的HTML，保留换行和空格
+ * @param {string} text - 用户输入的文本
+ * @returns {string} - 转换后的HTML
+ */
+function preserveTextFormat(text) {
+    return text.replace(/\n/g, '<br>');
+}
+
+/**
  * 构造消息 HTML
  * @param {object} message 消息对象
  * @param {boolean} isSelf 是否为自己发送的消息
@@ -61,33 +70,34 @@ function displayMessage(message, isSelf) {
     let alignmentClass;
     let messageClass;
     let contentHtml;
+    const formattedMessageContent = preserveTextFormat(message.content);
 
     switch (message.type) {
         case 'system':
             messageClass = 'alert alert-info system-msg';
             contentHtml = `
-                <p>${message.content}</p>
+                <p>${formattedMessageContent}</p>
                 <span class="timestamp">${message.created_at}</span>
             `;
             break;
         case 'warning':
             messageClass = 'alert alert-warning system-msg';
             contentHtml = `
-                <p>${message.content}</p>
+                <p>${formattedMessageContent}</p>
                 <span class="timestamp">${message.created_at}</span>
             `;
             break;
         case 'error':
             messageClass = 'alert alert-danger system-msg';
             contentHtml = `
-                <p>${message.content}</p>
+                <p>${formattedMessageContent}</p>
                 <span class="timestamp">${message.created_at}</span>
             `;
             break;
         case 'info':
             messageClass = 'alert alert-primary system-msg';
             contentHtml = `
-                <p>${message.content}</p>
+                <p>${formattedMessageContent}</p>
                 <span class="timestamp">${message.created_at}</span>
             `;
             break;
@@ -107,7 +117,7 @@ function displayMessage(message, isSelf) {
             contentHtml = `
                 <div class="message-text">
                     ${username}
-                    <p>${message.content}</p>
+                    <p>${formattedMessageContent}</p>
                     <span class="timestamp">${message.created_at}</span>
                 </div>
             `;
@@ -117,7 +127,7 @@ function displayMessage(message, isSelf) {
     playNotificationSound(message, isSelf)
 
     return `
-    <div class="${messageClass} ${alignmentClass}">
+    <div class="${messageClass} ${alignmentClass ?? ''}">
         <div class="message-content">
             ${contentHtml}
         </div>
@@ -355,6 +365,13 @@ function bindEventListeners() {
             alert("请输入消息或选择图片。");
         }
         $('#select-image').show(); // 显示图片选择按钮
+    });
+    // 添加对 Ctrl+Enter 快捷键的监听
+    $('#message').keydown(function (event) {
+        if (event.ctrlKey && event.key === 'Enter') {
+            event.preventDefault(); // 阻止默认换行动作
+            $('#chat-form').submit();
+        }
     });
 
     $('#scroll-down-button').on('click', function () {

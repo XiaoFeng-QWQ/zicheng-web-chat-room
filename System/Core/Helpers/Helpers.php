@@ -25,4 +25,30 @@ class Helpers
         // 返回JSON编码后的响应
         return json_encode($response, JSON_UNESCAPED_UNICODE);
     }
+
+    /**
+     * 获取指定GET参数
+     *
+     * @param string $param 要获取的参数名称
+     * @return string 指定参数的格式化字符串，例如 "?param=value"，如果参数不存在则返回空字符串
+     */
+    function getGetParams($param, $return = true)
+    {
+        // 获取查询字符串
+        $queryString = $_SERVER['QUERY_STRING'] ?? '';
+
+        // 将查询字符串解析为数组
+        parse_str($queryString, $queryArray);
+
+        // 检查并输出 GET 参数
+        if (isset($queryArray[$param])) {
+            if ($return) {
+                return "?$param={$queryArray[$param]}";
+            } else{
+                return $queryArray[$param];
+            }
+        } else {
+            return '';
+        }
+    }
 }

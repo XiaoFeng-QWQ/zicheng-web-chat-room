@@ -33,7 +33,7 @@ $setting = new SystemSetting(SqlLite::getInstance()->getConnection());
         </div>
         <button type="submit" class="btn btn-primary w-100">登录</button>
         <div class="register mt-3 text-end">
-            没有账号？<a href="register">点击注册</a>
+            没有账号？<a href="register<?= $helpers->getGetParams('callBack') ?>">点击注册</a>
         </div>
     </form>
     <hr>

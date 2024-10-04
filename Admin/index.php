@@ -41,6 +41,7 @@ $logs = $log->getLogs(5);
                 </div>
                 <div class="card-body">
                     <ul class="list-group list-group-flush">
+                        <li class="list-group-item">2024-10-4:[1.0.0.0]【正式版本！】发送消息支持Ctrl+Enter、优化登录逻辑，微调数据库结构，微调部分代码</li>
                         <li class="list-group-item">2024-09-17:[1.10.0.0]添加指令系统、新消息通知音。微调部分代码</li>
                         <li class="list-group-item">2024-08-27: [1.9.0.0]支持发送图片消息。</li>
                         <li class="list-group-item">2024-08-26: [1.8.0.0]完善后台管理。</li>
@@ -154,24 +155,22 @@ $logs = $log->getLogs(5);
 
         // Chart.js 配置对象
         const chartConfig = {
-            type: 'line',
+            type: 'bar', // 修改图表类型为柱状图
             data: {
                 labels: trendLabels,
                 datasets: [{
                         label: '消息数',
                         data: messageTrendCounts,
-                        borderColor: 'rgba(255, 99, 132, 1)', // 修改颜色为红色
                         backgroundColor: 'rgba(255, 99, 132, 0.2)', // 填充颜色
-                        borderWidth: 1,
-                        fill: true // 启用填充
+                        borderColor: 'rgba(255, 99, 132, 1)', // 边框颜色
+                        borderWidth: 1
                     },
                     {
                         label: '用户数',
                         data: userTrendCounts,
-                        borderColor: 'rgba(75, 192, 192, 1)', // 修改颜色为绿色
                         backgroundColor: 'rgba(75, 192, 192, 0.2)', // 填充颜色
-                        borderWidth: 1,
-                        fill: true // 启用填充
+                        borderColor: 'rgba(75, 192, 192, 1)', // 边框颜色
+                        borderWidth: 1
                     }
                 ]
             },

@@ -19,6 +19,14 @@ $(document).on('pjax:end', function () {
 // 绑定初始的表单事件
 bindFormEvents();
 
+let urlParams = new URLSearchParams(window.location.search);
+let callBack = urlParams.get('callBack');
+// 如果 callBack 为空或者未定义，则设置为 '/'
+if (!callBack) {
+    callBack = '/';
+}
+
+
 /**
  * 绑定登录和注册表单的提交事件
  */
@@ -74,7 +82,7 @@ function handleFormSubmit(event, submitFunction) {
  * 
  */
 function loginUser(username, password, 我TM是占位符, captcha, button) {
-    ajaxRequest('/api/user?method=login', { username, password, captcha }, button, '首页', '/');
+    ajaxRequest('/api/user?method=login', { username, password, captcha }, button, callBack, callBack);
 }
 
 /**
@@ -89,7 +97,7 @@ function loginUser(username, password, 我TM是占位符, captcha, button) {
 function registerUser(username, password, confirmPassword, captcha, button) {
     // 判断复选框是否被勾选
     if ($('#UserAgreementCheckbox').prop('checked')) {
-        ajaxRequest('/api/user?method=register', { username, password, confirm_password: confirmPassword, captcha }, button, '首页', '/');
+        ajaxRequest('/api/user?method=register', { username, password, confirm_password: confirmPassword, captcha }, button, callBack, callBack);
     } else {
         handleError('请勾选同意《用户协议》');
     }

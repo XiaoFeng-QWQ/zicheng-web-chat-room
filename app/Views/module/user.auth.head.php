@@ -1,11 +1,14 @@
 <?php
 
 use ChatRoom\Core\Helpers\User;
+use ChatRoom\Core\Helpers\Helpers;
 use ChatRoom\Core\Database\SqlLite;
 use ChatRoom\Core\Helpers\SystemSetting;
 
 $setting = new SystemSetting(SqlLite::getInstance()->getConnection());
 $UserHelpers = new User();
+$helpers = new Helpers;
+
 ?>
 <!--
  ______     __     ______     __  __     ______     __   __     ______     ______     __  __     ______     ______   ______     ______     ______     __    __    

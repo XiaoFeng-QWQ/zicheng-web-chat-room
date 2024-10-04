@@ -9,6 +9,8 @@ if (!defined('FRAMEWORK_DATABASE_PATH')) {
 try {
     $db = new PDO('sqlite:' . FRAMEWORK_DATABASE_PATH);
     $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    $db->exec('PRAGMA journal_mode=WAL;');
+    $db->beginTransaction();
 } catch (PDOException $e) {
     throw new Exception('数据库错误：'. $e->getMessage());
 }
