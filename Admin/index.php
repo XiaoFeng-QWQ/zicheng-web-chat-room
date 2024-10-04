@@ -108,8 +108,15 @@ $logs = $log->getLogs(5);
                 <div class="row mt-4">
                     <div class="col-12">
                         <div class="card">
-                            <div class="card-header">
-                                <i class="fas fa-chart-bar"></i> 用户和消息增长趋势
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <div>
+                                    <i class="fas fa-chart-bar"></i> 用户和消息增长趋势
+                                </div>
+                                <div>
+                                    <button class="btn btn-success me-2" id="exportButton" type="button">
+                                        <i class="fas fa-file-csv me-1"></i> 导出数据为CSV
+                                    </button>
+                                </div>
                             </div>
                             <div class="card-body">
                                 <!-- Chart.js -->
@@ -207,6 +214,30 @@ $logs = $log->getLogs(5);
         // 创建图表
         const ctx = document.getElementById('trendChart').getContext('2d');
         const trendChart = new Chart(ctx, chartConfig);
+
+        // 导出为 CSV
+        function exportToCSV() {
+            let csvContent = "data:text/csv;charset=utf-8,";
+
+            // 添加CSV头部
+            csvContent += "Date, Message Count, User Count\n";
+
+            // 添加数据行
+            trendLabels.forEach((label, index) => {
+                const row = [label, messageTrendCounts[index], userTrendCounts[index]].join(",");
+                csvContent += row + "\n";
+            });
+
+            // 创建隐藏的下载链接并点击
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "trend_data.csv");
+            document.body.appendChild(link); // Required for FF
+            link.click();
+            document.body.removeChild(link);
+        }
+        document.getElementById('exportButton').addEventListener('click', exportToCSV);
     })();
 </script>
 <?php
