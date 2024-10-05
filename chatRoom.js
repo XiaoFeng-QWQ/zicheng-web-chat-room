@@ -1,42 +1,8 @@
-<center>
-    <h1>简易聊天室插件</h1>
-    <img src="logo.svg"></img>
-</center>
-
-这是一个可以嵌入网页的小型聊天室插件，使用HTML、CSS和JavaScript（依赖jQuery）开发。该插件允许用户在小窗口内接收消息。
-
-## 功能
-
-- **实时聊天**：即可通过API接口实时接收消息。
-- **可折叠聊天窗**：支持展开和折叠功能，方便用户使用。
-- **自适应设计**：在移动设备上默认设置最大宽度与高度，并根据屏幕尺寸进行调整。
-
-## 使用说明
-
-### 先决条件
-
-- 下载安装PHP程序：https://github.com/XiaoFeng-QWQ/zicheng-web-chat-room/
-- 将代码中的`const apiUrl`值替换为你的域名。
-
-### 引入jQuery
-
-请确保在HTML文件中引入最新版本的jQuery：
-
-```html
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-```
-
-### 插件集成
-
-在HTML页面中插入以下JavaScript代码：
-
-```html
-<script>
 function ChatHtml() {
     var container = document.createDocumentFragment();
     var e_0 = document.createElement("div");
     var e_1 = document.createElement("style");
-    e_1.appendChild(document.createTextNode("/* 插件样式代码 */"));
+    e_1.appendChild(document.createTextNode("\n#ZichenChatRoomHtmlPluginChatbox {\nmax-width: 330px;\nheight: 400px;\nborder: 2px solid #ccc;\nbackground-color: #f9f9f9;\nposition: fixed;\nbottom: 50px;\nright: 50px;\nbox-shadow: 0 0 10px rgba(0, 0, 0, 0.2);\nz-index: 1000\n}\n#ZichenChatRoomHtmlPluginChatbox .chatbox-header {\nbox-shadow: 0 2px 3px rgba(0, 0, 0, 0.1);\nbackground: rgba(255, 255, 255, 0.2);\nbackdrop-filter: blur(2.5px);\npadding: 10px;\nuser-select: none\n}\n#ZichenChatRoomHtmlPluginChatbox .chatbox-body {\nmax-height: 88%;\noverflow-y: scroll;\noverflow-x: hidden;\npadding: 10px;\nheight: calc(100% - 70px);\n}\n#ZichenChatRoomHtmlPluginChatbox .chatbox-body .message-content {\npadding: 0.75rem 1rem;\nmargin: 10px;\nborder-radius: 0.75rem;\nword-wrap: break-word;\nbackground-color: #f1f1f1;\n}\n#ZichenChatRoomHtmlPluginChatbox img {\nmax-height: 100%;\nmax-width: 100%\n}\n#ZichenChatRoomHtmlPluginChatbox .chatbox-footer {\npadding: 10px;\nposition: absolute;\nwidth: 100%;\nbottom: 0\n}\n#ZichenChatRoomHtmlPluginChatbox.collapsed .chatbox-body,\n#ZichenChatRoomHtmlPluginChatbox.collapsed .chatbox-footer {\ndisplay: none\n}\n#ZichenChatRoomHtmlPluginChatbox.collapsed {\nheight: 40px\n}\n#ZichenChatRoomHtmlPluginChatbox .chatbox-body,\n#ZichenChatRoomHtmlPluginChatbox .chatbox-footer {\nopacity: 1\n}\n#ZichenChatRoomHtmlPluginChatbox .toggleChatbox,\n#ZichenChatRoomHtmlPluginChatbox .scrollToBottom {\nfloat: right;\nbackground-color: transparent;\nborder: none;\ncursor: pointer;\nfont-size: 16px;\ntransition: transform 0.2s\n}\n@media (max-width:600px) {\n#ZichenChatRoomHtmlPluginChatbox {\nmax-width: 100%;\nwidth: 100%;\nright: 0;\nbottom: 0\n}\n}\n"));
     e_0.appendChild(e_1);
     var e_2 = document.createElement("div");
     e_2.setAttribute("class", "collapsed");
@@ -77,7 +43,8 @@ chatbox.find(".toggleChatbox").click(() => chatbox.toggleClass("collapsed"));
 chatbox.find(".scrollToBottom").click(scrollToBottom);
 
 function sendMessage(message) {
-    if (!(message = message.trim())) return;
+    message = message.trim();
+    if (!message) return;
     $.post(`${apiUrl}/api/chat`, { message })
         .done(response => appendMessage(response.status === "success" ? message : "消息发送失败", "end"))
         .fail(() => appendMessage("消息发送失败", "end"));
@@ -115,9 +82,3 @@ function populateMessages(messages) {
 
 loadMessages();
 setInterval(loadMessages, 3000);
-</script>
-```
-
-或者下载仓库中的`chatRoom.min.js`，上传到您的服务器，修改`const apiUrl`值后引入！
-
-如有自定义需求，请相应调整JavaScript代码中的样式或功能。希望这个简易聊天室插件可以给您带来便利。如有任何问题或建议，请随时反馈！
