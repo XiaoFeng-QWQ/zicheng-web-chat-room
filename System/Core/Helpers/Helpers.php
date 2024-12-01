@@ -2,6 +2,9 @@
 
 namespace ChatRoom\Core\Helpers;
 
+/**
+ * 未分类辅助
+ */
 class Helpers
 {
     /**
@@ -32,7 +35,7 @@ class Helpers
      * @param string $param 要获取的参数名称
      * @return string 指定参数的格式化字符串，例如 "?param=value"，如果参数不存在则返回空字符串
      */
-    function getGetParams($param, $return = true)
+    public function getGetParams($param, $return = true)
     {
         // 获取查询字符串
         $queryString = $_SERVER['QUERY_STRING'] ?? '';
@@ -44,11 +47,29 @@ class Helpers
         if (isset($queryArray[$param])) {
             if ($return) {
                 return "?$param={$queryArray[$param]}";
-            } else{
+            } else {
                 return $queryArray[$param];
             }
         } else {
             return '';
         }
+    }
+
+    /**
+     * 获取当前请求的完整 URL。
+     * 
+     * @return string 返回当前请求的完整 URL（协议 + 主机名）
+     */
+    public function getCurrentUrl()
+    {
+        $protocol = 'http';
+        if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') {
+            $protocol = 'https';
+        }
+
+        $host = $_SERVER['HTTP_HOST'];  // 当前主机名（包括端口号）
+
+        // 返回完整的 URL
+        return $protocol . '://' . $host;
     }
 }

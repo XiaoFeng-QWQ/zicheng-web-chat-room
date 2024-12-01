@@ -277,4 +277,32 @@ class User
 
         return 'unknown';
     }
+
+    /**
+     * 获取用户登录状态
+     *
+     * @return bool
+     */
+    function checkUserLoginStatus(): bool
+    {   // 获取当前用户信息
+        $userSessionInfo = $_SESSION['user_login_info'] ?? null;
+        $userCookieInfo = json_decode($_COOKIE['user_login_info'] ?? '{}', true);
+
+        // 检查用户是否登录
+        if (empty($userSessionInfo) || empty($userCookieInfo)) {
+            return false;
+        }
+        // 校验SESSION与Cookie中的用户信息是否一致
+        if ($userSessionInfo !== $userCookieInfo) {
+            return false;
+        }
+        // 用户信息是否有效
+        $userInfo = $this->getUserInfo($userSessionInfo['username']);
+        if (empty($userInfo)) {
+            return false;
+        }
+
+        // 登录状态有效
+        return true;
+    }
 }

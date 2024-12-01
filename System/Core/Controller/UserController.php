@@ -42,7 +42,7 @@ class UserController
          * ！警告！
          * ！请勿修改此处保留字符，可能会出现意想不到的情况！
          */
-        $this->reservedNames = ['admin', 'system', 'root'];
+        $this->reservedNames = ['system', 'root'];
 
         $this->Helpers = new Helpers;
         $this->userHelpers = new User;

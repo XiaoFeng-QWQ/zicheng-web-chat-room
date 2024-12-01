@@ -5,13 +5,13 @@ require_once __DIR__ . '/../vendor/autoload.php';
 date_default_timezone_set("Asia/Shanghai");
 session_start();
 
-use ChatRoom\Core\Auth\TokenManager;
 use ChatRoom\Core\Helpers\User;
+use Gregwar\Captcha\PhraseBuilder;
 use ChatRoom\Core\Helpers\Helpers;
+use ChatRoom\Core\Database\SqlLite;
+use ChatRoom\Core\Auth\TokenManager;
 use ChatRoom\Core\Helpers\SystemLog;
 use ChatRoom\Core\Controller\UserController;
-use Gregwar\Captcha\PhraseBuilder;
-use ChatRoom\Core\Database\SqlLite;
 
 // 声明全局变量
 global $errorMessage;

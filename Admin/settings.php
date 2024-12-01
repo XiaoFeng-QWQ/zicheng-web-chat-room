@@ -24,6 +24,7 @@ require_once __DIR__ . "/helper/display_toast.php";
                     <a contentName="diy.php" class="list-group-item list-group-item-action"><i class="fas fa-sliders-h"></i> 自定义设置</a>
                     <a contentName="backup.php" class="list-group-item list-group-item-action"><i class="fas fa-save"></i> 备份数据</a>
                     <a contentName="update.php" class="list-group-item list-group-item-action"><i class="fas fa-sync"></i> 检测更新</a>
+                    <a contentName="info.php" class="list-group-item list-group-item-action"><i class="fa-solid fa-info"></i> 关于</a>
                 </div>
             </div>
         </div>

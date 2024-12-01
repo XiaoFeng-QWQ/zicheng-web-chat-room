@@ -7,18 +7,27 @@ header('Content-Type: application/json');
 
 use ChatRoom\Core\Config\Chat;
 use ChatRoom\Core\Helpers\User;
+use ChatRoom\Core\Helpers\Helpers;
 use ChatRoom\Core\Controller\ChatController;
 use ChatRoom\Core\Controller\ChatCommandController;
 
+$helpres = new Helpers;
+$chatConfig = new Chat();
 $chatController = new ChatController();
 $chatCommandController = new ChatCommandController();
-
-$chatConfig = new Chat();
 
 // 获取请求方法
 $method = $_SERVER['REQUEST_METHOD'];
 
-// 工具函数：响应 JSON 数据并退出
+/**
+ * 使用 JSON 或纯文本响应并设置 HTTP 状态码
+ * 内置exit()
+ *
+ * @param [type] $statusCode
+ * @param [type] $message
+ * @param [type] $isCommnd
+ * @return void
+ */
 function respondWithJson($status, $message = '', $isCommnd = false)
 {
     exit(json_encode(['status' => $status, 'message' => $message, 'isCommnd' => $isCommnd], JSON_UNESCAPED_UNICODE));
@@ -29,60 +38,68 @@ switch ($method) {
         $userHelpers = new User;
         // 安全地处理和检查输入
         $message = htmlspecialchars(trim($_POST['message'] ?? ''), ENT_QUOTES, 'UTF-8');
+        // 检查用户是否登录
+        if (!$userHelpers->checkUserLoginStatus()) {
+            respondWithJson(ChatController::STATUS_ERROR, ChatController::MESSAGE_NOT_LOGGED_IN);
+        }
         // 获取当前用户信息
         $user = $_SESSION['user_login_info'] ?? null;
-        $userCookieInfo = json_decode($_COOKIE['user_login_info'] ?? '{}', true);
-        // 检查用户是否登录
-        if (empty($user) || empty($userCookieInfo)) {
-            respondWithJson(ChatController::STATUS_ERROR, ChatController::MESSAGE_NOT_LOGGED_IN);
-        }
-        // 校验SESSION与Cookie中的用户信息是否一致
-        if ($user !== $userCookieInfo) {
-            respondWithJson(ChatController::STATUS_ERROR, ChatController::MESSAGE_NOT_LOGGED_IN);
-        }
         $userInfo = $userHelpers->getUserInfo($user['username']);
-        if (empty($userInfo)) {
-            respondWithJson(ChatController::STATUS_ERROR, ChatController::MESSAGE_NOT_LOGGED_IN);
-        }
 
-        // 检查上传的图片文件
-        if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
-            $image = $_FILES['image'];
-            // 验证图片类型和大小
-            $allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-            if (!in_array($image['type'], $allowedTypes) || $image['size'] > 4097152) {
-                respondWithJson(ChatController::STATUS_WARNING, '无效的图片类型或图片太大');
-                return;
+        // 检查上传的文件
+        if (isset($_FILES['file']) && $_FILES['file']['error'] === UPLOAD_ERR_OK) {
+            // 获取文件的 MIME 类型
+            $fileType = mime_content_type($_FILES['file']['tmp_name']);
+            // 检查文件 MIME 类型和扩展名是否匹配
+            $allowed = false;
+            if (in_array($fileType, $chatConfig->uploadFile['allowTypes'])) {
+                $allowed = true;
+            }
+            if (!$allowed) {
+                respondWithJson(ChatController::STATUS_WARNING, '无效的文件类型');
+            }
+
+            // 检查文件大小
+            if ($_FILES['file']['size'] > $chatConfig->uploadFile['maxSize']) {
+                respondWithJson(ChatController::STATUS_WARNING, '文件太大');
             }
 
             // 获取日期和时间
             $uploadDir = FRAMEWORK_DIR . "/StaticResources/uploads/" . date('Y/m/d') . "/u_{$userInfo['user_id']}/";
-
             // 创建目录（如果不存在）
             if (!is_dir($uploadDir) && !mkdir($uploadDir, 0777, true)) {
                 respondWithJson(ChatController::STATUS_ERROR, '无法创建上传目录');
-                return;
+            }
+            // 生成唯一的文件名并保存
+            $fileName = time() . "_" . uniqid() . '.' . pathinfo($_FILES['file']['name'], PATHINFO_EXTENSION);
+            $filePath = $uploadDir . $fileName;
+            if (!move_uploaded_file($_FILES['file']['tmp_name'], $filePath)) {
+                respondWithJson(ChatController::STATUS_ERROR, '上传失败');
             }
 
-            // 生成唯一的文件名并保存图片
-            $imageName = time() . "_" . uniqid() . '.' . pathinfo($image['name'], PATHINFO_EXTENSION);
-            $imagePath = $uploadDir . $imageName;
-
-            if (!move_uploaded_file($image['tmp_name'], $imagePath)) {
-                respondWithJson(ChatController::STATUS_ERROR, '图片上传失败');
-                return;
+            $relativeImagePath = $helpres->getCurrentUrl() . "/StaticResources/uploads/" . date('Y/m/d') . "/u_{$userInfo['user_id']}/$fileName";
+            function generateFileTemplate($fileData)
+            {
+                $template = '[!file(';
+                foreach ($fileData as $key => $value) {
+                    $template .= $key . '="' . $value . '", ';
+                }
+                $template = rtrim($template, ', ');
+                $template .= ')]';
+                return $template;
             }
-
-            // 生成相对路径用于前端显示
-            $relativeImagePath = "/StaticResources/uploads/" . date('Y/m/d') . "/u_{$userInfo['user_id']}/$imageName";
-
-            // 将图片路径插入到消息内容中
-            $message .= '<a href="' . $relativeImagePath . '" data-fancybox><img class="img-rounded" src="' . $relativeImagePath . '" alt="用户上传的图片"></a>';
+            $message .= generateFileTemplate([
+                'path' => $relativeImagePath,
+                'name' =>  $_FILES['file']['name'],
+                'type' =>  $_FILES['file']['type'],
+                'size' => round($_FILES['file']['size'] / 1024, 2) . 'KB',
+                'download' => 'true'
+            ]);
         }
 
-        // 检查是否有消息或图片发送
+        // 检查是否有消息或发送
         if (empty($message)) {
-            respondWithJson(ChatController::STATUS_WARNING, '消息内容不能为空或选择的图片太大');
+            respondWithJson(ChatController::STATUS_WARNING, '消息内容不能为空或选择的太大');
             return;
         }
 
@@ -91,24 +108,20 @@ switch ($method) {
             $parts = explode(' ', $message);
             $command = $parts[0]; // 获取指令名
             $params = array_slice($parts, 1); // 获取参数列表
-
             if (isset($chatConfig->chatCommandList[$command])) {
                 $commandConfig = $chatConfig->chatCommandList[$command];
                 $action = $commandConfig['action'][0];
                 $isAdminRequired = $commandConfig['isAdmin'];
-
                 // 检查用户权限
                 if ($isAdminRequired && $userInfo['group_id'] != 1) {
                     respondWithJson(ChatController::STATUS_ERROR, '权限不足');
                     return;
                 }
-
                 // 执行对应的命令函数
                 try {
                     $response = '';
                     if (method_exists($chatCommandController, $action)) {
                         $response .= call_user_func_array([$chatCommandController, $action], $params);
-                        $response .= PHP_EOL . "<p style='text-align: end;'>--子辰指令系统V1.0.1</p>";
                     } else {
                         $response .= '命令配置错误 函数不存在';
                     }
@@ -124,6 +137,7 @@ switch ($method) {
                 }
                 $chatController->sendMessage($userInfo, $message);
             } else {
+                $chatConfig = new Chat();
                 respondWithJson(ChatController::STATUS_ERROR, '未知命令');
             }
         }

@@ -1,10 +1,4 @@
 <?php
-// 检查 $_SESSION['user_login_info'] 是否存在且为数组
-if (isset($_SESSION['user_login_info']) && is_array($_SESSION['user_login_info'])) {
-    header('Location: /'); // 重定向到首页
-    exit(); // 终止脚本执行
-}
-
 require_once FRAMEWORK_APP_PATH . '/Views/module/user.auth.head.php';
 
 use ChatRoom\Core\Database\SqlLite;

@@ -11,16 +11,15 @@ if (defined('FRAMEWORK_DATABASE_PATH')) {
 require_once __DIR__ . '/../../vendor/autoload.php';
 
 // 常量配置
-define('MSG_SUCCESS', 'Success!');
 define('MSG_INVALID_METHOD', '无效的方法。');
 define('MSG_METHOD_NOT_PROVIDED', '方法未提供。');
 define('MSG_INVALID_REQUEST_METHOD', '无效的请求方法。');
 define('MSG_README_NOT_FOUND', 'README 文件不存在。');
 define('MSG_PASSWORD_MISMATCH', '密码不匹配，请重新输入。');
-define('MSG_DB_PATH_NOT_WRITABLE', '数据库路径不可写，请检查权限。');
+define('MSG_DB_PATH_NOT_WRITABLE', '数据库路径不可写，请检查权限。<a href="?step=3">返回上一步</a>');
 define('MSG_DB_CREATION_FAILURE', '无法创建数据库文件，请检查权限。');
-define('MSG_FILE_ALREADY_EXISTS', '文件已存在！禁止覆盖。');
-define('MSG_DB_WRITE_FAILURE', '数据库文件不可写，请检查权限。');
+define('MSG_FILE_ALREADY_EXISTS', '文件已存在！禁止覆盖。<a href="?step=3">返回上一步</a>');
+define('MSG_DB_WRITE_FAILURE', '数据库文件不可写，请检查权限。<a href="?step=3">返回上一步</a>');
 define('MSG_SQL_IMPORT_FAILURE', 'SQL 导入失败。');
 define('MSG_ADMIN_CREATION_FAILURE', '管理员用户创建失败。');
 define('MSG_SITE_CONFIG_FAILURE', '站点配置创建失败。');
@@ -57,7 +56,7 @@ function usageTerms()
 // 获取步骤
 $step = $_GET['step'] ?? '';
 
-// 生成或验证 CSRF 令牌
+// 生成 CSRF 令牌
 function generateCSRFToken()
 {
     return bin2hex(random_bytes(16));

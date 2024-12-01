@@ -1,255 +1,283 @@
 let isUserScrolling = false;
 let offset = 0;
-let lastFetched = null; // 用于存储上次获取消息的时间戳
-let lastScrollTop = 0; // 初始化上一次滚动位置
-let loadingMessages = false; // 是否正在加载消息
-// 创建通知音频对象
-const notificationSound = new Audio('/StaticResources/media/Windows10 Notify System Generic.wav');
-const errorNotificationSound = new Audio('/StaticResources/media/Windows10 Foreground.wav')
+let lastFetched = null;
+let lastScrollTop = 0;
+let loadingMessages = false;
+const fileInput = $('#file');
+const filePreview = $('#select-file-preview');
+const filePreviewModal = new bootstrap.Modal(document.getElementById('filePreviewModal'));
+const filePreviewContent = $('#filePreviewContent');
 
-/**
- * 隐藏加载指示器
- */
-function hideLoading() {
-    $('#loading').hide();
-}
+const scrollToBottom = () => $('#chat-box').scrollTop($('#chat-box')[0].scrollHeight);
 
-/**
- * 生成文字头像
- * @param {string} name 用户名
- * @param {number} size 尺寸
- * @param {string} customColor 自定义颜色
- * @returns {string} Base64 格式的图片数据
- */
-function letterAvatar(name, size = 60, customColor) {
-    const colors = [
-        "#1abc9c", "#2ecc71", "#3498db", "#9b59b6", "#34495e",
-        "#16a085", "#27ae60", "#2980b9", "#8e44ad", "#2c3e50",
-        "#f1c40f", "#e67e22", "#e74c3c", "#00bcd4", "#95a5a6",
-        "#f39c12", "#d35400", "#c0392b", "#bdc3c7", "#7f8c8d"
-    ];
+// 对于选择的文件生成预览
+const handleSelectFilePreview = file => {
+    const fileURL = URL.createObjectURL(file);
+    const fileName = file.name;
+    const fileType = file.type;
 
-    const text = (name || "?").split(" ");
-    const initials = text.length === 1 ? text[0].charAt(0) : text[0].charAt(0) + text[1].charAt(0);
+    // 渲染并显示预览
+    const showPreview = content => {
+        filePreviewContent.html(content);
+        $('#filePreviewFileInfo').text(fileName);
+        filePreviewModal.show();
+    };
 
-    const pixelRatio = window.devicePixelRatio || 1;
-    const canvasSize = size * pixelRatio;
-    const canvas = document.createElement("canvas");
-    canvas.width = canvasSize;
-    canvas.height = canvasSize;
+    // 根据文件类型生成预览内容
+    const fileExtension = fileName.split('.').pop().toLowerCase();
+    const isMatch = (patterns) => patterns.some(ext => fileExtension === ext || fileType.startsWith(ext));
 
-    const context = canvas.getContext("2d");
-    const textColorIndex = (initials === "?" ? 72 : initials.charCodeAt(0) - 64) % colors.length;
-    context.fillStyle = customColor || colors[textColorIndex];
-    context.fillRect(0, 0, canvas.width, canvas.height);
-
-    context.font = `${Math.round(canvas.width / 2)}px 'Microsoft Yahei'`;
-    context.textAlign = "center";
-    context.fillStyle = "#FFF";
-    context.fillText(initials, canvas.width / 2, canvas.height / 1.5);
-
-    return canvas.toDataURL();
-}
-
-/**
- * 将用户输入的文本转为适当的HTML，保留换行和空格
- * @param {string} text - 用户输入的文本
- * @returns {string} - 转换后的HTML
- */
-function preserveTextFormat(text) {
-    return text.replace(/\n/g, '<br>');
-}
-
-/**
- * 构造消息 HTML
- * @param {object} message 消息对象
- * @param {boolean} isSelf 是否为自己发送的消息
- * @returns {string} 消息 HTML 字符串
- */
-function displayMessage(message, isSelf) {
-    let alignmentClass;
-    let messageClass;
-    let contentHtml;
-    const formattedMessageContent = preserveTextFormat(message.content);
-
-    switch (message.type) {
-        case 'system':
-            messageClass = 'alert alert-info system-msg';
-            contentHtml = `
-                <p>${formattedMessageContent}</p>
-                <span class="timestamp">${message.created_at}</span>
-            `;
+    switch (true) {
+        case isMatch(['text']) || ['txt', 'json', 'xml', 'log'].includes(fileExtension): {
+            const reader = new FileReader();
+            reader.onload = e => {
+                const fileContent = e.target.result;
+                showPreview(`
+                    <pre>${fileContent}</pre>
+                `);
+            };
+            reader.readAsText(file);
             break;
-        case 'warning':
-            messageClass = 'alert alert-warning system-msg';
-            contentHtml = `
-                <p>${formattedMessageContent}</p>
-                <span class="timestamp">${message.created_at}</span>
+        }
+        case isMatch(['image']): {
+            html = `<img src="${fileURL}" alt="${fileName}" style="max-width: 100%; max-height: 100%; object-fit: contain;">`;
+            showPreview(html);
+            return;
+        }
+        case isMatch(['officedocument']) || ['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'csv'].includes(fileExtension): {
+            html = `<iframe src="https://view.officeapps.live.com/op/view.aspx?src=${encodeURIComponent(fileURL)}"></iframe>`;
+            showPreview(html);
+            return;
+        }
+        case fileType === 'application/pdf' || fileExtension === 'pdf': {
+            html = `<iframe src="${fileURL}"></iframe>`;
+            showPreview(html);
+            return;
+        }
+        case isMatch(['audio']) || ['mp3', 'wav', 'ogg', 'aac'].includes(fileExtension): {
+            html = `
+                <audio playsinline controls style="max-height: 100%;">
+                    <source src="${fileURL}" type="${fileType}">
+                </audio>
             `;
-            break;
-        case 'error':
-            messageClass = 'alert alert-danger system-msg';
-            contentHtml = `
-                <p>${formattedMessageContent}</p>
-                <span class="timestamp">${message.created_at}</span>
+            showPreview(html);
+            new Plyr('audio');
+            return;
+        }
+        case isMatch(['video']) || ['mp4', 'mkv'].includes(fileExtension): {
+            html = `
+                <video playsinline controls style="max-height: 100%;">
+                    <source src="${fileURL}" type="${fileType}">
+                </video>
             `;
-            break;
-        case 'info':
-            messageClass = 'alert alert-primary system-msg';
-            contentHtml = `
-                <p>${formattedMessageContent}</p>
-                <span class="timestamp">${message.created_at}</span>
-            `;
-            break;
-        default:
-            alignmentClass = isSelf ? 'right' : 'left';
-            messageClass = 'chat-message';
-            const userGroup = message.group_name ? `<span class="user-group">(${message.group_name})</span>` : '';
-
-            const avatar = message.avatar_url
-                ? `<img src="${message.avatar_url}" alt="avatar" class="avatar">`
-                : `<img src="${letterAvatar(message.user_name)}" alt="avatar" class="avatar">`;
-
-            const username = `<span class="username">
-                ${isSelf ? '' : avatar} ${message.user_name} ${isSelf ? avatar : ''} ${userGroup}
-            </span>`;
-
-            contentHtml = `
-                <div class="message-text">
-                    ${username}
-                    <p>${formattedMessageContent}</p>
-                    <span class="timestamp">${message.created_at}</span>
-                </div>
-            `;
-            break;
-    }
-
-    playNotificationSound(message, isSelf)
-
-    return `
-    <div class="${messageClass} ${alignmentClass ?? ''}">
-        <div class="message-content">
-            ${contentHtml}
-        </div>
-    </div>
-    `;
-}
-/**
- * 播放通知音效
- * @param {object} message 消息对象
- * @param {boolean} isSelf 是否为自己发送的消息
- */
-function playNotificationSound(message, isSelf) {
-    if (!isSelf) {
-        if (message.type === 'user') {
-            notificationSound.currentTime = 0; // 从头播放
-            notificationSound.play().catch(error => console.log("播放音频失败:", error));
-        } else {
-            errorNotificationSound.currentTime = 0; // 从头播放
-            errorNotificationSound.play().catch(error => console.log("播放音频失败:", error));
+            showPreview(html);
+            new Plyr('video');
+            return;
+        }
+        default: {
+            html = `<p class="text-center"><br>暂不支持该文件类型的在线预览。</p>`;
+            showPreview(html);
         }
     }
-}
+};
+// 对于上传的文件生成预览
+const handleFilePreview = (path, name, type, callback) => {
+    if (typeof callback !== 'function') {
+        console.error('The callback is not a function');
+        return;
+    }
+    const fileURL = path;
+    const fileName = name;
+    const fileType = type;
+    let html = '';
+    // 根据文件类型生成预览内容
+    const fileExtension = fileName.split('.').pop().toLowerCase();
+    const isMatch = (patterns) => patterns.some(ext => fileExtension === ext || fileType.startsWith(ext));
+    // 生成下载按钮
+    $('#filePreviewFileInfo').html(`
+        <a href="${fileURL}" download="${fileName}">
+            <button class="btn btn-sm btn-primary edit-button">下载</button>
+        </a>`);
 
-/**
- * 滚动至底部
- */
-function scrollToBottom() {
-    const chatBox = $('#chat-box');
-    chatBox.scrollTop(chatBox[0].scrollHeight);
-}
+    switch (true) {
+        case isMatch(['text']) || ['txt', 'json', 'xml', 'log'].includes(fileExtension): {
+            // 异步加载文本文件
+            $.ajax({
+                type: "GET",
+                url: fileURL,
+                success: function (response) {
+                    html = `<pre>${response}</pre>`;
+                    callback(html); // 确保通过回调函数更新页面
+                },
+                error: function () {
+                    callback('<p class="text-center">文件加载失败。</p>'); // 错误处理
+                }
+            });
+            return; // 直接返回，防止后续代码执行
+        }
+        case isMatch(['image']): {
+            html = `<img src="${fileURL}" alt="${fileName}" style="max-width: 100%; max-height: 100%; object-fit: contain;">`;
+            callback(html);
+            return;
+        }
+        case isMatch(['officedocument']) || ['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'csv'].includes(fileExtension): {
+            html = `<iframe src="https://view.officeapps.live.com/op/view.aspx?src=${encodeURIComponent(fileURL)}"></iframe>`;
+            callback(html);
+            return;
+        }
+        case fileType === 'application/pdf' || fileExtension === 'pdf': {
+            html = `<iframe src="${fileURL}"></iframe>`;
+            callback(html);
+            return;
+        }
+        case isMatch(['audio']) || ['mp3', 'wav', 'ogg', 'aac'].includes(fileExtension): {
+            html = `
+                <audio playsinline controls style="max-height: 100%;">
+                    <source src="${fileURL}" type="${fileType}">
+                </audio>
+            `;
+            callback(html);
+            new Plyr('audio');
+            return;
+        }
+        case isMatch(['video']) || ['mp4', 'mkv'].includes(fileExtension): {
+            html = `
+                <video playsinline controls style="max-height: 100%;">
+                    <source src="${fileURL}" type="${fileType}">
+                </video>
+            `;
+            callback(html);
+            new Plyr('video');
+            return;
+        }
+        default: {
+            html = `<p class="text-center"><br>暂不支持该文件类型的在线预览。</p>`;
+            callback(html);
+        }
+    }
+};
 
-/**
- * 加载聊天消息
- */
-function loadChatMessages() {
+const displayMessage = (message, isSelf) => {
+    // 保留文本中的换行和空格
+    const preserveTextFormat = text => text.replace(/\n/g, '<br>');
+    // 解析并格式化消息内容
+    const parseAndFormatMessageContent = content => {
+        const fileTemplatePattern = /\[!file\((.*?)\)\]/;
+
+        if (fileTemplatePattern.test(content)) {
+            const match = content.match(fileTemplatePattern);
+            const fileData = parseFileTemplate(match[1]);
+            const fileHTML = renderFileTemplate(fileData);
+            return content.replace(fileTemplatePattern, fileHTML);
+        }
+        return preserveTextFormat(content);
+    };
+    // 解析文件模板
+    const parseFileTemplate = paramsString =>
+        paramsString.split(',').reduce((acc, param) => {
+            const [key, value] = param.split('=');
+            acc[key.trim()] = value.trim().replace(/^"|"$/g, '');
+            return acc;
+        }, {});
+    // 渲染文件模板为HTML
+    const renderFileTemplate = parsedData => {
+        if (!parsedData) return '';
+        const { path, name, type, size } = parsedData;
+        return `
+            <div class="file-info">
+                <button type="button" class="preview-upload-file btn btn-sm primary" fileData='${message.content}' onclick="const data = parseFileTemplate($(this).attr('fileData'));handleFilePreview(data['path'], data['name'], data['type'], function (html) {filePreviewContent.html(html);filePreviewModal.show();});">预览文件</button><p>${name} ${size}</p>
+            </div>`;
+    };
+
+    const formattedContent = parseAndFormatMessageContent(message.content);
+    const timestamp = `<span class="timestamp">${message.created_at}</span>`;
+    const messageTypeClass = {
+        system: 'alert alert-info system-msg',
+        warning: 'alert alert-warning system-msg',
+        error: 'alert alert-danger system-msg',
+        info: 'alert alert-primary system-msg'
+    }[message.type] || 'chat-message';
+
+    const avatar = message.avatar_url
+        ? `<img src="${message.avatar_url}" alt="avatar" class="avatar">`
+        : `<img src="${letterAvatar(message.user_name)}" alt="avatar" class="avatar">`;
+
+    const username = `
+        <span class="username">
+            ${isSelf ? '' : avatar} ${message.user_name} ${isSelf ? avatar : ''} 
+            ${message.group_name ? `<div class="user-group">(${message.group_name})</div>` : ''}
+        </span>`;
+
+    return `
+        <div class="${messageTypeClass} ${isSelf ? 'right' : 'left'}">
+            <div class="message-content">
+                ${username}
+                <div>${formattedContent}</div>
+                ${timestamp}
+            </div>
+        </div>`;
+};
+
+const loadChatMessages = () => {
     if (loadingMessages) return;
     loadingMessages = true;
-
     $.ajax({
         url: '/api/chat',
         type: 'GET',
-        data: { offset: offset },
+        data: { offset },
         dataType: 'json',
-        success: function (response) {
+        success: (response) => {
             const chatBox = $('#chat-box');
-            const previousHeight = chatBox[0].scrollHeight;
-            const scrollPosition = chatBox.scrollTop() + chatBox.outerHeight();
-            const isAtBottom = Math.ceil(scrollPosition) >= previousHeight - 5; // 增加一个容差
-
+            const isAtBottom = chatBox.scrollTop() + chatBox.outerHeight() >= chatBox[0].scrollHeight - 5;
             if (Array.isArray(response.messages)) {
-                response.messages.forEach(message => {
-                    const isSelf = message.user_name === sessionUsername;
-                    chatBox.append(displayMessage(message, isSelf));
-                });
-
-                if (response.messages.length > 0) {
-                    offset += response.messages.length;
-                    lastFetched = response.messages[response.messages.length - 1].created_at;
-                }
+                response.messages.forEach(msg => chatBox.append(displayMessage(msg, msg.user_name === sessionUsername)));
+                offset += response.messages.length;
+                lastFetched = response.messages[response.messages.length - 1]?.created_at;
             } else {
                 chatBox.append(displayMessage({
                     type: 'error',
-                    content: `加载聊天记录失败${JSON.stringify(response)}请联系管理员。`,
+                    content: '加载聊天记录失败，请联系管理员。',
                     created_at: new Date()
-                }, 'error', false));
-                scrollToBottom();
+                }, false));
             }
-
             if (isAtBottom) {
-                chatBox.css('scroll-behavior', 'auto'); // 关闭平滑滚动，确保页面即时跳转到底部
                 scrollToBottom();
-                chatBox.css('scroll-behavior', 'smooth'); // 恢复平滑滚动
-                hideLoading(); // 只有在滚动到底部时隐藏加载中的元素
+                $('#loading').hide()
+                chatBox.css('scroll-behavior', 'smooth');
             } else {
                 $('#scroll-down-button').show();
             }
-
             loadingMessages = false;
         },
-
-        error: function (xhr) {
+        error: (xhr) => {
             console.error(xhr);
-            const chatBox = $('#chat-box');
-            chatBox.append(displayMessage({
+            $('#chat-box').append(displayMessage({
                 type: 'error',
-                content: `加载聊天记录失败 <br> ${xhr.responseText} <br> ${xhr.statusText}`,
+                content: `加载聊天记录失败<br>${xhr.statusText}`,
                 created_at: new Date()
-            }, 'error', false));
+            }, false));
             scrollToBottom();
             loadingMessages = false;
         }
     });
-}
-
-/**
- * 发送消息
- * @param {string} message 消息内容
- * @param {File} imageFile 图片文件
- */
-function sendMessage(message, imageFile) {
-    // 创建 FormData 对象
-    let formData = new FormData();
+};
+const sendMessage = (message, uploadFile) => {
+    const formData = new FormData();
     formData.append('message', message);
     const chatBox = $('#chat-box');
-
-    // 如果有图片文件，添加到 formData
-    if (imageFile) {
-        formData.append('image', imageFile);
+    if (uploadFile) {
+        formData.append('file', uploadFile);
     }
-
-    // 禁用发送按钮
     $('#send-button').attr('disabled', true);
-
     $.ajax({
         url: '/api/chat',
         type: 'POST',
-        contentType: false, // 让 jQuery 不设置 contentType
-        processData: false, // 让 jQuery 不处理 data
+        contentType: false,
+        processData: false,
         data: formData,
-        success: function (response) {
+        success: (response) => {
             if (response.status === 'success') {
-
+                // 处理指令类消息
                 if (response.isCommnd) {
                     chatBox.append(displayMessage({
                         type: 'system',
@@ -264,18 +292,17 @@ function sendMessage(message, imageFile) {
                     }
                     return;
                 }
-
                 loadChatMessages(); // 发送成功后重新加载聊天记录
                 $('#message').val(''); // 清空文本框
-                $('#select-image-file').html(''); // 清空图片预览
-                $('#image').val(''); // 清空文件输入框
+                $('#file').val(''); // 清空文件输入
+                $('#select-file-preview').empty(); // 清空预览区域
                 if (!isUserScrolling) {
-                    scrollToBottom(); // 若用户未滚动，则自动滚动到底部
+                    scrollToBottom();
                 } else {
                     $('#scroll-down-button').show(); // 若用户正在滚动，显示按钮
                 }
             } else {
-                chatBox.append(displayMessage({
+                $('#chat-box').append(displayMessage({
                     type: 'warning',
                     user_name: '系统',
                     content: response.message,
@@ -283,10 +310,9 @@ function sendMessage(message, imageFile) {
                 }, false));
                 scrollToBottom();
             }
-            loadingMessages = false;
         },
-        error: function () {
-            chatBox.append(displayMessage({
+        error: () => {
+            $('#chat-box').append(displayMessage({
                 type: 'error',
                 user_name: '系统',
                 content: '发送消息失败，请稍后再试。',
@@ -294,77 +320,54 @@ function sendMessage(message, imageFile) {
             }, false));
             scrollToBottom();
         },
-        complete: function () {
-            // 启用发送按钮
-            $('#send-button').attr('disabled', false);
-        }
+        complete: () => $('#send-button').attr('disabled', false)
     });
-}
-
-/**
- * 绑定事件监听器
- */
-function bindEventListeners() {
+};
+// 绑定事件监听器
+const bindEventListeners = () => {
     $('#chat-box').on('scroll', function () {
         const chatBox = $(this);
-        const scrollTop = chatBox.scrollTop();
-        const previousHeight = chatBox[0].scrollHeight;
-        const scrollPosition = chatBox.scrollTop() + chatBox.outerHeight();
-        const isAtBottom = Math.ceil(scrollPosition) >= previousHeight - 5; // 增加一个容差
-
-        if (scrollTop < lastScrollTop) {
-            isUserScrolling = true;
-            $('#scroll-down-button').show();
-        } else if (isAtBottom) {
-            isUserScrolling = false;
-            $('#scroll-down-button').hide();
-        }
-
-        lastScrollTop = scrollTop; // 更新上一次滚动位置
+        const isAtBottom = chatBox.scrollTop() + chatBox.outerHeight() >= chatBox[0].scrollHeight - 5;
+        isUserScrolling = chatBox.scrollTop() < lastScrollTop;
+        $('#scroll-down-button').toggle(!isAtBottom && isUserScrolling);
+        lastScrollTop = chatBox.scrollTop();
     });
-
-    $('#select-image').click(function () {
-        $('#image').click(); // 触发隐藏的文件选择器
-        $(this).hide(); // 隐藏选择图片按钮
-    });
-
-    $('#image').change(function (e) {
+    $('#select-file').click(() => $('#file').click());
+    // 文件选择事件处理
+    $('#file').change((e) => {
         const file = e.target.files[0];
         if (file) {
-            const imageTag = `
-                <div class="image-preview-wrapper position-relative">
-                    <a href="${URL.createObjectURL(file)}" data-fancybox>
-                        <img id="previewImage" src="${URL.createObjectURL(file)}" alt="Selected Image" style="max-width: 50%; max-height: 50%; cursor: pointer;">
-                    </a>
-                    <button type="button" id="remove-image" class="btn btn-danger btn-sm position-absolute" style="margin-left: 5px;bottom: 0;">取消</button>
-                </div>`;
-
-            // 显示图片在 select-image-file 区域
-            const imagePreviewContainer = $('#select-image-file');
-            imagePreviewContainer.html(imageTag); // 替换之前的图片
-
-            // 绑定取消按钮的事件
-            $('#remove-image').click(function () {
-                $('#image').val(''); // 清空文件输入框
-                imagePreviewContainer.html(''); // 移除图片预览
-                $('#select-image').show(); // 显示图片选择按钮
+            const filePreviewWrapper = $('#select-file-preview');
+            // 预览区动态生成预览按钮
+            filePreviewWrapper.html(`
+            <div class="file-preview-wrapper position-relative d-inline-block">
+                <button type="button" id="preview-file" class="btn">预览文件</button>
+                <button type="button" id="remove-file" 
+                        class="btn btn-sm btn-danger position-absolute" style="top: 5px">
+                    <i class="bi bi-x-circle"></i>
+                </button>
+            </div>
+        `);
+            // 绑定文件预览事件
+            $('#preview-file').click(() => handleSelectFilePreview(file));
+            // 绑定移除文件事件
+            $('#remove-file').click(() => {
+                $('#file').val(''); // 清空文件输入
+                $('#filePreviewContent').html('')
+                filePreviewWrapper.empty(); // 清空预览区域
             });
         }
     });
-
-    $('#chat-form').submit(function (event) {
-        event.preventDefault(); // 阻止表单默认提交
-
-        const message = $('#message').val();
-        const imageFile = $('#image')[0].files[0];
-
-        // 根据用户的输入和选择决定发送的内容
-        if (message.trim() || imageFile) {
-            sendMessage(message, imageFile);
+    // 表单提交事件
+    $('#chat-form').submit((event) => {
+        event.preventDefault();
+        const message = $('#message').val().trim();
+        const uploadFile = $('#file')[0].files[0];
+        if (message || uploadFile) {
+            sendMessage(message, uploadFile);
         } else {
-            alert("请输入消息或选择图片。");
+            alert("请输入消息或选择文件。");
         }
-        $('#select-image').show(); // 显示图片选择按钮
     });
     // 添加对 Ctrl+Enter 快捷键的监听
     $('#message').keydown(function (event) {
@@ -373,34 +376,10 @@ function bindEventListeners() {
             $('#chat-form').submit();
         }
     });
-
-    $('#scroll-down-button').on('click', function () {
-        scrollToBottom();
-        isUserScrolling = false;
-        $(this).hide();
-    });
-
-    $('#logout').on('click', function () {
-        const logoutModal = new bootstrap.Modal($('#logoutModal'), {});
-        logoutModal.show();
-    });
-
-    $('#confirmLogout').on('click', function () {
-        $.ajax({
-            url: '/user/logout',
-            type: 'POST',
-            success: function () {
-                window.location.href = '/user/login';
-            },
-            error: function () {
-                alert('离开聊天室失败，请稍后再试。');
-            }
-        });
-    });
-}
-
-// 绑定事件监听器只调用一次
+    $('#scroll-down-button').click(() => { scrollToBottom(); isUserScrolling = false; });
+    $('#logout').click(() => new bootstrap.Modal($('#logoutModal'), {}).show());
+    $('#confirmLogout').click(() => $.post('/user/logout').done(() => window.location.href = '/user/login').fail(() => alert('离开聊天室失败，请稍后再试。')));
+};
 bindEventListeners();
-
-loadChatMessages(); // 初始加载聊天记录
-setInterval(loadChatMessages, 3000); // 开始轮询，每 3 秒钟一次
+loadChatMessages();
+setInterval(loadChatMessages, 3000);

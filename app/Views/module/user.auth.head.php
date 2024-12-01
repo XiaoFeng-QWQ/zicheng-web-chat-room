@@ -9,6 +9,10 @@ $setting = new SystemSetting(SqlLite::getInstance()->getConnection());
 $UserHelpers = new User();
 $helpers = new Helpers;
 
+if ($UserHelpers->checkUserLoginStatus()) {
+    header("Location: /");
+    exit();
+}
 ?>
 <!--
  ______     __     ______     __  __     ______     __   __     ______     ______     __  __     ______     ______   ______     ______     ______     __    __    

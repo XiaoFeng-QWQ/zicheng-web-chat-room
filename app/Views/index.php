@@ -3,21 +3,22 @@
 use ChatRoom\Core\Helpers\SystemSetting;
 use ChatRoom\Core\Database\SqlLite;
 use ChatRoom\Core\Helpers\User;
-// 检查 $_SESSION['user_login_info'] 是否存在且为数组
-if (!isset($_SESSION['user_login_info']) || !is_array($_SESSION['user_login_info'])) {
-    header("Location: /user/login?callBack={$_SERVER['REQUEST_URI']}"); // 重定向到登录页面
-    exit(); // 终止脚本执行
-}
-$db = SqlLite::getInstance()->getConnection();
 
+$db = SqlLite::getInstance()->getConnection();
 $SystemSetting = new SystemSetting($db);
+$user = new User;
+if (!$user->checkUserLoginStatus()) {
+    header("Location: /user/login?callBack={$_SERVER['REQUEST_URI']}");
+    exit();
+}
+
 
 ?>
 <!--
  ______     __     ______     __  __     ______     __   __     ______     ______     __  __     ______     ______   ______     ______     ______     __    __    
 /\___  \   /\ \   /\  ___\   /\ \_\ \   /\  ___\   /\ "-.\ \   /\  ___\   /\  ___\   /\ \_\ \   /\  __ \   /\__  _\ /\  == \   /\  __ \   /\  __ \   /\ "-./  \   
 \/_/  /__  \ \ \  \ \ \____  \ \  __ \  \ \  __\   \ \ \-.  \  \ \ \__ \  \ \ \____  \ \  __ \  \ \  __ \  \/_/\ \/ \ \  __<   \ \ \/\ \  \ \ \/\ \  \ \ \-./\ \  
-  /\_____\  \ \_\  \ \_____\  \ \_\ \_\  \ \_____\  \ \_\\"\_\  \ \_____\  \ \_____\  \ \_\ \_\  \ \_\ \_\    \ \_\  \ \_\ \_\  \ \_____\  \ \_____\  \ \_\ \ \_\ 
+  /\_____\  \ \_\  \ \_____\  \ \_\ \_\  \ \_____\  \ \_\'\_\  \ \_____\  \ \_____\  \ \_\ \_\  \ \_\ \_\    \ \_\  \ \_\ \_\  \ \_____\  \ \_____\  \ \_\ \ \_\ 
   \/_____/   \/_/   \/_____/   \/_/\/_/   \/_____/   \/_/ \/_/   \/_____/   \/_____/   \/_/\/_/   \/_/\/_/     \/_/   \/_/ /_/   \/_____/   \/_____/   \/_/  \/_/ 
 -->
 <!DOCTYPE html>
@@ -28,9 +29,9 @@ $SystemSetting = new SystemSetting($db);
     <title><?= $SystemSetting->getSetting('site_name') ?></title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="<?= $SystemSetting->getSetting('site_description') ?>">
+    <link rel="stylesheet" href="https://cdn.plyr.io/3.6.12/plyr.css" />
     <link href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.3.3/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.bootcdn.net/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
-    <link href="https://cdn.bootcdn.net/ajax/libs/fancybox/3.5.7/jquery.fancybox.min.css" rel="stylesheet">
     <link rel="stylesheet" href="/StaticResources/css/index.chat.css?v=<?php echo FRAMEWORK_VERSION ?>">
     <script>
         const sessionUsername = "<?= $_SESSION['user_login_info']['username']; ?>"; // 获取用户名
@@ -38,7 +39,7 @@ $SystemSetting = new SystemSetting($db);
 </head>
 
 <body>
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <nav class="navbar navbar-fixed-top navbar-expand-lg navbar-light bg-light">
         <div class="container-fluid">
             <a class="navbar-brand d-flex align-items-center">
                 <?= $SystemSetting->getSetting('site_name') ?>
@@ -48,14 +49,6 @@ $SystemSetting = new SystemSetting($db);
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
-                    <li class="nav-item">
-                        <span class="nav-link">
-                            <?php
-                            $user = new User;
-                            echo '您的IP是:' . $user->getIp() . ' 请注意言行举止!';
-                            ?>
-                        </span>
-                    </li>
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" id="navbarScrollingDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             其他链接
@@ -64,14 +57,11 @@ $SystemSetting = new SystemSetting($db);
                             <?php
                             // 获取导航链接的设置
                             $navLinks = $SystemSetting->getSetting('nav_link');
-
-                            // 遍历导航链接并生成列表项
                             if ($navLinks) {
                                 foreach ($navLinks as $item) {
-                                    // 使用双引号插入变量
                                     echo "
                                     <li>
-                                        <a class=\"dropdown-item\" href=\"{$item['link']}\" target=\"_blank\" rel=\"noopener noreferrer\">
+                                        <a class='dropdown-item' href='{$item['link']}' target='_blank' rel='noopener noreferrer'>
                                             {$item['name']}
                                         </a>
                                     </li>
@@ -96,30 +86,39 @@ $SystemSetting = new SystemSetting($db);
     <div class="container mt-4">
         <div class="row justify-content-center">
             <div class="col-md-12">
-                <div id="chat-box-container" class="card">
-                    <div id="chat-box" class="card-body talk">
-                        <div id="loading">
-                            <div class="spinner-border" role="status" aria-hidden="true"></div>
-                            <p>加载中…</p>
+                <div id="chat-box-container" class="card shadow-sm">
+                    <div id="chat-box" class="card-body talk" style="overflow-y: auto; max-height: 500px;">
+                        <div id="loading" class="text-center my-3">
+                            <div class="spinner-border text-primary" role="status" aria-hidden="true"></div>
+                            <p class="mt-2 text-muted">加载中…</p>
                         </div>
+                        <button id="scroll-down-button" class="btn btn-primary">
+                            <i class="bi bi-arrow-down-circle"></i>
+                        </button>
                     </div>
-                    <form id="chat-form" class="card-footer d-flex">
-                        <div id="select-image-file" class="position-relative" style="max-width: 30%;max-height: 50%;"></div>
-                        <textarea type="text" class="form-control me-2" id="message" rows="3" placeholder="聊点什么吧，Ctrl+Enter发送消息"></textarea>
-                        <input type="file" id="image" accept="image/*" class="d-none" />
-                        <button type="button" id="select-image" class="btn btn-secondary me-2">选择图片</button>
-                        <button type="submit" id="send-button" class="btn btn-primary send">发送</button>
+                    <div id="select-file-preview" class="p-3 position-absolute"></div>
+                    <form id="chat-form" class="card-footer d-flex align-items-center gap-3 p-3">
+                        <textarea id="message" class="form-control flex-grow-1" rows="2"
+                            placeholder="聊点什么吧，Ctrl+Enter发送消息" style="resize: none;"></textarea>
+                        <div class="position-relative d-flex align-items-center">
+                            <input type="file" name="file" id="file" class="d-none" multiple />
+                            <button type="button" id="select-file" class="btn btn-secondary" title="上传文件">
+                                <i class="bi bi-paperclip"></i>
+                            </button>
+                        </div>
+                        <button type="submit" id="send-button" class="primary">
+                            <i class="bi bi-send me-1"></i>
+                        </button>
                     </form>
                 </div>
-                <!-- 向下箭头按钮 -->
-                <button id="scroll-down-button" class="btn btn-primary">
-                    <i class="bi bi-arrow-down-circle"></i> 返回底部
-                </button>
             </div>
         </div>
     </div>
-    <!-- 退出登录模态窗结构 -->
-    <div class="modal fade" id="logoutModal" tabindex="-1" aria-labelledby="logoutModalLabel" aria-hidden="true">
+
+    <!--
+        模态窗
+    -->
+    <div class="modal fade" id="logoutModal" aria-labelledby="logoutModalLabel" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
@@ -136,10 +135,22 @@ $SystemSetting = new SystemSetting($db);
             </div>
         </div>
     </div>
+    <div class="modal fade" id="filePreviewModal" aria-labelledby="filePreviewModalLabel" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-fullscreen">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="filePreviewModalLabel">文件预览 <span id="filePreviewFileInfo"></span></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="filePreviewContent" style="overflow: auto; max-height: 100vh;"></div>
+            </div>
+        </div>
+    </div>
 
     <script src="/StaticResources/js/jquery.min.js"></script>
-    <script src="/StaticResources/js/jquery.fancybox.min.js"></script>
     <script src="/StaticResources/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.plyr.io/3.6.12/plyr.js"></script>
+    <script src="/StaticResources/js/helper.js?v=<?php echo FRAMEWORK_VERSION ?>"></script>
     <script src="/StaticResources/js/index.chat.js?v=<?php echo FRAMEWORK_VERSION ?>"></script>
 </body>
 

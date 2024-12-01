@@ -33,11 +33,43 @@ class Chat
             'iSelf' => true,
             'isAdmin' => false
         ],
+        '/清屏' => [
+            'action' => ['清屏'],
+            'notes' => ['清空聊天窗口'],
+            'iSelf' => true,
+            'isAdmin' => false,
+        ],
+
+        '/发起投票' => [
+            'action' => ['发起投票'],
+            'notes' => ['只能同时进行一个投票 [主题] [选项]'],
+            'iSelf' => false,
+            'isAdmin' => false,
+        ],
+        '/投票' => [
+            'action' => ['投票'],
+            'notes' => ['参与投票 [编号]'],
+            'iSelf' => true,
+            'isAdmin' => false,
+        ],
+        '/结束投票' => [
+            'action' => ['结束投票'],
+            'notes' => ['结束投票'],
+            'iSelf' => false,
+            'isAdmin' => true,
+        ],
+        '/显示投票结果' => [
+            'action' => ['显示投票结果'],
+            'notes' => ['显示当前进行中的投票状态'],
+            'iSelf' => true,
+            'isAdmin' => true,
+        ],
+
         '/全员禁言' => [
             'action' => ['全员禁言'],
+            'iSelf' => false,
+            'isAdmin' => true,
             'notes' => ['说明(可选) 全员禁言'],
-            'iSelf' => true,
-            'isAdmin' => true
         ],
         '/调试' => [
             'action' => ['调试'],
@@ -45,5 +77,49 @@ class Chat
             'iSelf' => true,
             'isAdmin' => true
         ]
+    ];
+
+    /**
+     * 上传文件
+     *
+     * @var array
+     */
+    public array $uploadFile = [
+        // 运行上传文件类型
+        'allowTypes' => [
+            //** image **//
+            'image/jpeg',
+            'image/png',
+            'image/gif',
+            'image/webp',
+            'image/bmp',
+            'image/svg+xml',
+            'image/x-icon',
+            //** application **//
+            'application/pdf',
+            'application/msword',
+            'application/vnd.ms-excel',
+            'application/vnd.ms-powerpoint',
+            'application/rtf',
+            //** text **//
+            'text/plain',
+            'text/txt',
+            'text/json',
+            'text/xml',
+            'text/log',
+            //** audio **//
+            'audio/mpeg',
+            'audio/wav',
+            'audio/ogg',
+            'audio/aac',
+            'audio/mp3',
+            'audio/x-msvideo',
+            'audio/ogg',
+            'audio/webm',
+            //** video **/
+            'video/mp4',
+            'video/mkv',
+        ],
+        'maxSize' => 4097152 // 最大文件大小 4MB
     ];
 }

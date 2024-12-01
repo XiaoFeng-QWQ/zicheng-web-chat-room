@@ -3,146 +3,119 @@ require_once __DIR__ . "/module/head.php";
 
 use ChatRoom\Core\Helpers\SystemLog;
 
-// 获取用户统计数据
-$userCountQuery = $db->query('SELECT COUNT(*) as count FROM users');
-$userCount = $userCountQuery->fetch(PDO::FETCH_ASSOC)['count'];
+// 获取统计数据
+$statsQuery = $db->prepare("
+    SELECT 
+        (SELECT COUNT(*) FROM users) as total_users,
+        (SELECT COUNT(*) FROM messages) as total_messages,
+        (SELECT COUNT(*) FROM users WHERE DATE(created_at) = DATE('now')) as new_users_today,
+        (SELECT COUNT(*) FROM messages WHERE DATE(created_at) = DATE('now')) as messages_today
+");
+$statsQuery->execute();
+$stats = $statsQuery->fetch(PDO::FETCH_ASSOC);
 
-// 获取消息总数
-$messageCountQuery = $db->query('SELECT COUNT(*) as count FROM messages');
-$messageCount = $messageCountQuery->fetch(PDO::FETCH_ASSOC)['count'];
+// 获取趋势数据
+$trendQuery = $db->prepare("
+    SELECT 
+        DATE(created_at) as date,
+        COUNT(CASE WHEN type = 'message' THEN 1 END) as message_count,
+        COUNT(CASE WHEN type = 'user' THEN 1 END) as user_count
+    FROM (
+        SELECT created_at, 'message' as type FROM messages 
+        UNION ALL
+        SELECT created_at, 'user' as type FROM users
+    ) trend_data
+    GROUP BY DATE(created_at)
+    ORDER BY DATE(created_at) DESC 
+    LIMIT 31
+");
+$trendQuery->execute();
+$trendData = $trendQuery->fetchAll(PDO::FETCH_ASSOC);
 
-// 获取今日消息统计
-$todayMessageCountQuery = $db->query("SELECT COUNT(*) as count FROM messages WHERE date(created_at) = date('now')");
-$todayMessageCount = $todayMessageCountQuery->fetch(PDO::FETCH_ASSOC)['count'];
+// 获取完整趋势数据
+$trendCSVQuery = $db->prepare("
+    SELECT 
+        DATE(created_at) as date,
+        COUNT(CASE WHEN type = 'message' THEN 1 END) as message_count,
+        COUNT(CASE WHEN type = 'user' THEN 1 END) as user_count
+    FROM (
+        SELECT created_at, 'message' as type FROM messages 
+        UNION ALL
+        SELECT created_at, 'user' as type FROM users
+    ) trend_data
+    GROUP BY DATE(created_at)
+    ORDER BY DATE(created_at)
+");
+$trendCSVQuery->execute();
+$trendCSVData = $trendCSVQuery->fetchAll(PDO::FETCH_ASSOC);
 
-// 获取今日新注册用户数
-$todayNewUserCountQuery = $db->query("SELECT COUNT(*) as count FROM users WHERE date(created_at) = date('now')");
-$todayNewUserCount = $todayNewUserCountQuery->fetch(PDO::FETCH_ASSOC)['count'];
-
-// 获取消息增长趋势数据
-$messageTrendQuery = $db->query("SELECT date(created_at) as date, COUNT(*) as count FROM messages GROUP BY date(created_at) ORDER BY date(created_at) DESC LIMIT 30");
-$messageTrendData = $messageTrendQuery->fetchAll(PDO::FETCH_ASSOC);
-
-// 获取用户增长趋势数据
-$userTrendQuery = $db->query("SELECT date(created_at) as date, COUNT(*) as count FROM users GROUP BY date(created_at) ORDER BY date(created_at) DESC LIMIT 30");
-$userTrendData = $userTrendQuery->fetchAll(PDO::FETCH_ASSOC);
-
+// 获取最近日志
 $log = new SystemLog($db);
 $logs = $log->getLogs(5);
 ?>
 
 <div class="row">
-    <div class="col-md-2">
-        <!-- 系统通知和公告 -->
-        <div class="mb-3">
-            <div class="card">
-                <div class="card-header">
-                    <i class="fas fa-bell"></i> 更新日志
-                </div>
-                <div class="card-body">
-                    <ul class="list-group list-group-flush">
-                        <li class="list-group-item">2024-10-4:[1.0.0.0]【正式版本！】发送消息支持Ctrl+Enter、优化登录逻辑，微调数据库结构，微调部分代码</li>
-                        <li class="list-group-item">2024-09-17:[1.10.0.0]添加指令系统、新消息通知音。微调部分代码</li>
-                        <li class="list-group-item">2024-08-27: [1.9.0.0]支持发送图片消息。</li>
-                        <li class="list-group-item">2024-08-26: [1.8.0.0]完善后台管理。</li>
-                        <li class="list-group-item">2024-08-11: [1.7.0.0]完善站点设置功能。</li>
-                        <li class="list-group-item">2024-08-09: [1.6.7.0]优化部分逻辑。</li>
-                        <li class="list-group-item">2024-08-09: [1.6.6.1]修复通过内置路由验证码无法正常输出问题。</li>
-                    </ul>
-                </div>
-            </div>
+    <!-- 概览 -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <i class="fas fa-chart-line"></i> <?= htmlspecialchars($SystemSetting->getSetting('site_name')) ?>概览
         </div>
-    </div>
-    <div class="col-md-8">
-        <!-- 概览 -->
-        <div class="card mb-4">
-            <div class="card-header">
-                <i class="fas fa-chart-line"></i> <?= $SystemSetting->getSetting('site_name') ?>概览
+        <div class="card-body">
+            <h5 class="card-title">聊天室管理</h5>
+            <p class="card-text">您可以在此处管理用户、消息列表和设置。</p>
+            <hr>
+            <div class="row mt-4">
+                <?php
+                $statsCards = [
+                    ['title' => '今日消息', 'icon' => 'fa-comments', 'value' => $stats['messages_today'], 'class' => 'bg-success'],
+                    ['title' => '消息总数', 'icon' => 'fa-comments', 'value' => $stats['total_messages'], 'class' => 'bg-info'],
+                    ['title' => '新注册', 'icon' => 'fa-user-plus', 'value' => $stats['new_users_today'], 'class' => 'bg-warning text-dark'],
+                    ['title' => '总用户数', 'icon' => 'fa-users', 'value' => $stats['total_users'], 'class' => 'bg-primary'],
+                ];
+                foreach ($statsCards as $card) {
+                    echo "
+                    <div class='col-md-3 col-sm-6 mb-3'>
+                        <div class='card {$card['class']} text-white h-100'>
+                            <div class='card-body'>
+                                <h5 class='card-title'><i class='fas {$card['icon']}'></i> {$card['title']}</h5>
+                                <p class='card-text display-4'>" . htmlspecialchars($card['value']) . "</p>
+                            </div>
+                        </div>
+                    </div>";
+                }
+                ?>
             </div>
-            <div class="card-body">
-                <h5 class="card-title">欢迎来到聊天室管理仪表板</h5>
-                <p class="card-text">
-                    您可以在此处管理用户、消息列表和设置。当前版本：<span class="badge bg-primary"><?php echo FRAMEWORK_VERSION ?></span>
-                    <?php
-                    if (defined('FRAMEWORK_DEBUG') && FRAMEWORK_DEBUG):
-                    ?>
-                        | <span class="badge bg-danger">调试模式已启用</span>
-                    <?php
-                    endif;
-                    ?>
-                </p>
-                <div class="row mt-4">
-                    <div class="col-md-3 col-sm-6 mb-3">
-                        <div class="card bg-success text-white h-100">
-                            <div class="card-body">
-                                <h5 class="card-title"><i class="fas fa-comments"></i> 今日消息</h5>
-                                <p class="card-text display-4"><?php echo htmlspecialchars($todayMessageCount); ?></p>
-                            </div>
-                        </div>
+            <div class="mt-4">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fas fa-history"></i> 最近活动日志
                     </div>
-                    <div class="col-md-3 col-sm-6 mb-3">
-                        <div class="card bg-info text-white h-100">
-                            <div class="card-body">
-                                <h5 class="card-title"><i class="fas fa-comments"></i> 消息总数</h5>
-                                <p class="card-text display-4"><?php echo htmlspecialchars($messageCount); ?></p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3 col-sm-6 mb-3">
-                        <div class="card bg-warning text-dark h-100">
-                            <div class="card-body">
-                                <h5 class="card-title"><i class="fas fa-user-plus"></i> 新注册</h5>
-                                <p class="card-text display-4"><?php echo htmlspecialchars($todayNewUserCount); ?></p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3 col-sm-6 mb-3">
-                        <div class="card bg-primary text-white h-100">
-                            <div class="card-body">
-                                <h5 class="card-title"><i class="fas fa-users"></i> 总用户数</h5>
-                                <p class="card-text display-4"><?php echo htmlspecialchars($userCount); ?></p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="row mt-4">
-                    <div class="col-12">
-                        <div class="card">
-                            <div class="card-header d-flex justify-content-between align-items-center">
-                                <div>
-                                    <i class="fas fa-chart-bar"></i> 用户和消息增长趋势
-                                </div>
-                                <div>
-                                    <button class="btn btn-success me-2" id="exportButton" type="button">
-                                        <i class="fas fa-file-csv me-1"></i> 导出数据为CSV
-                                    </button>
-                                </div>
-                            </div>
-                            <div class="card-body">
-                                <!-- Chart.js -->
-                                <canvas id="trendChart"></canvas>
-                            </div>
-                        </div>
+                    <div class="card-body">
+                        <ul class="list-group list-group-flush">
+                            <?php
+                            foreach ($logs as $log) {
+                                echo "<li class='list-group-item'>[{$log['log_type']}] " . htmlspecialchars($log['message']) . " - " . htmlspecialchars($log['created_at']) . "</li>";
+                            }
+                            ?>
+                        </ul>
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
-    <div class="col-md-2">
-        <!-- 最近活动日志 -->
-        <div class="mb-3">
-            <div class="card">
-                <div class="card-header">
-                    <i class="fas fa-history"></i> 最近活动日志
-                </div>
-                <div class="card-body">
-                    <ul class="list-group list-group-flush">
-                        <?php
-                        foreach ($logs as $log) {
-                            echo "<li class='list-group-item'>[{$log['log_type']}] {$log['message']} - {$log['created_at']}</li>";
-                        }
-                        ?>
-                    </ul>
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <div>
+                                <i class="fas fa-chart-bar"></i> 近31天用户和消息增长图表(如需查看完整信息，请导出为CSV)
+                            </div>
+                            <button class="btn btn-success me-2" id="exportButton" type="button">
+                                <i class="fas fa-file-csv me-1"></i> 导出数据为CSV
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="trendChart"></canvas>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -151,32 +124,29 @@ $logs = $log->getLogs(5);
 
 <script>
     (function() {
-        // 将PHP数组转换为JavaScript数组
-        const messageTrendData = <?php echo json_encode($messageTrendData); ?>;
-        const userTrendData = <?php echo json_encode($userTrendData); ?>;
-
-        // 准备消息和用户增长趋势的数据
-        const trendLabels = messageTrendData.map(item => item.date);
-        const messageTrendCounts = messageTrendData.map(item => item.count);
-        const userTrendCounts = userTrendData.map(item => item.count);
-
-        // Chart.js 配置对象
+        // 从PHP传递完整的趋势数据
+        const trendData = <?php echo json_encode($trendData); ?>;
+        // 提取趋势数据的日期、消息数和用户数
+        const trendLabels = trendData.map(item => item.date);
+        const messageTrendCounts = trendData.map(item => item.message_count);
+        const userTrendCounts = trendData.map(item => item.user_count);
+        // 配置 Chart.js 图表
         const chartConfig = {
-            type: 'bar', // 修改图表类型为柱状图
+            type: 'bar',
             data: {
                 labels: trendLabels,
                 datasets: [{
                         label: '消息数',
                         data: messageTrendCounts,
-                        backgroundColor: 'rgba(255, 99, 132, 0.2)', // 填充颜色
-                        borderColor: 'rgba(255, 99, 132, 1)', // 边框颜色
+                        backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                        borderColor: 'rgba(255, 99, 132, 1)',
                         borderWidth: 1
                     },
                     {
                         label: '用户数',
                         data: userTrendCounts,
-                        backgroundColor: 'rgba(75, 192, 192, 0.2)', // 填充颜色
-                        borderColor: 'rgba(75, 192, 192, 1)', // 边框颜色
+                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                        borderColor: 'rgba(75, 192, 192, 1)',
                         borderWidth: 1
                     }
                 ]
@@ -185,14 +155,12 @@ $logs = $log->getLogs(5);
                 responsive: true,
                 scales: {
                     x: {
-                        display: true,
                         title: {
                             display: true,
                             text: '日期'
                         }
                     },
                     y: {
-                        display: true,
                         title: {
                             display: true,
                             text: '数量'
@@ -201,7 +169,6 @@ $logs = $log->getLogs(5);
                 },
                 plugins: {
                     legend: {
-                        display: true,
                         position: 'top'
                     },
                     tooltip: {
@@ -210,36 +177,33 @@ $logs = $log->getLogs(5);
                 }
             }
         };
-
-        // 创建图表
+        // 创建趋势图表
         const ctx = document.getElementById('trendChart').getContext('2d');
-        const trendChart = new Chart(ctx, chartConfig);
+        new Chart(ctx, chartConfig);
+        // 导出完整数据为CSV
+        document.getElementById('exportButton').addEventListener('click', () => {
+            // 从PHP传递完整的趋势数据
+            const trendData = <?php echo json_encode($trendCSVData); ?>;
+            // 提取趋势数据的日期、消息数和用户数
+            const trendLabels = trendData.map(item => item.date);
+            const messageTrendCounts = trendData.map(item => item.message_count);
+            const userTrendCounts = trendData.map(item => item.user_count);
 
-        // 导出为 CSV
-        function exportToCSV() {
-            let csvContent = "data:text/csv;charset=utf-8,";
-
-            // 添加CSV头部
-            csvContent += "Date, Message Count, User Count\n";
-
-            // 添加数据行
+            let csvContent = "data:text/csv;charset=utf-8,Date,Message Count,User Count\n";
             trendLabels.forEach((label, index) => {
-                const row = [label, messageTrendCounts[index], userTrendCounts[index]].join(",");
-                csvContent += row + "\n";
+                csvContent += `${label},${messageTrendCounts[index]},${userTrendCounts[index]}\n`;
             });
 
-            // 创建隐藏的下载链接并点击
+            // 创建并触发下载链接
             const encodedUri = encodeURI(csvContent);
             const link = document.createElement("a");
             link.setAttribute("href", encodedUri);
-            link.setAttribute("download", "trend_data.csv");
-            document.body.appendChild(link); // Required for FF
+            link.setAttribute("download", "complete_trend_data.csv");
+            document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
-        }
-        document.getElementById('exportButton').addEventListener('click', exportToCSV);
+        });
     })();
 </script>
-<?php
-require_once __DIR__ . '/module/footer.php';
-?>
+
+<?php require_once __DIR__ . '/module/footer.php'; ?>

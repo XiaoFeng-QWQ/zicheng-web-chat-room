@@ -3,7 +3,7 @@
 <footer class="footer mt-auto py-3 bg-dark">
     <div class="container text-center">
         <span class="text-light">
-            <i class="fas fa-copyright"></i> 2024 子辰聊天室. All rights reserved.
+            Powered By: <a href="https://zicheng.icu" target="_blank" rel="noopener noreferrer">小枫_QWQ</a> V:<?= FRAMEWORK_VERSION ?>
         </span>
     </div>
 </footer>
