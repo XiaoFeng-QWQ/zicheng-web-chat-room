@@ -1,6 +1,6 @@
 <center>
     <h1>子辰网页聊天室</h1>
-    <img src='/StaticResources/image/logo.svg' alt='logo' />
+    <img src=https://image.lolimi.cn/2024/12/01/674c7b46aa3c1.png alt='logo' />
 </center>
 
 发布页: [https://bri6.cn/archives/405.html](https://bri6.cn/archives/405.html)  
@@ -11,21 +11,36 @@
 
 - 确保 PHP 版本为 8.2 或以上
 
+Nginx需要配置以下伪静态
+```
+if (!-d $request_filename){
+    set $rule_0 1$rule_0;
+}
+if ($rule_0 = "1"){
+ rewrite ^/(.+)/$ /$1 permanent;
+}
+#ignored: "-" thing used or unknown variable in regex/rew
+if (!-f $request_filename){
+    set $rule_2 1$rule_2;
+}
+if (!-d $request_filename){
+    set $rule_2 2$rule_2;
+}
+if ($rule_2 = "21"){
+ rewrite ^/(.*)$ /index.php?/$1 last;
+}
+```
+
 ## 项目介绍
 
 - 基于 AJAX 技术实现的网页聊天室
 - 兼容虚拟主机环境
 - 使用 Bootstrap 进行界面设计
 
-## 待实现功能
-
-- [x] 完善的管理后台
-- 自定义聊天气泡
-- 用户中心
-- 消息举报功能
-
 ## 已实现的功能
 - [x] 完整的后台管理
+- [x] 上传文件
+- [x] 上传的文件预览
 
 ## 参与贡献
 
