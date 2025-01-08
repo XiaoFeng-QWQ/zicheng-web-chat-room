@@ -41,4 +41,3 @@ define('FRAMEWORK_APP_PATH', FRAMEWORK_DIR . '/App');
  * 
  * @var string
  */
-define('FRAMEWORK_DATABASE_PATH', 'F:\\web\\wwwroot\\Zichen Web chat room/data.db');
