@@ -34,7 +34,7 @@ switch ($method) {
 
             // 将文件信息插入到消息模板中
             $message .= sprintf(
-                '[!file(path_"%s", name_"%s", type_"%s", size_"%s", download_"true")]',
+                '<br>[!file(path_"%s", name_"%s", type_"%s", size_"%s", download_"true")]',
                 $uploadedFile['url'],
                 $uploadedFile['name'],
                 $uploadedFile['type'],

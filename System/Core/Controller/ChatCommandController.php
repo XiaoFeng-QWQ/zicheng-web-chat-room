@@ -67,7 +67,7 @@ class ChatCommandController extends ChatController
             $response = $this->executeCommand($action, $params);
 
             // 如果是管理员并且指令配置为不可见，则直接返回响应
-            if ($isAdminRequired && $commandConfig['iSelf']) {
+            if ($isAdminRequired || $commandConfig['iSelf']) {
                 return $response;
             }
 
