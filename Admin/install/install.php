@@ -1,7 +1,5 @@
 <?php
 require_once __DIR__ . '/../../config.global.php';
-
-// 开始会话
 session_start();
 
 if (defined('FRAMEWORK_DATABASE_PATH')) {
@@ -10,26 +8,46 @@ if (defined('FRAMEWORK_DATABASE_PATH')) {
 }
 require_once __DIR__ . '/../../vendor/autoload.php';
 
-// 常量配置
-define('MSG_INVALID_METHOD', '无效的方法。');
-define('MSG_METHOD_NOT_PROVIDED', '方法未提供。');
-define('MSG_INVALID_REQUEST_METHOD', '无效的请求方法。');
-define('MSG_README_NOT_FOUND', 'README 文件不存在。');
-define('MSG_PASSWORD_MISMATCH', '密码不匹配，请重新输入。');
-define('MSG_DB_PATH_NOT_WRITABLE', '数据库路径不可写，请检查权限。<a href="?step=3">返回上一步</a>');
-define('MSG_DB_CREATION_FAILURE', '无法创建数据库文件，请检查权限。');
-define('MSG_FILE_ALREADY_EXISTS', '文件已存在！禁止覆盖。<a href="?step=3">返回上一步</a>');
-define('MSG_DB_WRITE_FAILURE', '数据库文件不可写，请检查权限。<a href="?step=3">返回上一步</a>');
-define('MSG_SQL_IMPORT_FAILURE', 'SQL 导入失败。');
-define('MSG_ADMIN_CREATION_FAILURE', '管理员用户创建失败。');
-define('MSG_SITE_CONFIG_FAILURE', '站点配置创建失败。');
-define('MSG_SESSION_DESTROY_SUCCESS', '销毁临时会话成功。');
-define('MSG_INSTALL_SUCCESS', '安装成功！请在 站点目录下的 config.global.php 文件中设置 define(\'FRAMEWORK_DATABASE_PATH\', \'%s\');');
+/**
+ * 动态返回上一步链接的函数
+ *
+ * @return html
+ */
+function INSTALL_STEP_BACK()
+{
+    // 检查是否存在 $_GET['step']，如果不存在则设为默认值 1
+    $step = isset($_GET['step']) ? $_GET['step'] : 1;
+    return '<a href="?step=' . ((int)$step - 1) . '">返回上一步</a>';
+}
 
-// 处理异常
+// 配置数组，包含错误信息和成功信息
+define('INSTALL_CONFIG', [
+    'ERROR_INVALID_METHOD' => '无效的方法。',
+    'ERROR_METHOD_NOT_PROVIDED' => '方法未提供。',
+    'ERROR_INVALID_REQUEST_METHOD' => '无效的请求方法。',
+    'ERROR_README_NOT_FOUND' => 'README 文件不存在。',
+    'ERROR_PASSWORD_MISMATCH' => '密码不匹配，请重新输入。' . INSTALL_STEP_BACK(),
+    'ERROR_DB_PATH_NOT_WRITABLE' => '数据库路径不存在或不可写，请检查。' . INSTALL_STEP_BACK(),
+    'ERROR_DB_CREATION_FAILURE' => '无法创建数据库文件，请检查权限。' . INSTALL_STEP_BACK(),
+    'ERROR_FILE_ALREADY_EXISTS' => '文件已存在！禁止覆盖。' . INSTALL_STEP_BACK(),
+    'ERROR_DB_WRITE_FAILURE' => '数据库文件不可写，请检查权限。' . INSTALL_STEP_BACK(),
+    'ERROR_SQL_IMPORT_FAILURE' => 'SQL 导入失败。' . INSTALL_STEP_BACK(),
+    'ERROR_ADMIN_CREATION_FAILURE' => '管理员用户创建失败。' . INSTALL_STEP_BACK(),
+    'ERROR_SITE_CONFIG_FAILURE' => '站点配置创建失败。' . INSTALL_STEP_BACK(),
+    'SUCCESS_SESSION_DESTROY' => '销毁临时会话成功。',
+    'SUCCESS' => "安装成功！请在站点目录下的 config.global.php 文件中添加 <pre class='language-php'><code>define('FRAMEWORK_DATABASE_PATH', '%s');</code></pre>"
+]);
+
+
+/**
+ * 处理异常
+ *
+ * @param [type] $e
+ * @return void
+ */
 function HandleException($e)
 {
-    echo sprintf('<div class="alert alert-danger" role="alert">哎呀！安装程序出错了：%s</div>', htmlspecialchars($e->getMessage()));
+    echo sprintf('<div class="alert alert-danger" role="alert">出错了! -> <pre><code class="language-php">%s</code</pre></div>', $e);
 }
 set_exception_handler('HandleException');
 
@@ -40,9 +58,8 @@ function readme()
     if (file_exists($readme_file)) {
         return $Parsedown->text(file_get_contents($readme_file));
     }
-    return MSG_README_NOT_FOUND;
+    return INSTALL_CONFIG['ERROR_README_NOT_FOUND'];
 }
-
 function usageTerms()
 {
     $Parsedown = new Parsedown();

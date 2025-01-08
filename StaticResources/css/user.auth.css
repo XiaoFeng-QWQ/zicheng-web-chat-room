@@ -5,24 +5,7 @@ body {
     height: 100vh;
     margin: 0;
     font-family: 'Arial', sans-serif;
-
-    background: linear-gradient(270deg, #a8e6cf, #dcedc1, #ffd3b6, #ffaaa5, #ff8b94);
-    background-size: 1000% 1000%;
-    animation: GradientAnimation 15s ease infinite;
-}
-
-@keyframes GradientAnimation {
-    0% {
-        background-position: 0% 50%;
-    }
-
-    50% {
-        background-position: 100% 50%;
-    }
-
-    100% {
-        background-position: 0% 50%;
-    }
+    background: #f8f9fd;
 }
 
 .container {
@@ -30,19 +13,15 @@ body {
     flex-direction: column;
     /* 默认列方向 */
     border-radius: 10px;
-    overflow: hidden;
     max-width: 960px;
     width: 100%;
     padding-right: unset;
-    /* 半透明的白色背景 */
-    background: rgba(255, 255, 255, 0.8);
-    /* 圆角 */
-    border-radius: 10px;
-    /* 阴影 */
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
 }
 
 .user-auth-container {
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
     padding: 2rem;
     text-align: center;
     width: 100%;
@@ -53,6 +32,7 @@ body {
 .user-auth-container h1 {
     margin-bottom: 2rem;
     color: #333;
+    text-align: left;
 }
 
 .user-auth-container label {
@@ -118,20 +98,22 @@ body {
     .user-login-auth-image {
         display: block;
         /* 平板及以上设备显示 */
-        background: url('https://t.alcy.cc/bd') no-repeat center center;
+        background: url('https://api.vvhan.com/api/bing') no-repeat center center;
         background-size: cover;
         width: 50%;
         /* 占据一半宽度 */
         background-position: right;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
     }
 
     .user-register-auth-image {
         display: block;
         /* 平板及以上设备显示 */
-        background: url('https://t.alcy.cc/xhl') no-repeat center center;
+        background: url('https://api.vvhan.com/api/wallpaper/views') no-repeat center center;
         background-size: cover;
         width: 50%;
         /* 占据一半宽度 */
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
     }
 }
 

@@ -17,7 +17,7 @@ if (isset($_GET['user_id']) && !empty($_GET['user_id'])) {
             echo json_encode(['success' => false, 'message' => '未获取到用户信息！']);
         }
     } catch (Exception $e) {
-        echo json_encode(['success' => false, 'message' => '获取用户信息失败', 'error' => $e->getMessage()]);
+        echo json_encode(['success' => false, 'message' => '获取用户信息失败', 'error' => $e]);
     }
 } else {
     echo json_encode(['success' => false, 'message' => 'userid不能为空！']);

@@ -11,14 +11,13 @@ if (!$user->checkUserLoginStatus()) {
     header("Location: /user/login?callBack={$_SERVER['REQUEST_URI']}");
     exit();
 }
-
-
+$cookieData = json_decode($_COOKIE['user_login_info'], true);
 ?>
 <!--
  ______     __     ______     __  __     ______     __   __     ______     ______     __  __     ______     ______   ______     ______     ______     __    __    
 /\___  \   /\ \   /\  ___\   /\ \_\ \   /\  ___\   /\ "-.\ \   /\  ___\   /\  ___\   /\ \_\ \   /\  __ \   /\__  _\ /\  == \   /\  __ \   /\  __ \   /\ "-./  \   
 \/_/  /__  \ \ \  \ \ \____  \ \  __ \  \ \  __\   \ \ \-.  \  \ \ \__ \  \ \ \____  \ \  __ \  \ \  __ \  \/_/\ \/ \ \  __<   \ \ \/\ \  \ \ \/\ \  \ \ \-./\ \  
-  /\_____\  \ \_\  \ \_____\  \ \_\ \_\  \ \_____\  \ \_\'\_\  \ \_____\  \ \_____\  \ \_\ \_\  \ \_\ \_\    \ \_\  \ \_\ \_\  \ \_____\  \ \_____\  \ \_\ \ \_\ 
+  /\_____\  \ \_\  \ \_____\  \ \_\ \_\  \ \_____\  \ \_\'\_\   \ \_____\  \ \_____\  \ \_\ \_\  \ \_\ \_\    \ \_\  \ \_\ \_\  \ \_____\  \ \_____\  \ \_\ \ \_\ 
   \/_____/   \/_/   \/_____/   \/_/\/_/   \/_____/   \/_/ \/_/   \/_____/   \/_____/   \/_/\/_/   \/_/\/_/     \/_/   \/_/ /_/   \/_____/   \/_____/   \/_/  \/_/ 
 -->
 <!DOCTYPE html>
@@ -32,9 +31,11 @@ if (!$user->checkUserLoginStatus()) {
     <link rel="stylesheet" href="https://cdn.plyr.io/3.6.12/plyr.css" />
     <link href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.3.3/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.bootcdn.net/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="/StaticResources/css/index.chat.css?v=<?php echo FRAMEWORK_VERSION ?>">
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.6.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/StaticResources/css/highlight/vs2015.min.css">
+    <link rel="stylesheet" href="/StaticResources/css/index.chat.css?v=<?= FRAMEWORK_VERSION ?>">
     <script>
-        const sessionUsername = "<?= $_SESSION['user_login_info']['username']; ?>"; // 获取用户名
+        const sessionUsername = "<?= $cookieData['username']; ?>"; // 获取用户名
     </script>
 </head>
 
@@ -42,7 +43,7 @@ if (!$user->checkUserLoginStatus()) {
     <nav class="navbar navbar-fixed-top navbar-expand-lg navbar-light bg-light">
         <div class="container-fluid">
             <a class="navbar-brand d-flex align-items-center">
-                <?= $SystemSetting->getSetting('site_name') ?>
+                <?= $SystemSetting->getSetting('site_name') ?>(<i class="bi bi-people-fill"></i><span id="chatroom-user-count"></span>)
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
@@ -71,13 +72,17 @@ if (!$user->checkUserLoginStatus()) {
                             ?>
                         </ul>
                     </li>
-                    <?php if ($_SESSION['user_login_info']['group_id'] === 1) : ?>
+                    <li class="nav-item">
+                        <span>在线用户(<span id="online-users-list-count"></span>)</span>
+                        <a id="online-users-list"></a>
+                    </li>
+                    <?php if ($cookieData['group_id'] === 1) : ?>
                         <li class="nav-item">
-                            <a class="nav-link" href="/Admin/index.php" target="_blank" rel="noopener noreferrer">后台管理</a>
+                            <a class="nav-link" href="/Admin/index.php" target="_blank" rel="noopener noreferrer"><i class="bi bi-gear"></i> 后台管理</a>
                         </li>
                     <?php endif; ?>
                     <li class="nav-item">
-                        <button id="logout" class="btn btn-danger nav-link">退出登录</button>
+                        <button id="logout" class="btn btn-danger nav-link"><i class="bi bi-box-arrow-right"></i> 退出登录</button>
                     </li>
                 </ul>
             </div>
@@ -85,7 +90,7 @@ if (!$user->checkUserLoginStatus()) {
     </nav>
     <div class="container mt-4">
         <div class="row justify-content-center">
-            <div class="col-md-12">
+            <div class="col-md-9">
                 <div id="chat-box-container" class="card shadow-sm">
                     <div id="chat-box" class="card-body talk" style="overflow-y: auto; max-height: 500px;">
                         <div id="loading" class="text-center my-3">
@@ -103,7 +108,7 @@ if (!$user->checkUserLoginStatus()) {
                         <div class="position-relative d-flex align-items-center">
                             <input type="file" name="file" id="file" class="d-none" multiple />
                             <button type="button" id="select-file" class="btn btn-secondary" title="上传文件">
-                                <i class="bi bi-paperclip"></i>
+                                <i class="bi bi-file-earmark-arrow-up"></i>
                             </button>
                         </div>
                         <button type="submit" id="send-button" class="primary">
@@ -150,8 +155,27 @@ if (!$user->checkUserLoginStatus()) {
     <script src="/StaticResources/js/jquery.min.js"></script>
     <script src="/StaticResources/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.plyr.io/3.6.12/plyr.js"></script>
-    <script src="/StaticResources/js/helper.js?v=<?php echo FRAMEWORK_VERSION ?>"></script>
-    <script src="/StaticResources/js/index.chat.js?v=<?php echo FRAMEWORK_VERSION ?>"></script>
+    <script src="/StaticResources/js/highlight.min.js"></script>
+    <script src="/StaticResources/js/highlight.prolog.min.js"></script>
+    <script src="/StaticResources/js/helper.js?v=<?= FRAMEWORK_VERSION ?>"></script>
+    <script src="/StaticResources/js/index.chat.js?v=<?= FRAMEWORK_VERSION ?>"></script>
+    <script>
+        $.ajax({
+            type: "GET",
+            url: "/api/v1/home/user",
+            dataType: "JSON",
+            success: function(response) {
+                if (response.code === 200) {
+                    $('#chatroom-user-count').text(response.data.registerUserCount);
+                } else {
+                    $('#chatroom-user-count').text('undefined');
+                }
+            },
+            error: function() {
+                $('#chatroom-user-count').text('undefined');
+            }
+        });
+    </script>
 </body>
 
 </html>

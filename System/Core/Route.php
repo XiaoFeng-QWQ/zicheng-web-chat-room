@@ -50,9 +50,14 @@ class Route
     {
         $uriWithoutQuery = strtok($uri, '?');
         foreach ($this->routeRules as $pattern => $handler) {
-            $pattern = preg_quote($pattern, '/');
-            if (preg_match("/^$pattern$/", $uriWithoutQuery)) {
-                return $handler;
+            if (strpos($pattern, '/') === 0) {
+                if (preg_match("#^$pattern$#", $uriWithoutQuery)) {
+                    return $handler;
+                }
+            } else {
+                if ($uriWithoutQuery === $pattern) {
+                    return $handler;
+                }
             }
         }
         return null;

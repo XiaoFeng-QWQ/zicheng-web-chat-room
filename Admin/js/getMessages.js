@@ -65,14 +65,12 @@ function updatePagination(totalPages) {
     const prevDisabled = currentPage === 1 ? 'disabled' : '';
     const nextDisabled = currentPage === totalPages ? 'disabled' : '';
 
-    pagination.append(`<li class="page-item ${prevDisabled}" id="prev-page"><a class="page-link" href="#" tabindex="-1" aria-disabled="${prevDisabled}">上一页</a></li>`);
-
-    for (let i = 1; i <= totalPages; i++) {
-        const activeClass = i === currentPage ? 'active' : '';
-        pagination.append(`<li class="page-item ${activeClass}"><a class="page-link" href="#">${i}</a></li>`);
-    }
-
-    pagination.append(`<li class="page-item ${nextDisabled}" id="next-page"><a class="page-link" href="#" aria-disabled="${nextDisabled}">下一页</a></li>`);
+    pagination.append(`
+    <li class="page-item ${prevDisabled}" id="prev-page"><a class="page-link" href="#" tabindex="-1" aria-disabled="${prevDisabled}">上一页</a></li>
+    <li class="page-item"><a class="page-link">${currentPage} / ${totalPages}</a></li>
+    <li class="page-item ${nextDisabled}" id="next-page"><a class="page-link" href="#" aria-disabled="${nextDisabled}">下一页</a></li>
+    `);
+  
 }
 
 /**

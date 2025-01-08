@@ -82,7 +82,7 @@ function handleFormSubmit(event, submitFunction) {
  * 
  */
 function loginUser(username, password, 我TM是占位符, captcha, button) {
-    ajaxRequest('/api/user?method=login', { username, password, captcha }, button, callBack, callBack);
+    ajaxRequest('/api/v1/user/login', { username, password, captcha }, button, callBack, callBack);
 }
 
 /**
@@ -97,7 +97,7 @@ function loginUser(username, password, 我TM是占位符, captcha, button) {
 function registerUser(username, password, confirmPassword, captcha, button) {
     // 判断复选框是否被勾选
     if ($('#UserAgreementCheckbox').prop('checked')) {
-        ajaxRequest('/api/user?method=register', { username, password, confirm_password: confirmPassword, captcha }, button, callBack, callBack);
+        ajaxRequest('/api/v1/user/register', { username, password, confirm_password: confirmPassword, captcha }, button, callBack, callBack);
     } else {
         handleError('请勾选同意《用户协议》');
     }
@@ -152,6 +152,7 @@ function handleResponse(response, action, redirectUrl) {
     } else {
         const message = response.message || `${action}失败`;
         messageBox.text(message).removeClass().addClass('alert alert-danger');
+        $('#captchaImage').attr('src', '/api/v1/captcha?' + Math.random());
         enableButtonWithLoading(submitButton);
     }
 }

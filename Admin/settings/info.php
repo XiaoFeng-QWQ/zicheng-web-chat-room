@@ -27,7 +27,11 @@ require_once __DIR__ . "/../helper/common.php";
             <p class="text-muted">以下是最近的更新记录：</p>
             <ul class="list-group list-group-flush">
                 <li class="list-group-item d-flex justify-content-between align-items-center">
-                    <span>2024-10-4: [1.2.0.0]1.聊天支持上传文件，指令列表新增投票 2.部分CSS、布局优化 3.优化部分代码</span>
+                    <span>2024-1-8: [2.0.0.0]1.全部代码优化 2.API更加标准化 3.部分逻辑优化 4.部分样式优化</span>
+                    <span class="badge bg-info">改进</span>
+                </li>
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <span>2024-12-1: [1.2.0.0]1.聊天支持上传文件，指令列表新增投票 2.部分CSS、布局优化 3.优化部分代码</span>
                     <span class="badge bg-success">新功能</span>
                 </li>
                 <li class="list-group-item d-flex justify-content-between align-items-center">

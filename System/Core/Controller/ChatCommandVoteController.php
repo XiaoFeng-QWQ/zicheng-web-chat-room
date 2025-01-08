@@ -6,7 +6,7 @@ class ChatCommandVoteController
 {
     private $currentVote = null;  // 当前的投票
     private $voters = [];  // 记录已投票的用户
-    private $filePath = FRAMEWORK_DIR . '/Writable/vote_data.json';  // 存储投票数据的文件路径
+    private $filePath = FRAMEWORK_DIR . '/Writable/chat.command.vote.json';  // 存储投票数据的文件路径
 
     /**
      * 构造函数

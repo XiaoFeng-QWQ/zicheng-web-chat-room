@@ -8,6 +8,20 @@ CREATE TABLE "admin_login_attempts" (
 	"is_blocked"	INTEGER NOT NULL DEFAULT 0,
 	PRIMARY KEY("id" AUTOINCREMENT)
 );
+DROP TABLE IF EXISTS "files";
+CREATE TABLE "files" (
+	"id"	INTEGER UNIQUE,
+	"file_name"	VARCHAR(255) NOT NULL,
+	"file_type"	VARCHAR(50),
+	"file_size"	BIGINT,
+	"file_path"	TEXT,
+	"file_uuid"	TEXT UNIQUE,
+	"created_at"	TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+	"updated_at"	TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+	"user_id"	INT,
+	"status"	VARCHAR(50) DEFAULT 'active',
+	PRIMARY KEY("id" AUTOINCREMENT)
+);
 DROP TABLE IF EXISTS "groups";
 CREATE TABLE "groups" (
 	"group_id"	INTEGER NOT NULL UNIQUE,
@@ -70,22 +84,13 @@ CREATE TABLE "users" (
 	"created_at"	DATETIME DEFAULT CURRENT_TIMESTAMP,
 	PRIMARY KEY("user_id" AUTOINCREMENT)
 );
-INSERT INTO "groups" VALUES (1,'管理员','0000-00-00 00:00:00');
-INSERT INTO "groups" VALUES (2,'普通用户','0000-00-00 00:00:00');
-INSERT INTO "system_sets" VALUES (1,'nav_link','[
-    {
-        "name": "作者博客",
-        "link": "https://blog.zicheng.icu"
-    },
-    {
-        "name": "Gitee开源地址",
-        "link": "https://gitee.com/XiaoFengQWQ/zichen-web-chat-room"
-    }
-]');
-INSERT INTO "system_sets" VALUES (2,'enable_user_registration','true');
 DROP INDEX IF EXISTS "admin_login_attempts_index";
 CREATE UNIQUE INDEX "admin_login_attempts_index" ON "admin_login_attempts" (
 	"id"
+);
+DROP INDEX IF EXISTS "files_index";
+CREATE INDEX "files_index" ON "files" (
+	"file_uuid"
 );
 DROP INDEX IF EXISTS "groups_index";
 CREATE UNIQUE INDEX "groups_index" ON "groups" (

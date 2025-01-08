@@ -9,17 +9,19 @@ require_once __DIR__ . '/install.php';
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>子辰聊天室安装程序 - <?= $progress ?>%</title>
     <link href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.3.3/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.bootcdn.net/ajax/libs/nprogress/0.2.0/nprogress.min.css" rel="stylesheet">
+    <script src="/StaticResources/js/bootstrap.bundle.min.js"></script>
     <link href="https://cdn.bootcdn.net/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+    <?php require_once FRAMEWORK_APP_PATH . '/Views/module/module.highlight.php' ?>
     <style>
         #readme,
         #usageTerms {
             overflow: auto;
-            max-height: 65vh;
+            max-height: 70vh;
         }
 
         img {
-            max-width: 50%;
-            max-height: 50%;
+            max-width: 100%;
         }
 
         .step {
@@ -60,7 +62,7 @@ require_once __DIR__ . '/install.php';
             </div>
         </div>
         <div class="step <?= ($step == '') ? 'active' : ''; ?>">
-            <h1 class="text-center">欢迎使用子辰聊天室 <i>V<?= FRAMEWORK_VERSION ?></i> 安装程序</h1>
+            <h1 class="text-center">欢迎使用子辰聊天室 <i>V<?= FRAMEWORK_VERSION ?></i></h1>
             <h2>描述：</h2>
             <div id="readme" class="mt-4 p-3 border border-primary rounded">
                 <?= readme(); ?>
@@ -106,7 +108,7 @@ require_once __DIR__ . '/install.php';
                     $confirm_pass = $_POST['confirm_pass'];
 
                     if ($admin_pass !== $confirm_pass) {
-                        exit('<div class="alert alert-danger">' . MSG_PASSWORD_MISMATCH . ' <a href="?step=1">返回上一步</a></div>');
+                        exit('<div class="alert alert-danger">' . INSTALL_CONFIG['ERROR_PASSWORD_MISMATCH']);
                     } else {
                         $_SESSION['admin_name'] = $admin_name;
                         $_SESSION['admin_pass'] = password_hash($admin_pass, PASSWORD_DEFAULT);
@@ -161,14 +163,14 @@ require_once __DIR__ . '/install.php';
 
                     $directory = dirname($fullPath);
                     if (!is_writable($directory)) {
-                        echo '<div class="alert alert-danger">' . MSG_DB_PATH_NOT_WRITABLE . '</div>';
+                        echo '<div class="alert alert-danger">' . INSTALL_CONFIG['ERROR_DB_PATH_NOT_WRITABLE'] . '</div>';
                     } else {
                         if (file_exists($fullPath)) {
-                            echo '<div class="alert alert-danger">' . MSG_FILE_ALREADY_EXISTS . '</div>';
+                            echo '<div class="alert alert-danger">' . INSTALL_CONFIG['ERROR_FILE_ALREADY_EXISTS'] . '</div>';
                             exit;
                         }
                         if (!file_exists($fullPath) && !touch($fullPath)) {
-                            echo '<div class="alert alert-danger">' . MSG_DB_CREATION_FAILURE . '</div>';
+                            echo '<div class="alert alert-danger">' . INSTALL_CONFIG['ERROR_DB_CREATION_FAILURE'] . '</div>';
                             exit;
                         }
                         if (is_writable($fullPath)) {
@@ -178,43 +180,80 @@ require_once __DIR__ . '/install.php';
                                 $pdo = new PDO("sqlite:$fullPath");
                                 $install_sql = file_get_contents(__DIR__ . '/install.sql');
                                 if ($pdo->exec($install_sql) === false) {
-                                    throw new Exception(MSG_SQL_IMPORT_FAILURE);
+                                    throw new Exception(INSTALL_CONFIG['ERROR_SQL_IMPORT_FAILURE']);
                                 }
-                                echo '<div class="alert alert-success">数据库创建完成 <br></div>';
+                                // 开启事务
+                                $pdo->beginTransaction();
+
+                                // 插入管理员用户
                                 $stmt = $pdo->prepare("INSERT INTO users (username, password, group_id) VALUES (?, ?, 1)");
-                                if (!$stmt->execute([$_SESSION['admin_name'], $_SESSION['admin_pass']])) {
-                                    throw new Exception(MSG_ADMIN_CREATION_FAILURE);
-                                }
-                                echo '<div class="alert alert-success">管理员用户插入完成 <br></div>';
+                                $stmt->execute([$_SESSION['admin_name'], $_SESSION['admin_pass']]);
+
+                                // 创建站点配置
+                                $siteConfig = [
+                                    ['site_name', $_SESSION['site_name']],
+                                    ['site_description', $_SESSION['site_description']],
+                                    ['enable_user_registration', 'true'],
+                                    ['nav_link', json_encode([
+                                        ['name' => '联系站长', 'link' => 'https://blog.zicheng.icu'],
+                                        ['name' => 'Gitee开源地址', 'link' => 'https://gitee.com/XiaoFengQWQ/zichen-web-chat-room']
+                                    ], JSON_UNESCAPED_UNICODE)]
+                                ];
                                 $stmt = $pdo->prepare("INSERT INTO system_sets (name, value) VALUES (?, ?)");
-                                if (!$stmt->execute(['site_name', $_SESSION['site_name']]) || !$stmt->execute(['site_description', $_SESSION['site_description']])) {
-                                    throw new Exception(MSG_SITE_CONFIG_FAILURE);
+                                foreach ($siteConfig as $config) {
+                                    $stmt->execute($config);
                                 }
-                                echo '<div class="alert alert-success">站点配置插入完成 <br></div>';
+
+                                // 创建用户组
+                                $groups = [
+                                    ['管理员'],
+                                    ['普通用户']
+                                ];
+                                $stmt = $pdo->prepare("INSERT INTO groups (group_name) VALUES (?)");
+                                foreach ($groups as $config) {
+                                    $stmt->execute($config);
+                                }
+
+                                // 提交事务
+                                $pdo->commit();
                                 session_unset();
                                 session_destroy();
-                                echo '<div class="alert alert-success">' . MSG_SESSION_DESTROY_SUCCESS . '</div>';
-                                echo sprintf('<div class="alert alert-success">' . MSG_INSTALL_SUCCESS . '</div>', addslashes($fullPath));
+                                echo sprintf('<div class="alert alert-success">' . INSTALL_CONFIG['SUCCESS'] . '</div>', addslashes($fullPath));
                                 exit();
                             } catch (PDOException $e) {
-                                HandleException($e);
-                            } catch (Exception $e) {
+                                // 滚回！
+                                $pdo->rollBack();
                                 HandleException($e);
                             }
                         } else {
-                            echo '<div class="alert alert-danger">' . MSG_DB_WRITE_FAILURE . '</div>';
+                            echo '<div class="alert alert-danger">' . INSTALL_CONFIG['ERROR_DB_WRITE_FAILURE'] . '</div>';
                         }
                     }
                     $_SESSION['install_step'] = 4;
                 }
             } else {
                 echo '<div class="alert alert-danger">非法访问！</div>';
-                exit;
             }
             ?>
         </div>
     </div>
-    <script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
+    <script src="/StaticResources/js/jquery.min.js"></script>
+    <script src="/StaticResources/js/nprogress.min.js"></script>
+    <script src="/StaticResources/js/jquery.pjax.min.js"></script>
+    <script>
+        // Pjax!
+        $(document).pjax('a:not(a[target="_blank"],a[no-pjax])', {
+            container: '.container',
+            fragment: '.container',
+            timeout: 20000
+        });
+        $(document).on('pjax:send', function() {
+            NProgress.start();
+        });
+        $(document).on('pjax:end', function() {
+            NProgress.done();
+        });
+    </script>
 </body>
 
 </html>

@@ -63,25 +63,6 @@ if (!is_array($navLinkSetting)) {
         const linkItem = $(this).closest('.nav-link-item');
         var index = linkItem.data('index');
 
-        removedLinks.push(linkItem.prop('outerHTML')); // 存储删除的项
-
-        linkItem.html(`
-        <div class="alert alert-warning alert-dismissible fade show" role="alert">
-            链接已删除 
-            <button type="button" class="btn btn-outline-warning btn-sm undo-remove" data-index="${index}">
-                <i class="bi bi-arrow-counterclockwise"></i> 撤回
-            </button>
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-        `);
-    });
-
-    // 事件委托处理撤回删除操作
-    $('#nav-links-container').on('click', '.undo-remove', function() {
-        const index = $(this).data('index');
-        const container = $('#nav-links-container');
-        var removedLink = removedLinks.pop(); // 从存储中取出最后一项
-
-        container.find(`[data-index="${index}"]`).replaceWith(removedLink);
+        linkItem.html('');
     });
 </script>

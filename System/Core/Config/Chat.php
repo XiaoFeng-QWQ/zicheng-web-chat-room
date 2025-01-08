@@ -101,6 +101,7 @@ class Chat
             'application/vnd.ms-excel',
             'application/vnd.ms-powerpoint',
             'application/rtf',
+            'application/json',
             //** text **//
             'text/plain',
             'text/txt',

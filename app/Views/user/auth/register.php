@@ -2,8 +2,10 @@
 require_once FRAMEWORK_APP_PATH . '/Views/module/user.auth.head.php';
 ?>
 
+<div class="user-register-auth-image"></div>
 <div class="user-auth-container">
-    <h1 class="h4 fw-normal text-center">注册到<?= $setting->getSetting('site_name') ?></h1>
+    <h1 class="h4 fw-normal">注册到<?= $setting->getSetting('site_name') ?></h1>
+    <div class="mt-3" id="messageBox"></div>
     <form id="registerForm" action="/api/user?method=register" method="POST">
         <?php
         if ($setting->getSetting('enable_user_registration') === true) {
@@ -24,7 +26,7 @@ require_once FRAMEWORK_APP_PATH . '/Views/module/user.auth.head.php';
                 <label for="captcha" class="form-label">验证码:</label>
                 <div class="captcha-container">
                     <input type="text" class="form-control" id="captcha" name="captcha" required>
-                    <img src="/api/captcha" alt="验证码消失啦" onclick="this.src='/api/captcha?'+Math.random()">
+                    <img src="/api/v1/captcha" id="captchaImage" alt="验证码消失啦" onclick="this.src='/api/v1/captcha?'+Math.random()">
                 </div>
             </div>
             <button type="submit" class="btn btn-primary w-100">注册并登录</button>
@@ -50,11 +52,6 @@ require_once FRAMEWORK_APP_PATH . '/Views/module/user.auth.head.php';
         }
         ?>
     </form>
-    <hr>
-    <!-- 消息框 -->
-    <div class="mt-3" id="messageBox">
-        <!-- 错误或成功消息将在这里显示 -->
-    </div>
 </div>
 <div class="modal fade" id="UserAgreementModal" tabindex="-1" aria-labelledby="UserAgreementModalLabel" aria-hidden="true">
     <div class="modal-dialog">
@@ -72,8 +69,7 @@ require_once FRAMEWORK_APP_PATH . '/Views/module/user.auth.head.php';
         </div>
     </div>
 </div>
-<!-- 电脑端右侧图片显示部分 -->
-<div class="user-register-auth-image"></div>
+
 
 <?php
 require_once FRAMEWORK_APP_PATH . '/Views/module/user.auth.footer.php';

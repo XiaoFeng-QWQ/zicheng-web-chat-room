@@ -14,24 +14,27 @@ require_once __DIR__ . '/../../config.global.php';
 require_once __DIR__ . '/../../vendor/autoload.php';
 require_once __DIR__ . '/database_connection.php';
 
-use ChatRoom\Core\Auth\CheckUserLoginStatus;
 use ChatRoom\Core\Helpers\SystemSetting;
+use ChatRoom\Core\Helpers\User;
+use ChatRoom\Core\Modules\TokenManager;
 
 /**
  * 初始化变量
  */
 $SystemSetting = new SystemSetting($db);
-$loginStatus = new CheckUserLoginStatus;
+$loginStatus = new User;
+$tokenManager = new TokenManager;
 
 /**
  * 验证权限
  */
 // 验证会话中的用户ID
-if (!$loginStatus->check()) {
+if (!$loginStatus->checkUserLoginStatus()) {
     logoutAndRedirect();
 }
+$user_login_info = json_decode($_COOKIE['user_login_info'], true);
+$userId = $tokenManager->getInfo($user_login_info['token'])['user_id'] ?? null;
 
-$userId = $_SESSION['user_login_info']['user_id'] ?? null;
 if ($userId === null) {
     logoutAndRedirect();
 }

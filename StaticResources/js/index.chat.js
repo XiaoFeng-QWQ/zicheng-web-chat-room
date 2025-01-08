@@ -7,10 +7,13 @@ const fileInput = $('#file');
 const filePreview = $('#select-file-preview');
 const filePreviewModal = new bootstrap.Modal(document.getElementById('filePreviewModal'));
 const filePreviewContent = $('#filePreviewContent');
-
 const scrollToBottom = () => $('#chat-box').scrollTop($('#chat-box')[0].scrollHeight);
 
-// 对于选择的文件生成预览
+/**
+ * 对于选择的文件生成预览
+ * @param {*} file 
+ * @returns 
+ */
 const handleSelectFilePreview = file => {
     const fileURL = URL.createObjectURL(file);
     const fileName = file.name;
@@ -33,8 +36,9 @@ const handleSelectFilePreview = file => {
             reader.onload = e => {
                 const fileContent = e.target.result;
                 showPreview(`
-                    <pre>${fileContent}</pre>
+                    <pre><code class="language-${fileExtension}">${fileContent}</code></pre>
                 `);
+                hljs.highlightAll()
             };
             reader.readAsText(file);
             break;
@@ -75,12 +79,19 @@ const handleSelectFilePreview = file => {
             return;
         }
         default: {
-            html = `<p class="text-center"><br>暂不支持该文件类型的在线预览。</p>`;
+            html = `<p class="text-center"><br>暂不支持该文件类型的预览。</p>`;
             showPreview(html);
         }
     }
 };
-// 对于上传的文件生成预览
+/**
+ * 对于上传的文件生成预览
+ * @param {*} path 
+ * @param {*} name 
+ * @param {*} type 
+ * @param {*} callback 
+ * @returns 
+ */
 const handleFilePreview = (path, name, type, callback) => {
     if (typeof callback !== 'function') {
         console.error('The callback is not a function');
@@ -96,7 +107,7 @@ const handleFilePreview = (path, name, type, callback) => {
     // 生成下载按钮
     $('#filePreviewFileInfo').html(`
         <a href="${fileURL}" download="${fileName}">
-            <button class="btn btn-sm btn-primary edit-button">下载</button>
+            <button class="btn btn-sm btn-primary edit-button"><i class="bi bi-file-earmark-arrow-down"></i></button>
         </a>`);
 
     switch (true) {
@@ -106,8 +117,13 @@ const handleFilePreview = (path, name, type, callback) => {
                 type: "GET",
                 url: fileURL,
                 success: function (response) {
-                    html = `<pre>${response}</pre>`;
+                    if (fileExtension === 'txt') {
+                        html = `<pre><code class="language-${fileExtension}">${response}</code></pre>`;
+                    } else {
+                        html = `<pre><code class="language-${fileExtension}">${JSON.stringify(response, null, 2)}</code></pre>`;
+                    }
                     callback(html); // 确保通过回调函数更新页面
+                    hljs.highlightAll()
                 },
                 error: function () {
                     callback('<p class="text-center">文件加载失败。</p>'); // 错误处理
@@ -165,28 +181,26 @@ const displayMessage = (message, isSelf) => {
         const fileTemplatePattern = /\[!file\((.*?)\)\]/;
 
         if (fileTemplatePattern.test(content)) {
-            const match = content.match(fileTemplatePattern);
-            const fileData = parseFileTemplate(match[1]);
+            const fileData = parseFileTemplate(content);
             const fileHTML = renderFileTemplate(fileData);
             return content.replace(fileTemplatePattern, fileHTML);
         }
         return preserveTextFormat(content);
     };
-    // 解析文件模板
-    const parseFileTemplate = paramsString =>
-        paramsString.split(',').reduce((acc, param) => {
-            const [key, value] = param.split('=');
-            acc[key.trim()] = value.trim().replace(/^"|"$/g, '');
-            return acc;
-        }, {});
     // 渲染文件模板为HTML
     const renderFileTemplate = parsedData => {
         if (!parsedData) return '';
         const { path, name, type, size } = parsedData;
-        return `
+        const fileExtension = name.split('.').pop().toLowerCase();
+        const isMatch = (patterns) => patterns.some(ext => fileExtension === ext || type.startsWith(ext));
+        if (isMatch(['image'])) {
+            return `<img alt="${name}" src=${path}></img>`
+        } else {
+            return `
             <div class="file-info">
-                <button type="button" class="preview-upload-file btn btn-sm primary" fileData='${message.content}' onclick="const data = parseFileTemplate($(this).attr('fileData'));handleFilePreview(data['path'], data['name'], data['type'], function (html) {filePreviewContent.html(html);filePreviewModal.show();});">预览文件</button><p>${name} ${size}</p>
+                <button type="button" class="preview-upload-file btn btn-sm primary" fileData='${message.content}' onclick="const data = parseFileTemplate($(this).attr('fileData'));handleFilePreview(data['path'], data['name'], data['type'], function (html) {filePreviewContent.html(html);filePreviewModal.show();});"><i class="fa-solid fa-expand"></i> 预览文件</button><p>${name} ${size}</p>
             </div>`;
+        }
     };
 
     const formattedContent = parseAndFormatMessageContent(message.content);
@@ -211,7 +225,7 @@ const displayMessage = (message, isSelf) => {
     return `
         <div class="${messageTypeClass} ${isSelf ? 'right' : 'left'}">
             <div class="message-content">
-                ${username}
+                ${message.type === 'user' ? username : ''}
                 <div>${formattedContent}</div>
                 ${timestamp}
             </div>
@@ -222,38 +236,66 @@ const loadChatMessages = () => {
     if (loadingMessages) return;
     loadingMessages = true;
     $.ajax({
-        url: '/api/chat',
+        url: '/api/v1/chat',
         type: 'GET',
         data: { offset },
         dataType: 'json',
         success: (response) => {
-            const chatBox = $('#chat-box');
-            const isAtBottom = chatBox.scrollTop() + chatBox.outerHeight() >= chatBox[0].scrollHeight - 5;
-            if (Array.isArray(response.messages)) {
-                response.messages.forEach(msg => chatBox.append(displayMessage(msg, msg.user_name === sessionUsername)));
-                offset += response.messages.length;
-                lastFetched = response.messages[response.messages.length - 1]?.created_at;
+            loadingMessages = false;
+            if (response.code === 200) {
+                response = response.data;
+                const chatBox = $('#chat-box');
+                const isAtBottom = chatBox.scrollTop() + chatBox.outerHeight() >= chatBox[0].scrollHeight - 5;
+                if (response.onlineUsers) {
+                    const onlineUsersList = $('#online-users-list');
+                    onlineUsersList.empty();
+                    const currentTime = Math.floor(Date.now() / 1000);
+                    let count = 0;
+                    for (let userId in response.onlineUsers) {
+                        count++
+                        // 最多显示5个
+                        if (count >= 6) {
+                            break;
+                        }
+                        const user = response.onlineUsers[userId];
+                        if (currentTime - user.last_time < 10) {
+                            const userItem = $('<li>').text(`${user.user_name}|`);
+                            $('#online-users-list-count').text(count)
+                            onlineUsersList.append(userItem);
+                        }
+                    }
+                }
+                if (Array.isArray(response.messages)) {
+                    response.messages.forEach(msg => chatBox.append(displayMessage(msg, msg.user_name === sessionUsername)));
+                    offset += response.messages.length;
+                    lastFetched = response.messages[response.messages.length - 1]?.created_at;
+                } else {
+                    chatBox.append(displayMessage({
+                        type: 'error',
+                        content: '加载聊天记录失败',
+                        created_at: new Date()
+                    }, false));
+                }
+                if (isAtBottom) {
+                    scrollToBottom();
+                    $('#loading').hide()
+                    chatBox.css('scroll-behavior', 'smooth');
+                } else {
+                    $('#scroll-down-button').show();
+                }
             } else {
-                chatBox.append(displayMessage({
+                $('#chat-box').append(displayMessage({
                     type: 'error',
-                    content: '加载聊天记录失败，请联系管理员。',
+                    content: '加载聊天记录失败',
                     created_at: new Date()
                 }, false));
-            }
-            if (isAtBottom) {
                 scrollToBottom();
-                $('#loading').hide()
-                chatBox.css('scroll-behavior', 'smooth');
-            } else {
-                $('#scroll-down-button').show();
             }
-            loadingMessages = false;
         },
         error: (xhr) => {
-            console.error(xhr);
             $('#chat-box').append(displayMessage({
                 type: 'error',
-                content: `加载聊天记录失败<br>${xhr.statusText}`,
+                content: `加载聊天记录失败<br>${xhr}`,
                 created_at: new Date()
             }, false));
             scrollToBottom();
@@ -270,15 +312,16 @@ const sendMessage = (message, uploadFile) => {
     }
     $('#send-button').attr('disabled', true);
     $.ajax({
-        url: '/api/chat',
+        url: '/api/v1/chat',
         type: 'POST',
         contentType: false,
         processData: false,
         data: formData,
         success: (response) => {
-            if (response.status === 'success') {
-                // 处理指令类消息
-                if (response.isCommnd) {
+            loadChatMessages(); // 发送成功后重新加载聊天记录
+            if (response.code === 200) {
+                // 不为true 指令消息
+                if (response.message !== 'true') {
                     chatBox.append(displayMessage({
                         type: 'system',
                         user_name: '系统',
@@ -292,7 +335,6 @@ const sendMessage = (message, uploadFile) => {
                     }
                     return;
                 }
-                loadChatMessages(); // 发送成功后重新加载聊天记录
                 $('#message').val(''); // 清空文本框
                 $('#file').val(''); // 清空文件输入
                 $('#select-file-preview').empty(); // 清空预览区域
@@ -338,16 +380,26 @@ const bindEventListeners = () => {
         const file = e.target.files[0];
         if (file) {
             const filePreviewWrapper = $('#select-file-preview');
+            const fileExtension = file.name.split('.').pop().toLowerCase();
+            const isMatch = (patterns) => patterns.some(ext => fileExtension === ext || file.type.startsWith(ext));
             // 预览区动态生成预览按钮
-            filePreviewWrapper.html(`
-            <div class="file-preview-wrapper position-relative d-inline-block">
-                <button type="button" id="preview-file" class="btn">预览文件</button>
-                <button type="button" id="remove-file" 
-                        class="btn btn-sm btn-danger position-absolute" style="top: 5px">
-                    <i class="bi bi-x-circle"></i>
-                </button>
-            </div>
-        `);
+            if (isMatch(['image'])) {
+                filePreviewWrapper.html(`
+                <div class="file-preview-wrapper position-relative d-inline-block">
+                    <img style="max-width: 30%;" src="${URL.createObjectURL(file)}"></img>
+                    <button type="button" id="remove-file" class="btn btn-sm btn-danger position-absolute" style="top: 5px; left: 5px">
+                        <i class="bi bi-x-circle"></i>
+                    </button>
+                </div>`)
+            } else {
+                filePreviewWrapper.html(`
+                <div class="file-preview-wrapper position-relative d-inline-block">
+                    <button type="button" id="preview-file" class="btn">预览 ${file.name}</button>
+                    <button type="button" id="remove-file" class="btn btn-sm btn-danger position-absolute" style="top: 5px">
+                        <i class="bi bi-x-circle"></i>
+                    </button>
+                </div>`)
+            };
             // 绑定文件预览事件
             $('#preview-file').click(() => handleSelectFilePreview(file));
             // 绑定移除文件事件
@@ -378,7 +430,7 @@ const bindEventListeners = () => {
     });
     $('#scroll-down-button').click(() => { scrollToBottom(); isUserScrolling = false; });
     $('#logout').click(() => new bootstrap.Modal($('#logoutModal'), {}).show());
-    $('#confirmLogout').click(() => $.post('/user/logout').done(() => window.location.href = '/user/login').fail(() => alert('离开聊天室失败，请稍后再试。')));
+    $('#confirmLogout').click(() => $.post('/api/v1/user/logout').done(() => window.location.href = '/user/login').fail(() => alert('离开聊天室失败，请稍后再试。')));
 };
 bindEventListeners();
 loadChatMessages();

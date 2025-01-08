@@ -14,7 +14,6 @@ try {
     // 获取用户总数和分页后的数据
     $totalUsers = $userHelper->getUserCount();
     $usersData = $userHelper->getUsersWithPagination($limit, $offset);
-
     // 计算总页数
     $totalPages = ceil($totalUsers / $limit);
 } catch (Exception $e) {
@@ -54,8 +53,8 @@ try {
                             <tr>
                                 <th>ID</th>
                                 <th>用户名</th>
-                                <th>邮箱</th>
                                 <th>注册时间</th>
+                                <th>注册ip</th>
                                 <th>是否为管理员</th>
                                 <th>操作</th>
                             </tr>
@@ -70,8 +69,8 @@ try {
                                     <tr>
                                         <td><?php echo htmlspecialchars($user['user_id']); ?></td>
                                         <td><?php echo htmlspecialchars($user['username']); ?></td>
-                                        <td><?php echo htmlspecialchars($user['email'] ?? '无'); ?></td>
                                         <td><?php echo htmlspecialchars($user['created_at']); ?></td>
+                                        <td><?php echo htmlspecialchars($user['register_ip'] ?? '无法获取'); ?></td>
                                         <td>
                                             <?php echo $user['group_id'] == 1 ? '是' : '否'; ?>
                                         </td>
@@ -89,11 +88,9 @@ try {
                             <li class="page-item <?php echo $page <= 1 ? 'disabled' : ''; ?>">
                                 <a class="page-link" href="?page=<?php echo $page - 1; ?>">上一页</a>
                             </li>
-                            <?php for ($i = 1; $i <= $totalPages; $i++): ?>
-                                <li class="page-item <?php echo $page == $i ? 'active' : ''; ?>">
-                                    <a class="page-link" href="?page=<?php echo $i; ?>"><?php echo $i; ?></a>
-                                </li>
-                            <?php endfor; ?>
+                            <li class="page-item">
+                                <a class="page-link"><?php echo $page ?> / <?php echo $totalPages ?></a>
+                            </li>
                             <li class="page-item <?php echo $page >= $totalPages ? 'disabled' : ''; ?>">
                                 <a class="page-link" href="?page=<?php echo $page + 1; ?>">下一页</a>
                             </li>
@@ -127,10 +124,6 @@ try {
                                     <div class="mb-3">
                                         <label for="username" class="form-label">用户名</label>
                                         <input type="text" class="form-control" id="username" name="username" value="${userInfo.data.username}" required>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label for="email" class="form-label">邮箱</label>
-                                        <input type="email" class="form-control" id="email" name="email" value="${userInfo.data.email}" required>
                                     </div>
                                     <div class="mb-3">
                                         <label for="group_id" class="form-label">用户组ID (1为管理员, 2为普通用户)</label>

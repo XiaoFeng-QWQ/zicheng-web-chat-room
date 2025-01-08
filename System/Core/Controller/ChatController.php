@@ -8,26 +8,21 @@ use PDOException;
 use ChatRoom\Core\Helpers\User;
 use ChatRoom\Core\Helpers\Helpers;
 use ChatRoom\Core\Database\SqlLite;
+use ChatRoom\Core\Modules\TokenManager;
 
 class ChatController
 {
-    private $user_helpers;
     public $Helpers;
 
     // 状态消息常量
-    const STATUS_SUCCESS = 'success';
-    const STATUS_WARNING = 'warning';
-    const STATUS_ERROR = 'error';
-    const MESSAGE_EMPTY = '消息内容不能为空';
-    const MESSAGE_SUCCESS = '发送成功';
-    const MESSAGE_NOT_LOGGED_IN = '用户未登录';
+    const MESSAGE_SUCCESS = 'true';
     const MESSAGE_SEND_FAILED = '发送消息失败';
     const MESSAGE_FETCH_FAILED = '获取消息失败';
     const MESSAGE_INVALID_REQUEST = '无效请求';
+    const ONLINE_USERS_FILE = FRAMEWORK_DIR . '/Writable/chat.user.online.list.json';
 
     public function __construct()
     {
-        $this->user_helpers = new User;
         $this->Helpers = new Helpers;
     }
 
@@ -41,11 +36,12 @@ class ChatController
     public function sendMessage($user, $message)
     {
         try {
+            $userIP = new User;
             $db = SqlLite::getInstance()->getConnection();
             $stmt = $db->prepare('INSERT INTO messages (user_name, content, type, created_at, user_ip) VALUES (?, ?, ?, ?, ?)');
-            return $stmt->execute([$user['username'], $message, 'user', date('Y-m-d H:i:s'), $this->user_helpers->getIp()]);
+            return $stmt->execute([$user['username'], $message, 'user', date('Y-m-d H:i:s'), $userIP->getIp()]);
         } catch (Exception $e) {
-            throw new Exception($e->getMessage());
+            throw new ('发送消息发生错误:' . $e);
         }
     }
 
@@ -66,35 +62,43 @@ class ChatController
             $totalStmt = $db->query($countQuery);
             $totalMessages = $totalStmt->fetch(PDO::FETCH_ASSOC)['total'];
 
-            $query = '
-            SELECT 
-                messages.id,
-                messages.type,
-                messages.content,
-                messages.user_name,
-                users.group_id AS user_group_id,
-                messages.created_at AS created_at,
-                users.avatar_url,
-                groups.group_name
-            FROM messages
-            LEFT JOIN users ON messages.user_name = users.username
-            LEFT JOIN groups ON users.group_id = groups.group_id
-            ORDER BY messages.created_at ASC LIMIT :limit OFFSET :offset';
+            $query = 'SELECT 
+                    messages.id,
+                    messages.type,
+                    messages.content,
+                    messages.user_name,
+                    users.group_id AS user_group_id,
+                    messages.created_at AS created_at,
+                    users.avatar_url,
+                    groups.group_name
+                FROM messages
+                LEFT JOIN users ON messages.user_name = users.username
+                LEFT JOIN groups ON users.group_id = groups.group_id
+                ORDER BY messages.created_at ASC LIMIT :limit OFFSET :offset';
 
             $stmt = $db->prepare($query);
             $stmt->bindValue(':limit', (int)$limit, PDO::PARAM_INT);
             $stmt->bindValue(':offset', (int)$offset, PDO::PARAM_INT);
 
             $stmt->execute();
+
+            $this->updataOnlineUsers();
+
             return [
                 'total' => $totalMessages, // 返回总数
+                'onlineUsers' => $this->getOnlineUsers(),
                 'messages' => $stmt->fetchAll(PDO::FETCH_ASSOC) // 返回消息数组
             ];
         } catch (PDOException $e) {
-            throw new Exception($e->getMessage());
+            throw new ('获取消息发送错误:' . $e);
         }
     }
 
+    /**
+     * 获取全部消息
+     *
+     * @return array
+     */
     public function getAllMessages()
     {
         try {
@@ -106,29 +110,31 @@ class ChatController
             $totalMessages = $totalStmt->fetch(PDO::FETCH_ASSOC)['total'];
 
             // 查询消息
-            $query = '
-            SELECT 
-                messages.id,
-                messages.type,
-                messages.content,
-                messages.user_name,
-                users.group_id AS user_group_id,
-                messages.created_at AS created_at,
-                users.avatar_url,
-                groups.group_name
-            FROM messages
-            LEFT JOIN users ON messages.user_name = users.username
-            LEFT JOIN groups ON users.group_id = groups.group_id';
+            $query = 'SELECT 
+                    messages.id,
+                    messages.type,
+                    messages.content,
+                    messages.user_name,
+                    users.group_id AS user_group_id,
+                    messages.created_at AS created_at,
+                    users.avatar_url,
+                    groups.group_name
+                FROM messages
+                LEFT JOIN users ON messages.user_name = users.username
+                LEFT JOIN groups ON users.group_id = groups.group_id';
 
             $stmt = $db->query($query);
             $messages = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+            $this->updataOnlineUsers();
+
             return [
                 'total' => $totalMessages, // 返回总数
+                'onlineUsers' => $this->getOnlineUsers(),
                 'messages' => $messages // 返回消息数组
             ];
         } catch (PDOException $e) {
-            throw new Exception($e->getMessage());
+            throw new ('获取全部消息发送错误:' . $e);
         }
     }
     /**
@@ -146,7 +152,44 @@ class ChatController
             $stmt = $db->prepare('INSERT INTO messages (user_name, content, type, created_at) VALUES (?, ?, ?, ?)');
             $stmt->execute([$user_name, $message, $type, date('Y-m-d H:i:s')]);
         } catch (PDOException $e) {
-            HandleException($e);
+            throw new ('插入系统消息发生错误:' .  $e);
         }
+    }
+
+    /**
+     * 获取当前所有在线用户
+     *
+     * @return array 在线用户数据
+     */
+    private function getOnlineUsers()
+    {
+        // 读取 JSON 文件中的在线用户数据
+        if (file_exists(self::ONLINE_USERS_FILE)) {
+            $data = file_get_contents(self::ONLINE_USERS_FILE);
+            $onlineUsers = json_decode($data, true);
+            return $onlineUsers ?? [];
+        }
+        return [];
+    }
+
+    /**
+     * 更新在线用户数据
+     *
+     * @return void
+     */
+    private function updataOnlineUsers(){
+        $userHelpers = new User;
+        $tokenManager = new TokenManager;
+        $userCookieInfo = json_decode($_COOKIE['user_login_info'], true);
+        $tokenInfo = $tokenManager->getInfo($userCookieInfo['token']);
+        $userInfo = $userHelpers->getUserInfo(null, $tokenInfo['user_id']);
+        $onlineUsers = $this->getOnlineUsers();
+
+        $onlineUsers[$userInfo['user_id']] = [
+            'user_name' => $userInfo['username'],
+            'avatar_url' => $userInfo['avatar_url'],
+            'last_time' => time()
+        ];
+        file_put_contents(self::ONLINE_USERS_FILE, json_encode($onlineUsers, JSON_UNESCAPED_UNICODE));
     }
 }

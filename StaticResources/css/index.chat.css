@@ -1,4 +1,8 @@
 /* 通用设置 */
+* {
+    font-family: Menlo, Consolas, Monaco, Liberation Mono, Lucida Console, ui-monospace;
+}
+
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background-color: #f4f7fc;
@@ -7,12 +11,16 @@ body {
     padding: 0;
 }
 
+.card {
+    border: none;
+}
+
 #chat-box-container {
     min-height: 500px;
     background-color: #fff;
-    border-radius: 12px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     overflow: hidden;
+    border-radius: 0;
 }
 
 #chat-box {
@@ -42,9 +50,31 @@ body {
     background-color: #0056b3;
 }
 
+#select-file-preview {
+    bottom: 90px;
+    z-index: 1;
+}
+
 img {
     max-width: 100%;
     max-height: 100%;
+    border-radius: 5px;
+}
+
+#online-users-list {
+    display: flex;
+    list-style-type: none;
+    padding-left: 0;
+}
+
+#online-users-list li {
+    padding-right: 4px;
+}
+
+/* 在线用户数量 */
+#online-users-list-count,
+#chatroom-user-count {
+    color: #007bff;
 }
 
 /* 消息样式 */
@@ -58,7 +88,7 @@ img {
 .chat-message .message-content {
     max-width: 80%;
     padding: 1rem;
-    border-radius: 15px;
+    border-radius: 10px;
     word-wrap: break-word;
     background-color: #f1f1f1;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
@@ -144,10 +174,10 @@ button.primary:focus {
 
 /* 禁用按钮 */
 button:disabled {
-    background-color: #ccc;
-    color: #666;
+    background-color: #ccc !important;
+    color: #666 !important;
     cursor: not-allowed;
-    box-shadow: none;
+    box-shadow: none !important;
 }
 
 button:disabled:hover {
@@ -155,30 +185,18 @@ button:disabled:hover {
     transform: none;
 }
 
-/* 按钮禁用样式 */
-button[disabled] {
-    background-color: #dcdcdc;
-    color: #a1a1a1;
-    cursor: not-allowed;
-    box-shadow: none;
-}
-
-/* 代码块样式 */
-pre {
-    white-space: pre-wrap;
-    word-wrap: break-word;
-    max-height: 100%;
-    overflow: auto;
-    padding: 1rem;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    background-color: #f7f7f7;
-    font-family: 'Courier New', monospace;
-    font-size: 0.9rem;
+pre code.hljs {
+    display: block;
+    overflow-x: auto;
+    padding: 1em;
 }
 
 .plyr {
     max-height: 100%;
+}
+
+.plyr--audio {
+    padding-top: 50vh;
 }
 
 iframe {
@@ -262,9 +280,5 @@ iframe {
         width: 100%;
         font-size: 0.9rem;
         padding: 10px;
-    }
-
-    #scroll-down-button {
-        bottom: 80px;
     }
 }

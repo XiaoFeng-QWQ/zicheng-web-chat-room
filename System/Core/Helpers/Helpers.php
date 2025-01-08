@@ -8,25 +8,32 @@ namespace ChatRoom\Core\Helpers;
 class Helpers
 {
     /**
-     * 生成JSON响应
+     * 生成JSON响应(内置exit)
      *
-     * @param string $message 响应消息
      * @param int $statusCode HTTP状态码
+     * @param string $message 响应消息
+     * @param array $data 返回数据数组
      * @return string JSON格式的响应
      */
-    public function jsonResponse(string $message, int $statusCode = 200): string
+    public function jsonResponse(int $statusCode, string $message, array $data = []): string
     {
-        // 设置响应的内容类型为JSON
         header('Content-Type: application/json');
 
         // 构建JSON响应数据
         $response = [
+            'APIVersion' => '1.0.0.0',
             'code' => $statusCode,
-            'message' => $message
+            'message' => $message,
+            'data' => $data,
         ];
+        if (defined('FRAMEWORK_DEBUG') && FRAMEWORK_DEBUG) {
+            $response['data']['api_debug'] = [
+                'AppVersion' => FRAMEWORK_VERSION,
+                'backtrace' => debug_backtrace(),
+            ];
+        }
 
-        // 返回JSON编码后的响应
-        return json_encode($response, JSON_UNESCAPED_UNICODE);
+        exit(json_encode($response, JSON_UNESCAPED_UNICODE));
     }
 
     /**

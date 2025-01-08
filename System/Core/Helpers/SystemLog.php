@@ -35,7 +35,7 @@ class SystemLog
             $stmt->bindValue(':created_at', date('Y-m-d H:i:s'), PDO::PARAM_STR);
             $stmt->execute();
         } catch (PDOException $e) {
-            throw new Exception('插入日志记录失败：' . $e->getMessage());
+            throw new ('插入日志记录失败:' . $e);
         }
     }
 
@@ -54,7 +54,7 @@ class SystemLog
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
         } catch (PDOException $e) {
-            throw new Exception('读取日志记录失败：' . $e->getMessage());
+            throw new ('读取日志记录失败:' . $e);
         }
     }
 
@@ -77,7 +77,7 @@ class SystemLog
             $stmt->bindValue(':created_at', date('Y-m-d H:i:s'), PDO::PARAM_STR);
             $stmt->execute();
         } catch (PDOException $e) {
-            throw new Exception('更新日志记录失败：' . $e->getMessage());
+            throw new ('更新日志记录失败:' . $e);
         }
     }
 }

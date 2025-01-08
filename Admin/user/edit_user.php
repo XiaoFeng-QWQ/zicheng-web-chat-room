@@ -16,7 +16,6 @@ if (isset($_GET['user_id']) && !empty($_GET['user_id'])) {
             $data = [
                 'username' => $_POST['username'],
                 'group_id' => $_POST['group_id'],
-                'email' => $_POST['email']
             ];
 
             // 更新用户信息
@@ -29,7 +28,7 @@ if (isset($_GET['user_id']) && !empty($_GET['user_id'])) {
             echo json_encode(['success' => false, 'message' => '请求方法错误！']);
         }
     } catch (Exception $e) {
-        echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        echo json_encode(['success' => false, 'message' => $e]);
     }
 } else {
     echo json_encode(['success' => false, 'message' => 'userid不能为空！']);

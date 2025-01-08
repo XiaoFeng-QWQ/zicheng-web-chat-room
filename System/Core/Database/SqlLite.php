@@ -3,7 +3,6 @@
 namespace ChatRoom\Core\Database;
 
 use PDO;
-use Exception;
 use PDOException;
 
 class SqlLite
@@ -22,7 +21,7 @@ class SqlLite
             $this->connection->exec('PRAGMA busy_timeout = 5000;');
             $this->connection->exec('PRAGMA journal_mode=WAL;');
         } catch (PDOException $e) {
-            throw new Exception('数据库错误：' . $e->getMessage());
+            throw new ('数据库错误：' . $e->getMessage());
         }
     }
 

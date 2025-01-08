@@ -9,7 +9,7 @@ use Monolog\Logger;
 use ChatRoom\Core\Helpers\User;
 use ChatRoom\Core\Helpers\Helpers;
 use ChatRoom\Core\Database\SqlLite;
-use ChatRoom\Core\Auth\TokenManager;
+use ChatRoom\Core\Modules\TokenManager;
 
 class UserController
 {
@@ -42,7 +42,7 @@ class UserController
          * ！警告！
          * ！请勿修改此处保留字符，可能会出现意想不到的情况！
          */
-        $this->reservedNames = ['system', 'root'];
+        $this->reservedNames = ['system', 'root', 'admin'];
 
         $this->Helpers = new Helpers;
         $this->userHelpers = new User;
@@ -59,7 +59,7 @@ class UserController
         try {
             // 验证用户名
             if (!$this->validateUsername->validateUsername($username)) {
-                return $this->Helpers->jsonResponse('用户名不合法，必须长度在3到20字符之间和不能有中文和特殊字符', 400);
+                return $this->Helpers->jsonResponse(400, '用户名不合法，必须长度在3到20字符之间和不能有中文和特殊字符');
             }
 
             // 验证保留名称
@@ -67,17 +67,17 @@ class UserController
                 $username,
                 $this->reservedNames
             )) {
-                return $this->Helpers->jsonResponse("用户名不合法，系统保留名称", 400);
+                return $this->Helpers->jsonResponse(400, "用户名不合法，系统保留名称");
             }
 
             // 验证密码和确认密码是否一致
             if ($password !== $confirmPassword) {
-                return $this->Helpers->jsonResponse('确认密码和密码不一致', 400);
+                return $this->Helpers->jsonResponse(400, '确认密码和密码不一致');
             }
 
             // 检查用户名是否重复
             if ($this->validateUsername->isUsernameTaken($username)) {
-                return $this->Helpers->jsonResponse('用户名已被注册', 400);
+                return $this->Helpers->jsonResponse(400, '用户名已被注册');
             }
 
             $passwordHash = password_hash($password, PASSWORD_DEFAULT);
@@ -86,18 +86,15 @@ class UserController
             $isSuccessful = $stmt->execute([$username, $passwordHash, date('Y-m-d H:i:s'), $this->userHelpers->getIp()]);
 
             if ($isSuccessful) {
-
                 $this->updateLoginInfo($this->validateUsername->getUserInfo($username));
-
                 $this->insertSystemMessage('system', "欢迎新用户 $username 来到聊天室！", 'system');
-
-                return $this->Helpers->jsonResponse('注册成功', 200);
+                return $this->Helpers->jsonResponse(200, '注册成功');
             } else {
-                return $this->Helpers->jsonResponse('注册失败，请重试', 500);
+                return $this->Helpers->jsonResponse(500, '注册失败，请重试');
             }
         } catch (PDOException $e) {
-            HandleException($e);
-            return $this->Helpers->jsonResponse("内部服务器错误。请联系管理员。", 500);
+            throw new ('注册发生错误:' . $e);
+            return $this->Helpers->jsonResponse(500, "内部服务器错误。请联系管理员。");
         }
     }
 
@@ -114,7 +111,7 @@ class UserController
                 if ($return) {
                     return "用户名不合法，必须长度在3到20字符之间和不能有中文和特殊字符";
                 } else {
-                    return $this->Helpers->jsonResponse("用户名不合法，必须长度在3到20字符之间和不能有中文和特殊字符", 400);
+                    return $this->Helpers->jsonResponse(400, "用户名不合法，必须长度在3到20字符之间和不能有中文和特殊字符");
                 }
             }
             // 验证保留名称
@@ -122,7 +119,7 @@ class UserController
                 if ($return) {
                     return "用户名不合法，系统保留名称";
                 } else {
-                    return $this->Helpers->jsonResponse("用户名不合法，系统保留名称", 400);
+                    return $this->Helpers->jsonResponse(400, "用户名不合法，系统保留名称",);
                 }
             }
             // 使用getUserInfo来获取用户信息
@@ -131,29 +128,27 @@ class UserController
                 if ($return) {
                     return "用户名不存在";
                 } else {
-                    return $this->Helpers->jsonResponse('用户名不存在', 400);
+                    return $this->Helpers->jsonResponse(400, '用户名不存在');
                 }
             }
             if (!password_verify($password, $user['password'])) {
                 if ($return) {
                     return "密码错误";
                 } else {
-                    return $this->Helpers->jsonResponse('密码错误', 400);
+                    return $this->Helpers->jsonResponse(400, '密码错误');
                 }
             }
-            // 更新用户登录信息
-            $this->updateLoginInfo($user);
             if ($return) {
                 return true;
             } else {
-                return $this->Helpers->jsonResponse('登录成功', 200);
+                return $this->Helpers->jsonResponse(200, '登录成功', $this->updateLoginInfo($user));
             }
         } catch (Exception $e) {
-            throw new Exception($e);
+            throw new ('登录发生错误:' . $e);
             if ($return) {
                 return "内部服务器错误。请联系管理员。";
             } else {
-                return $this->Helpers->jsonResponse("内部服务器错误。请联系管理员。", 500);
+                return $this->Helpers->jsonResponse(500, "内部服务器错误。请联系管理员。");
             }
         }
     }
@@ -172,15 +167,15 @@ class UserController
             $db = SqlLite::getInstance()->getConnection();
             $stmt = $db->prepare('INSERT INTO messages (user_name, content, type, created_at) VALUES (?, ?, ?, ?)');
             $stmt->execute([$user_name, $message, $type, date('Y-m-d H:i:s')]);
-        } catch (PDOException $e) {
-            HandleException($e);
+        } catch (PDOException) {
+            return;
         }
     }
 
     /**
      * 更新登录信息
      * @param array $user 用户信息数组
-     * @return void
+     * @return array
      */
     private function updateLoginInfo(array $user)
     {
@@ -188,10 +183,8 @@ class UserController
         unset($user['email']);
         unset($user['password']);
         unset($user['register_ip']);
-        unset($user['admin_login_token']);
 
-        $user['user_login_token'] = $this->tokenManager->generateToken($user['user_id'], '+1 year');
-        $_SESSION['user_login_info'] = $user; // 存储用户信息到会话
+        $user['token'] = $this->tokenManager->generateToken($user['user_id'], '+1 year');
         setcookie(
             'user_login_info',
             json_encode($user),
@@ -201,5 +194,6 @@ class UserController
             ]
         );
         unset($_SESSION['captcha']);
+        return $user;
     }
 }

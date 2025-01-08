@@ -47,6 +47,9 @@ class App
         ],
         '/api/debug' => [
             'file' => ['/api/debug.php']
+        ],
+        '/api/v1/[\s\S]*' => [
+            'file' => ['/api/v1/api.php']
         ]
     ];
 }

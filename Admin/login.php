@@ -9,8 +9,8 @@ use ChatRoom\Core\Helpers\User;
 use Gregwar\Captcha\PhraseBuilder;
 use ChatRoom\Core\Helpers\Helpers;
 use ChatRoom\Core\Database\SqlLite;
-use ChatRoom\Core\Auth\TokenManager;
 use ChatRoom\Core\Helpers\SystemLog;
+use ChatRoom\Core\Modules\TokenManager;
 use ChatRoom\Core\Controller\UserController;
 
 // 声明全局变量
@@ -68,13 +68,12 @@ function authenticateUser($username, $password)
                     clearLoginAttempts($ip_address);
                     $log->insertLog('INFO', "管理员 $username 在IP $ip_address 登录成功");
 
-                    // 清除会话中的验证码
+                    // 移除无用信息
+                    unset($user['email']);
+                    unset($user['password']);
+                    unset($user['register_ip']);
                     unset($_SESSION['captcha']);
-
-                    // 清理并存储用户信息
-                    unset($user['email'], $user['password'], $user['register_ip'], $user['admin_login_token']);
-                    $user['user_login_token'] = $tokenManager->generateToken($user['user_id'], '+1 year');
-                    $_SESSION['user_login_info'] = $user;
+                    $user['token'] = $tokenManager->generateToken($user['user_id'], '+1 year');
                     setcookie('user_login_info', json_encode($user), time() + 86400 * 365, '/');
 
                     // 重定向
@@ -247,7 +246,7 @@ function handleFailedLogin($ip_address, $username, $log)
                 <label for="captcha" class="form-label">验证码</label>
                 <div class="captcha-container">
                     <input type="text" class="form-control" id="captcha" name="captcha" required>
-                    <img src="/api/captcha" alt="captcha" id="captchaImage" class="captcha-image mt-2" onclick="this.src='/api/captcha?'+Math.random()">
+                    <img src="/api/v1/captcha" alt="captcha" id="captchaImage" class="captcha-image mt-2" onclick="this.src='/api/v1/captcha?'+Math.random()">
                 </div>
             </div>
             <button type="submit" class="btn btn-primary">登录</button>

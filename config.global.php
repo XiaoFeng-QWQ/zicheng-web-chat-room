@@ -12,7 +12,7 @@ define('FRAMEWORK_DIR', dirname(__FILE__));
  * 
  * @var int
  */
-define('FRAMEWORK_VERSION', '1.2.0.0');
+define('FRAMEWORK_VERSION', '2.0.0.0');
 
 /**
  * 当前系统文件目录
@@ -41,3 +41,4 @@ define('FRAMEWORK_APP_PATH', FRAMEWORK_DIR . '/App');
  * 
  * @var string
  */
+define('FRAMEWORK_DATABASE_PATH', 'F:\\web\\wwwroot\\Zichen Web chat room/data.db');

@@ -17,7 +17,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($stmt->execute([$id])) {
         echo json_encode(['success' => true]);
 
-        $log->insertLog('WARNING', "管理员ID {$_SESSION['user_login_info']['user_id']} 在IP $userIp 删除消息");
+        $log->insertLog('WARNING', "管理员ID {$userId} 在IP $userIp 删除消息");
     } else {
         echo json_encode(['success' => false, 'message' => '删除失败']);
     }

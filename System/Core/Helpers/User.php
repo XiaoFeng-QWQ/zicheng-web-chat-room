@@ -6,6 +6,7 @@ use PDO;
 use Exception;
 use Parsedown;
 use ChatRoom\Core\Database\SqlLite;
+use ChatRoom\Core\Modules\TokenManager;
 
 /**
  * 用户辅助类
@@ -14,6 +15,7 @@ class User
 {
     private Parsedown $parsedown;
     private $db;
+    protected $tokenManager;
     private string $userAgreementFile;
 
     public function __construct()
@@ -21,6 +23,7 @@ class User
         $this->parsedown = new Parsedown();
         $this->userAgreementFile = FRAMEWORK_DIR . '/StaticResources/MarkDown/UserAgreement.md';
         $this->db = SqlLite::getInstance()->getConnection();
+        $this->tokenManager = new TokenManager;;
     }
 
     /**
@@ -69,8 +72,7 @@ class User
 
             return $userInfo ?: [];
         } catch (Exception $e) {
-            // 捕获并抛出异常
-            throw new Exception("Error retrieving user information: " . $e->getMessage());
+            throw new ("查询用户信息出错:" . $e);
         }
     }
 
@@ -82,12 +84,11 @@ class User
      */
     public function getAllUsers(): array
     {
-
         try {
             $stmt = $this->db->query("SELECT user_id, username, email, created_at, group_id FROM users");
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (Exception $e) {
-            throw new Exception("Error retrieving users: " . $e->getMessage());
+            throw new ("获取所有用户出错:" . $e);
         }
     }
 
@@ -101,16 +102,14 @@ class User
      */
     public function getUsersWithPagination(int $limit, int $offset): array
     {
-
         try {
-            $stmt = $this->db->prepare("SELECT user_id, username, email, created_at, group_id FROM users LIMIT :limit OFFSET :offset");
+            $stmt = $this->db->prepare("SELECT * FROM users LIMIT :limit OFFSET :offset");
             $stmt->bindParam(':limit', $limit, PDO::PARAM_INT);
             $stmt->bindParam(':offset', $offset, PDO::PARAM_INT);
             $stmt->execute();
-
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (Exception $e) {
-            throw new Exception("Error retrieving users with pagination: " . $e->getMessage());
+            throw new ("查询带有分页的用户出错:" . $e);
         }
     }
 
@@ -122,12 +121,11 @@ class User
      */
     public function getUserCount(): int
     {
-
         try {
             $stmt = $this->db->query("SELECT COUNT(*) FROM users");
             return (int)$stmt->fetchColumn();
         } catch (Exception $e) {
-            throw new Exception("Error retrieving user count: " . $e->getMessage());
+            throw new ("获取用户总数出错:" . $e);
         }
     }
 
@@ -158,7 +156,7 @@ class User
             }
 
             if (empty($fields)) {
-                throw new Exception("没有提供更新的数据。");
+                return \null;
             }
 
             $fieldsString = implode(', ', $fields);
@@ -176,7 +174,7 @@ class User
             if ($db->inTransaction()) {
                 $db->rollBack();
             }
-            throw new Exception("Error updating user: " . $e->getMessage());
+            throw new ("更新用户信息出错:" . $e);
         }
     }
 
@@ -192,29 +190,21 @@ class User
         $db = SqlLite::getInstance()->getConnection();
 
         try {
-            // 开始事务处理
             if (!$db->inTransaction()) {
                 $db->beginTransaction();
             }
 
-            // 准备 SQL 语句以删除用户
             $stmt = $db->prepare("DELETE FROM users WHERE user_id = :user_id");
             $stmt->bindParam(':user_id', $userId, PDO::PARAM_INT);
-
-            // 执行 SQL 语句
             $stmt->execute();
-
-            // 提交事务
             $db->commit();
 
-            return true; // 返回成功标志
+            return true;
         } catch (Exception $e) {
-            // 在错误时回滚事务
             if ($db->inTransaction()) {
                 $db->rollBack();
             }
-            // 抛出异常并返回错误信息
-            throw new Exception("Error deleting user: " . $e->getMessage());
+            throw new ("删除用户出错:" . $e);
         }
     }
 
@@ -231,7 +221,6 @@ class User
         }
 
         $fileContents = file_get_contents($this->userAgreementFile);
-
         return $raw ? $fileContents : $this->parsedown->text($fileContents);
     }
 
@@ -243,12 +232,15 @@ class User
      */
     public function isUsernameTaken(string $username): bool
     {
+        try {
+            $stmt = $this->db->prepare('SELECT COUNT(*) FROM users WHERE username = :username');
+            $stmt->bindParam(':username', $username, PDO::PARAM_STR);
+            $stmt->execute();
 
-        $stmt = $this->db->prepare('SELECT COUNT(*) FROM users WHERE username = :username');
-        $stmt->bindParam(':username', $username, PDO::PARAM_STR);
-        $stmt->execute();
-
-        return $stmt->fetchColumn() > 0;
+            return $stmt->fetchColumn() > 0;
+        } catch (Exception $e) {
+            throw new ("检查用户名是否被使用出错:" . $e);
+        }
     }
 
     /**
@@ -284,25 +276,21 @@ class User
      * @return bool
      */
     function checkUserLoginStatus(): bool
-    {   // 获取当前用户信息
-        $userSessionInfo = $_SESSION['user_login_info'] ?? null;
-        $userCookieInfo = json_decode($_COOKIE['user_login_info'] ?? '{}', true);
-
-        // 检查用户是否登录
-        if (empty($userSessionInfo) || empty($userCookieInfo)) {
-            return false;
+    {
+        try {
+            // 检查 cookie 是否存在
+            if (empty($_COOKIE['user_login_info'])) {
+                return false;
+            }
+            $cookieData = json_decode($_COOKIE['user_login_info'], true);
+            // 检查会话信息是否完整
+            if (empty($cookieData['token']) || empty($cookieData['user_id'])) {
+                return false;
+            }
+            // 使用 TokenManager 验证令牌
+            return $this->tokenManager->validateToken($cookieData['token']);
+        } catch (Exception $e) {
+            throw new ("获取用户登录状态出错:" . $e);
         }
-        // 校验SESSION与Cookie中的用户信息是否一致
-        if ($userSessionInfo !== $userCookieInfo) {
-            return false;
-        }
-        // 用户信息是否有效
-        $userInfo = $this->getUserInfo($userSessionInfo['username']);
-        if (empty($userInfo)) {
-            return false;
-        }
-
-        // 登录状态有效
-        return true;
     }
 }
