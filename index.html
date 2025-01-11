@@ -4,12 +4,61 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>子辰聊天室网页小组件</title>
+    <style>
+        .readyme {
+            margin: 0 auto;
+            padding: 20px;
+            border: 1px solid #ccc;
+        }
+
+        .readyme img {
+            height: 400px;
+        }
+
+        center {
+            background: #FFD700;
+        }
+    </style>
 </head>
 
 <body>
+    <div class="readyme">
+        <center>
+            <img src="logo.png"></img>
+        </center>
+        <p>这是一个可以嵌入网页的小型聊天室插件该插件允许用户在小窗口内接收、发送消息。</p>
+        <h2>功能</h2>
+        <ul>
+            <li><strong>实时聊天</strong>：即可通过API接口实时接收消息。</li>
+            <li><strong>可折叠聊天窗</strong>：支持展开和折叠功能，方便用户使用。</li>
+        </ul>
+        <h2>使用说明</h2>
+        <h3>先决条件</h3>
+        <p>下载安装PHP程序：<a
+                href="https://github.com/XiaoFeng-QWQ/zicheng-web-chat-room/">https://github.com/XiaoFeng-QWQ/zicheng-web-chat-room/</a>
+        </p>
+        <h3>使用</h3>
+        <pre><code class="language-html">&lt;script src="https://code.jquery.com/jquery-3.6.0.min.js"&gt;&lt;/script&gt;
+&lt;script src="js.cookie.min.js"&gt;&lt;/script&gt;
+&lt;script&gt;
+    $(document).ready(function () {
+        $().ZichenChatRoom({
+            apiUrl: 'http://127.0.0.1'
+        });
+    });
+&lt;/script&gt;</code></pre>
+    </div>
     <script src="jquery-3.7.1.min.js"></script>
-    <script src="chatRoom.min.js"></script>
+    <script src="js.cookie.min.js"></script>
+    <script src="chatRoom.js"></script>
+    <script>
+        $(document).ready(function () {
+            $().ZichenChatRoom({
+                apiUrl: 'http://127.0.0.1'
+            });
+        });
+    </script>
 </body>
 
 </html>
