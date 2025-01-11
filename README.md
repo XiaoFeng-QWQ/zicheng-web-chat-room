@@ -17,8 +17,9 @@
 
 ### 使用
 ```html
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="jquery-3.7.1.min.js"></script>
 <script src="js.cookie.min.js"></script>
+<script src="chatRoom.js"></script>
 <script>
     $(document).ready(function () {
         $().ZichenChatRoom({
