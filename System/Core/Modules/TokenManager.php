@@ -88,7 +88,7 @@ class TokenManager
     }
 
     /**
-     * 更具token返回用户信息
+     * 根具token返回用户信息
      *
      * @param Token $token
      * @return array
@@ -102,9 +102,8 @@ class TokenManager
             $stmt->execute();
             $result = $stmt->fetch(PDO::FETCH_ASSOC);
             // 输出结果
-            return $result;
+            return $result ? $result : throw new ("获取 token 信息发生错误: 无法获取");
         } catch (Exception $e) {
-            $this->db->rollBack();
             throw new ("获取 token 信息发生错误:" . $e);
         }
     }

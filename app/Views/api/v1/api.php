@@ -1,9 +1,10 @@
 <?php
 
 /**
- * API 入口文件
+ * API 入口
  */
-
+// 允许所有域名跨域访问
+header("Access-Control-Allow-Origin: *");
 error_reporting(0);
 
 use ChatRoom\Core\Helpers\Helpers;
@@ -39,5 +40,5 @@ try {
     }
     include $apiFile;
 } catch (Exception $e) {
-    throw new ($e);
+    throw new Exception($e);
 }

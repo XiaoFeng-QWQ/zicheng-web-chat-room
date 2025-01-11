@@ -180,8 +180,9 @@ class ChatController
     private function updataOnlineUsers(){
         $userHelpers = new User;
         $tokenManager = new TokenManager;
-        $userCookieInfo = json_decode($_COOKIE['user_login_info'], true);
-        $tokenInfo = $tokenManager->getInfo($userCookieInfo['token']);
+        $userCookieInfo = json_decode($_COOKIE['user_login_info'] ?? '', true);
+        $token = !empty($userCookieInfo['token']) ? $userCookieInfo['token'] : ($_POST['token'] ?? null);
+        $tokenInfo = $token ? $tokenManager->getInfo($token) : null;
         $userInfo = $userHelpers->getUserInfo(null, $tokenInfo['user_id']);
         $onlineUsers = $this->getOnlineUsers();
 

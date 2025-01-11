@@ -236,9 +236,8 @@ const loadChatMessages = () => {
     if (loadingMessages) return;
     loadingMessages = true;
     $.ajax({
-        url: '/api/v1/chat',
-        type: 'GET',
-        data: { offset },
+        url: `/api/v1/chat/get?offset=${offset}`,
+        type: 'POST',
         dataType: 'json',
         success: (response) => {
             loadingMessages = false;
@@ -312,7 +311,7 @@ const sendMessage = (message, uploadFile) => {
     }
     $('#send-button').attr('disabled', true);
     $.ajax({
-        url: '/api/v1/chat',
+        url: '/api/v1/chat/send',
         type: 'POST',
         contentType: false,
         processData: false,
