@@ -30,7 +30,7 @@
                 max-height: 88%;
                 overflow-y: scroll;
                 overflow-x: hidden;
-                height: calc(100% - 70px);
+                height: calc(100% - 72px);
             }
             #ZichenChatRoomHtmlPluginChatbox .chatbox-body .message-content {
                 padding: 0.75rem 1rem;
@@ -54,7 +54,7 @@
                 display: none;
             }
             #ZichenChatRoomHtmlPluginChatbox.collapsed {
-                height: 40px;
+                height: 43px;
             }
             #ZichenChatRoomHtmlPluginChatbox.collapsed .scrollToBottom,
             #ZichenChatRoomHtmlPluginChatbox.collapsed a {
