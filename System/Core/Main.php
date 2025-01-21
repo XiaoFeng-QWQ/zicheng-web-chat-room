@@ -9,8 +9,7 @@ namespace ChatRoom\Core;
  *     / /__/ / /___/ / / /  __/ / / / /_/ / /___/ / / / /_/ / /_/ _, _/ /_/ / /_/ / /  / /  
  *    /____/_/\____/_/ /_/\___/_/ /_/\__, /\____/_/ /_/\__,_/\__/_/ |_|\____/\____/_/  /_/   
  *                                  /____/                                                   
- *                                                          Powered By:XiaoFeng_QWQ
- * -----------------------------------
+ * ------------------------------------------------------------------ Powered By:XiaoFeng_QWQ
  * 注意事项：
  * - 文件路径必须遵守以下规则：
  *   - 路径末尾不得有斜杠 ("/")。
@@ -25,9 +24,11 @@ namespace ChatRoom\Core;
  * - 函数名使用小驼峰，函数内部变量也是
  * -----------------------------------
  * 
- * @copyright 2025 XiaoFeng-QWQ
+ * @copyright 2024 - 2025 XiaoFeng-QWQ
  * @version FRAMEWORK_VERSION
  * @author XiaoFeng-QWQ <1432777209@qq.com>
+ * @license Apache
+ * @link https://github.com/XiaoFeng-QWQ/zicheng-web-chat-room
  */
 class Main
 {
@@ -42,7 +43,8 @@ class Main
      * 初始化
      *
      */
-    private function init() {
+    private function init()
+    {
         require_once __DIR__ . '/../../config.global.php';
         require_once __DIR__ . '/../../System/Core/Helpers/HandleException.php';
         set_exception_handler('HandleException');
@@ -58,10 +60,11 @@ class Main
     public function run(): void
     {
         $this->init();
+        // 什么？你想要调试？那么不用安装了！
         if (defined('FRAMEWORK_DEBUG') && FRAMEWORK_DEBUG) {
             exit($this->route->processRoutes());
         }
-        if (!defined('FRAMEWORK_DATABASE_PATH')) {
+        if (!FRAMEWORK_INSTALL_LOCK) {
             // 滚去给我安装😡！
             header('Location: /Admin/install/index.php');
             exit;

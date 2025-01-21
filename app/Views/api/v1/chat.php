@@ -18,15 +18,16 @@ $method = isset(explode('/', trim($uri, '/'))[3]) ? explode('/', trim($uri, '/')
 
 // 验证 API 名称是否符合字母和数字的格式，且长度不超过 30
 if (preg_match('/^[a-zA-Z0-9]{1,30}$/', $method)) {
-    // 安全地处理和检查输入
+
     $message = htmlspecialchars(trim($_POST['message'] ?? ''), ENT_QUOTES, 'UTF-8');
     $userCookieInfo = json_decode($_COOKIE['user_login_info'] ?? '', true);
     $token = !empty($userCookieInfo['token']) ? $userCookieInfo['token'] : ($_POST['token'] ?? null);
     $tokenInfo = $token ? $tokenManager->getInfo($token) : null;
     $userInfo = $userHelpers->getUserInfo(null, $tokenInfo['user_id']);
-    
+
     switch ($method) {
         case 'send':
+            $isMarkdown = $_POST['isMarkdown'];
             // 处理上传文件
             if (isset($_FILES['file']) && $_FILES['file']['error'] === UPLOAD_ERR_OK) {
                 $uploadedFile = new FileUploader($chatConfig->uploadFile['allowTypes'], $chatConfig->uploadFile['maxSize']);
@@ -62,7 +63,7 @@ if (preg_match('/^[a-zA-Z0-9]{1,30}$/', $method)) {
             }
 
             // 调用ChatController处理消息发送
-            if ($chatController->sendMessage($userInfo, $message)) {
+            if ($chatController->sendMessage($userInfo, $message, $isMarkdown)) {
                 $helpers->jsonResponse(200, ChatController::MESSAGE_SUCCESS);
             } else {
                 $helpers->jsonResponse(406, ChatController::MESSAGE_SEND_FAILED);

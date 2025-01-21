@@ -19,6 +19,13 @@ try {
         $updatedSettings[] = '更新站点描述';
     }
 
+    if (!empty($_POST['api'])) {
+        $enableCrossDomain = !empty($_POST['api_enable_cross_domain']) ? 'true' : 'false';
+        $systemSetting->setSetting('api_enable_cross_domain', $enableCrossDomain);
+        $systemSetting->setSetting('api_cross_domain_allowlist', $_POST['api_cross_domain_allowlist']);
+        $updatedSettings[] = '更新API设置';
+    }
+
     if (!empty($_POST['nav_link'])) {
         $navLinks = $_POST['nav_link'] ?? [];
         $navLinksJson = json_encode($navLinks, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
@@ -27,7 +34,7 @@ try {
     }
 
     if (!empty($_POST['user_agreement'])) {
-        $filePath = FRAMEWORK_DIR . '/StaticResources/MarkDown/UserAgreement.md';
+        $filePath = FRAMEWORK_DIR . '/StaticResources/MarkDown/user.agreement.md';
 
         // 备份旧的用户协议文件
         backupUserAgreement($filePath);
@@ -42,7 +49,7 @@ try {
     }
 
     if (!empty($_POST['backup_database'])) {
-        $backupFilePath = dirname(FRAMEWORK_DATABASE_PATH) . '/database_backup_' . date('Ymd_His') . '.db';
+        $backupFilePath = dirname(FRAMEWORK_DATABASE_PATH) . '/backup.database_' . date('Ymd_His') . '.db';
         if (!copy(FRAMEWORK_DATABASE_PATH, $backupFilePath)) {
             throw new Exception('数据库文件备份失败。');
         }
@@ -67,7 +74,7 @@ try {
 function backupUserAgreement(string $filePath)
 {
     if (file_exists($filePath)) {
-        $backupFilePath = dirname($filePath) . '/UserAgreement_backup_' . date('Ymd_His') . '.md';
+        $backupFilePath = dirname($filePath) . '/backup.user.agreement_' . date('Ymd_His') . '.md';
         if (!copy($filePath, $backupFilePath)) {
             throw new Exception('用户协议备份失败。');
         }

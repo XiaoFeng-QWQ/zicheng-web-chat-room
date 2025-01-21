@@ -176,17 +176,25 @@ const handleFilePreview = (path, name, type, callback) => {
 const displayMessage = (message, isSelf) => {
     // 保留文本中的换行和空格
     const preserveTextFormat = text => text.replace(/\n/g, '<br>');
+
     // 解析并格式化消息内容
     const parseAndFormatMessageContent = content => {
-        const fileTemplatePattern = /\[!file\((.*?)\)\]/;
+        // 如果消息类型是 user.markdown，则使用 marked.parse 解析 Markdown
+        if (message.type === 'user.markdown') {
+            return marked.parse(content);  // 解析 Markdown
+        }
 
+        // 如果包含文件模板，则解析文件
+        const fileTemplatePattern = /\[!file\((.*?)\)\]/;
         if (fileTemplatePattern.test(content)) {
             const fileData = parseFileTemplate(content);
             const fileHTML = renderFileTemplate(fileData);
             return content.replace(fileTemplatePattern, fileHTML);
         }
+
         return preserveTextFormat(content);
     };
+
     // 渲染文件模板为HTML
     const renderFileTemplate = parsedData => {
         if (!parsedData) return '';
@@ -194,7 +202,7 @@ const displayMessage = (message, isSelf) => {
         const fileExtension = name.split('.').pop().toLowerCase();
         const isMatch = (patterns) => patterns.some(ext => fileExtension === ext || type.startsWith(ext));
         if (isMatch(['image'])) {
-            return `<img alt="${name}" src=${path}></img>`
+            return `<img alt="${name}" src=${path}></img>`;
         } else {
             return `
             <div class="file-info">
@@ -205,11 +213,12 @@ const displayMessage = (message, isSelf) => {
 
     const formattedContent = parseAndFormatMessageContent(message.content);
     const timestamp = `<span class="timestamp">${message.created_at}</span>`;
+
     const messageTypeClass = {
         system: 'alert alert-info system-msg',
         warning: 'alert alert-warning system-msg',
         error: 'alert alert-danger system-msg',
-        info: 'alert alert-primary system-msg'
+        info: 'alert alert-primary system-msg',
     }[message.type] || 'chat-message';
 
     const avatar = message.avatar_url
@@ -222,14 +231,17 @@ const displayMessage = (message, isSelf) => {
             ${message.group_name ? `<div class="user-group">(${message.group_name})</div>` : ''}
         </span>`;
 
-    return `
+    // 渲染最终的 HTML
+    const messageHTML = `
         <div class="${messageTypeClass} ${isSelf ? 'right' : 'left'}">
             <div class="message-content">
-                ${message.type === 'user' ? username : ''}
+                ${username}
                 <div>${formattedContent}</div>
                 ${timestamp}
             </div>
         </div>`;
+
+    return messageHTML;
 };
 
 const loadChatMessages = () => {
@@ -261,6 +273,8 @@ const loadChatMessages = () => {
                             const userItem = $('<li>').text(`${user.user_name}|`);
                             $('#online-users-list-count').text(count)
                             onlineUsersList.append(userItem);
+                        } else {
+                            count--
                         }
                     }
                 }
@@ -292,12 +306,8 @@ const loadChatMessages = () => {
             }
         },
         error: (xhr) => {
-            $('#chat-box').append(displayMessage({
-                type: 'error',
-                content: `加载聊天记录失败<br>${xhr}`,
-                created_at: new Date()
-            }, false));
-            scrollToBottom();
+            console.error(xhr)
+            $('#loading').find('p').text(`加载失败 ${xhr.status}-${xhr.statusText}`);
             loadingMessages = false;
         }
     });
@@ -306,6 +316,11 @@ const sendMessage = (message, uploadFile) => {
     const formData = new FormData();
     formData.append('message', message);
     const chatBox = $('#chat-box');
+    if ($('#message').attr('data-markdown') === 'true') {
+        formData.append('isMarkdown', true)
+    } else {
+        formData.append('isMarkdown', false)
+    }
     if (uploadFile) {
         formData.append('file', uploadFile);
     }
@@ -372,6 +387,17 @@ const bindEventListeners = () => {
         isUserScrolling = chatBox.scrollTop() < lastScrollTop;
         $('#scroll-down-button').toggle(!isAtBottom && isUserScrolling);
         lastScrollTop = chatBox.scrollTop();
+    });
+    $('#insert-md').click(function (e) {
+        // 默认情况下是关闭
+        if ($('#message').attr('data-markdown') === 'true') {
+            $('#message').attr('data-markdown', 'false').attr('placeholder', '聊点什么吧，Ctrl+Enter发送消息');
+            $('#insert-md').removeClass('btn-primary').addClass('btn-secondary');
+        } else {
+            $('#message').attr('data-markdown', 'true')
+                .attr('placeholder', 'MarkDown语法已开启');
+            $('#insert-md').removeClass('btn-secondary').addClass('btn-primary');
+        }
     });
     $('#select-file').click(() => $('#file').click());
     // 文件选择事件处理

@@ -26,7 +26,7 @@ class FileUploader
      * @param int $userId 用户ID
      * @return array|false 文件上传成功时返回文件信息，失败时返回 false
      */
-    public function upload($file, $userId)
+    public function upload($file, $userId): array|bool
     {
         if ($file['error'] !== UPLOAD_ERR_OK) {
             return false;
@@ -47,7 +47,7 @@ class FileUploader
         if (!move_uploaded_file($file['tmp_name'], $filePath)) {
             return false;
         }
-        $uuid = time() . uniqid();
+        $uuid = md5(time() . $userId . uniqid());
         $fileInfo = [
             'name' => $file['name'],
             'type' => $file['type'],
@@ -59,7 +59,7 @@ class FileUploader
         if (!$this->saveFileInfo($userId, $fileInfo)) {
             return false;
         }
-        $fileInfo['url'] = "/api/v1/files/$uuid";
+        $fileInfo['url'] = "/api/v1/files/$uuid"; // 返回前端相对路径
         return $fileInfo;
     }
 
@@ -70,7 +70,7 @@ class FileUploader
      * @param string $fileName 文件名
      * @return string 返回文件的相对 URL
      */
-    private function getFileUrl($userId, $fileName)
+    private function getFileUrl($userId, $fileName): string
     {
         return "/StaticResources/uploads/" . date('Y/m/d') . "/u_$userId/$fileName";
     }
@@ -82,7 +82,7 @@ class FileUploader
      * @param array $fileData 文件信息
      * @return bool 返回是否成功
      */
-    private function saveFileInfo($userId, $fileData)
+    private function saveFileInfo($userId, $fileData): bool
     {
         try {
             $query = "INSERT INTO files (file_name, file_type, file_size, file_path, file_uuid, created_at, user_id) 
@@ -107,12 +107,19 @@ class FileUploader
 
     /**
      * 文件管理
-     *
-     * @param [type] $method
-     * @param [type] ...$options
-     * @return void
+     * 
+     * @param string $method 操作类型，支持 "search" 和 "delete"。
+     *                       - "search" 用于搜索文件，可以提供条件进行筛选；
+     *                       - "delete" 用于删除指定文件。
+     * @param mixed ...$options 可选的参数，取决于操作类型：
+     *                        - 如果 $method 是 "search"，第一个选项应为搜索条件（如文件名、文件类型等）。
+     *                        - 如果 $method 是 "delete"，第一个选项应为文件的 UUID（唯一标识符）。
+     * 
+     * @return array|bool 如果操作是 "search"，返回符合条件的文件列表（数组形式）； 
+     *                     如果操作是 "delete"，返回删除是否成功（布尔值）。
+     *                     如果 $method 不支持或没有提供正确的参数，返回 false。
      */
-    public function manageFile($method, ...$options)
+    public function manageFile($method, ...$options): array|bool
     {
         switch ($method) {
             case "search":
@@ -124,7 +131,6 @@ class FileUploader
                     return $this->searchFiles($condition);
                 }
                 break;
-
             case "delete":
                 if (isset($options[0])) {
                     $fileUuid = $options[0]; // 第一个选项是文件UUID
@@ -138,10 +144,10 @@ class FileUploader
 
     /**
      * 获取所有文件
-     *
-     * @return array 返回所有文件信息
+     * 返回所有文件信息
+     * @return array
      */
-    private function getAllFiles()
+    private function getAllFiles(): array
     {
         try {
             $query = "SELECT * FROM files WHERE status = 'active'";
@@ -168,14 +174,14 @@ class FileUploader
      * @param array $condition 搜索条件，可以是文件名、文件类型等
      * @return array 返回符合条件的文件列表
      */
-    private function searchFiles($condition)
+    private function searchFiles($condition): array
     {
         try {
             if ($condition[1] === '1') {
-                return;
+                return [];
             }
             if ($condition[1] === '0') {
-                return;
+                return [];
             }
 
             // 执行查询
@@ -197,7 +203,7 @@ class FileUploader
      * @param string $fileUuid 文件的 UUID
      * @return bool 返回删除是否成功
      */
-    private function deleteFile($fileUuid)
+    private function deleteFile($fileUuid): bool
     {
         try {
             // 获取文件路径

@@ -1,5 +1,124 @@
 <?php
+// 获取步骤
+$step = $_GET['step'] ?? '';
+
 require_once __DIR__ . '/install.php';
+
+// 处理POST请求
+function processPostRequest($step)
+{
+    // 提取全局变量
+    $csrfToken = $_SESSION['csrf_token'] ?? '';
+    $postData = $_POST;
+
+    // CSRF验证
+    if (!verifyCSRFToken($csrfToken)) {
+        return '<div class="alert alert-danger">' . INSTALL_CONFIG['ERROR_INVALID_REQUEST_METHOD'] . '</div>';
+    }
+
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST'){
+        return;
+    }
+
+    switch ($step) {
+        case '2':
+            return handleAdminSetup($postData);
+        case '3':
+            return handleDatabaseSetup($postData);
+        default:
+            return;
+    }
+}
+
+function handleAdminSetup($postData)
+{
+    if ($postData['admin_pass'] !== $postData['confirm_pass']) {
+        return '<div class="alert alert-danger">密码不一致，请重新输入。</div>';
+    }
+
+    // 设置管理员信息
+    $_SESSION['admin_name'] = $postData['admin_name'];
+    $_SESSION['admin_pass'] = password_hash($postData['admin_pass'], PASSWORD_DEFAULT);
+    $_SESSION['install_step'] = 2;
+
+    return true;
+}
+
+function handleDatabaseSetup($postData)
+{
+    if (empty($postData)){
+        return '数据为空！';
+    }
+    $_SESSION['site_name'] = $postData['site_name'];
+    $_SESSION['site_description'] = $postData['site_description'];
+
+    $fullPath = FRAMEWORK_DATABASE_PATH;
+    $directory = dirname($fullPath);
+    if (!is_writable($directory)) {
+        return '<div class="alert alert-danger">数据库路径不可写，请检查权限。</div>';
+    }
+    if (!file_exists($fullPath) && !touch($fullPath)) {
+        return '<div class="alert alert-danger">无法创建数据库文件，请检查路径权限。</div>';
+    }
+
+    try {
+        $pdo = new PDO("sqlite:$fullPath");
+        $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+        // 执行SQL导入
+        $install_sql = file_get_contents(__DIR__ . '/install.sql');
+        if ($pdo->exec($install_sql) === false) {
+            throw new Exception('SQL导入失败');
+        }
+
+        // 开启事务
+        $pdo->beginTransaction();
+
+        // 插入管理员信息
+        insertIntoDatabase($pdo, "INSERT INTO users (username, password, group_id) VALUES (?, ?, 1)", [
+            $_SESSION['admin_name'],
+            $_SESSION['admin_pass']
+        ]);
+
+        // 插入站点配置信息
+        $siteConfig = [
+            ['site_name', $_SESSION['site_name']],
+            ['site_description', $_SESSION['site_description']],
+            ['enable_user_registration', 'true'],
+            ['nav_link', json_encode([
+                ['name' => '联系站长', 'link' => 'https://blog.zicheng.icu'],
+                ['name' => 'Gitee开源地址', 'link' => 'https://gitee.com/XiaoFengQWQ/zichen-web-chat-room']
+            ], JSON_UNESCAPED_UNICODE)]
+        ];
+        foreach ($siteConfig as $config) {
+            insertIntoDatabase($pdo, "INSERT INTO system_sets (name, value) VALUES (?, ?)", $config);
+        }
+
+        // 插入默认用户组
+        $groups = [['管理员'], ['普通用户']];
+        foreach ($groups as $group) {
+            insertIntoDatabase($pdo, "INSERT INTO groups (group_name) VALUES (?)", $group);
+        }
+
+        // 提交事务
+        $pdo->commit();
+        session_unset();
+        session_destroy();
+
+        return '<div class="alert alert-success">' . INSTALL_CONFIG['SUCCESS'] . '</div>';
+    } catch (PDOException $e) {
+        // 事务回滚
+        $pdo->rollBack();
+        throw $e;
+    }
+}
+
+// 插入数据库的辅助函数
+function insertIntoDatabase($pdo, $sql, $params)
+{
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute($params);
+}
 ?>
 <!DOCTYPE html>
 <html lang="zh-cn">
@@ -61,6 +180,13 @@ require_once __DIR__ . '/install.php';
                 <?= $progress; ?>%
             </div>
         </div>
+        <?php
+        // 执行POST请求的处理
+        $stepFeedback = processPostRequest($step);
+        if ($stepFeedback !== true) {
+            echo $stepFeedback;
+        }
+        ?>
         <div class="step <?= ($step == '') ? 'active' : ''; ?>">
             <h1 class="text-center">欢迎使用子辰聊天室 <i>V<?= FRAMEWORK_VERSION ?></i></h1>
             <h2>描述：</h2>
@@ -83,7 +209,7 @@ require_once __DIR__ . '/install.php';
         <div class="step <?= ($step == '1') ? 'active' : ''; ?>">
             <h2 class="text-center">设置管理员</h2>
             <form action="?step=2" method="post" class="mt-4">
-                <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token']; ?>">
+                <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? ''; ?>">
                 <div class="mb-3">
                     <label for="admin_name" class="form-label">设置管理员用户名</label>
                     <input id="admin_name" name="admin_name" type="text" class="form-control" required>
@@ -100,27 +226,9 @@ require_once __DIR__ . '/install.php';
             </form>
         </div>
         <div class="step <?= ($step == '2') ? 'active' : ''; ?>">
-            <?php
-            if ($_SERVER['REQUEST_METHOD'] === 'POST' && verifyCSRFToken($_POST['csrf_token'])) {
-                if (!isset($_SESSION['install_step']) || $_SESSION['install_step'] < 2) {
-                    $admin_name = $_POST['admin_name'];
-                    $admin_pass = $_POST['admin_pass'];
-                    $confirm_pass = $_POST['confirm_pass'];
-
-                    if ($admin_pass !== $confirm_pass) {
-                        exit('<div class="alert alert-danger">' . INSTALL_CONFIG['ERROR_PASSWORD_MISMATCH']);
-                    } else {
-                        $_SESSION['admin_name'] = $admin_name;
-                        $_SESSION['admin_pass'] = password_hash($admin_pass, PASSWORD_DEFAULT);
-                        $_SESSION['csrf_token'] = generateCSRFToken();
-                        $_SESSION['install_step'] = 2;
-                    }
-                }
-            }
-            ?>
             <h2 class="text-center">站点信息</h2>
             <form action="?step=3" method="post" class="mt-4">
-                <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token']; ?>">
+                <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? ''; ?>">
                 <div class="mb-3">
                     <label for="site_name" class="form-label">站点名称</label>
                     <input id="site_name" name="site_name" type="text" class="form-control" required>
@@ -131,110 +239,6 @@ require_once __DIR__ . '/install.php';
                 </div>
                 <button type="submit" class="btn btn-primary">下一步</button>
             </form>
-        </div>
-        <div class="step <?= ($step == '3') ? 'active' : ''; ?>">
-            <?php
-            if ($_SERVER['REQUEST_METHOD'] === 'POST' && verifyCSRFToken($_POST['csrf_token'])) {
-                if (!isset($_SESSION['install_step']) || $_SESSION['install_step'] < 3) {
-                    $_SESSION['site_name'] = $_POST['site_name'];
-                    $_SESSION['site_description'] = $_POST['site_description'];
-                    $_SESSION['csrf_token'] = generateCSRFToken();
-                    $_SESSION['install_step'] = 3;
-                }
-            }
-            ?>
-            <h2 class="text-center">数据库配置</h2>
-            <form action="?step=4" method="post" class="mt-4">
-                <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token']; ?>">
-                <div class="mb-3">
-                    <label for="database_path" class="form-label">自定义数据库路径</label>
-                    <input id="database_path" name="database_path" type="text" class="form-control" required>
-                    <div class="form-text">必须是完整路径例如：System/Data/data.db (确保路径可读写)</div>
-                </div>
-                <button type="submit" class="btn btn-primary">下一步</button>
-            </form>
-        </div>
-        <div class="step <?= ($step == '4') ? 'active' : ''; ?>">
-            <?php
-            if ($_SERVER['REQUEST_METHOD'] === 'POST' && verifyCSRFToken($_POST['csrf_token'])) {
-                if (!isset($_SESSION['install_step']) || $_SESSION['install_step'] <= 4) {
-                    $database_path = $_POST['database_path'];
-                    $fullPath = FRAMEWORK_DIR . '/' . $database_path;
-
-                    $directory = dirname($fullPath);
-                    if (!is_writable($directory)) {
-                        echo '<div class="alert alert-danger">' . INSTALL_CONFIG['ERROR_DB_PATH_NOT_WRITABLE'] . '</div>';
-                    } else {
-                        if (file_exists($fullPath)) {
-                            echo '<div class="alert alert-danger">' . INSTALL_CONFIG['ERROR_FILE_ALREADY_EXISTS'] . '</div>';
-                            exit;
-                        }
-                        if (!file_exists($fullPath) && !touch($fullPath)) {
-                            echo '<div class="alert alert-danger">' . INSTALL_CONFIG['ERROR_DB_CREATION_FAILURE'] . '</div>';
-                            exit;
-                        }
-                        if (is_writable($fullPath)) {
-                            $_SESSION['database_path'] = $fullPath;
-
-                            try {
-                                $pdo = new PDO("sqlite:$fullPath");
-                                $install_sql = file_get_contents(__DIR__ . '/install.sql');
-                                if ($pdo->exec($install_sql) === false) {
-                                    throw new Exception(INSTALL_CONFIG['ERROR_SQL_IMPORT_FAILURE']);
-                                }
-                                // 开启事务
-                                $pdo->beginTransaction();
-
-                                // 插入管理员用户
-                                $stmt = $pdo->prepare("INSERT INTO users (username, password, group_id) VALUES (?, ?, 1)");
-                                $stmt->execute([$_SESSION['admin_name'], $_SESSION['admin_pass']]);
-
-                                // 创建站点配置
-                                $siteConfig = [
-                                    ['site_name', $_SESSION['site_name']],
-                                    ['site_description', $_SESSION['site_description']],
-                                    ['enable_user_registration', 'true'],
-                                    ['nav_link', json_encode([
-                                        ['name' => '联系站长', 'link' => 'https://blog.zicheng.icu'],
-                                        ['name' => 'Gitee开源地址', 'link' => 'https://gitee.com/XiaoFengQWQ/zichen-web-chat-room']
-                                    ], JSON_UNESCAPED_UNICODE)]
-                                ];
-                                $stmt = $pdo->prepare("INSERT INTO system_sets (name, value) VALUES (?, ?)");
-                                foreach ($siteConfig as $config) {
-                                    $stmt->execute($config);
-                                }
-
-                                // 创建用户组
-                                $groups = [
-                                    ['管理员'],
-                                    ['普通用户']
-                                ];
-                                $stmt = $pdo->prepare("INSERT INTO groups (group_name) VALUES (?)");
-                                foreach ($groups as $config) {
-                                    $stmt->execute($config);
-                                }
-
-                                // 提交事务
-                                $pdo->commit();
-                                session_unset();
-                                session_destroy();
-                                echo sprintf('<div class="alert alert-success">' . INSTALL_CONFIG['SUCCESS'] . '</div>', addslashes($fullPath));
-                                exit();
-                            } catch (PDOException $e) {
-                                // 滚回！
-                                $pdo->rollBack();
-                                HandleException($e);
-                            }
-                        } else {
-                            echo '<div class="alert alert-danger">' . INSTALL_CONFIG['ERROR_DB_WRITE_FAILURE'] . '</div>';
-                        }
-                    }
-                    $_SESSION['install_step'] = 4;
-                }
-            } else {
-                echo '<div class="alert alert-danger">非法访问！</div>';
-            }
-            ?>
         </div>
     </div>
     <script src="/StaticResources/js/jquery.min.js"></script>

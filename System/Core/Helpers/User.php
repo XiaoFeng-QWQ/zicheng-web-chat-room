@@ -21,7 +21,7 @@ class User
     public function __construct()
     {
         $this->parsedown = new Parsedown();
-        $this->userAgreementFile = FRAMEWORK_DIR . '/StaticResources/MarkDown/UserAgreement.md';
+        $this->userAgreementFile = FRAMEWORK_DIR . '/StaticResources/MarkDown/user.agreement.md';
         $this->db = SqlLite::getInstance()->getConnection();
         $this->tokenManager = new TokenManager;;
     }

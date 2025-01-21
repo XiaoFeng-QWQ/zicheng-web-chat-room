@@ -88,32 +88,37 @@ $cookieData = json_decode($_COOKIE['user_login_info'], true);
             </div>
         </div>
     </nav>
-    <div class="container mt-4">
+    <div class="container mt-3">
         <div class="row justify-content-center">
-            <div class="col-md-9">
+            <div>
                 <div id="chat-box-container" class="card shadow-sm">
                     <div id="chat-box" class="card-body talk" style="overflow-y: auto; max-height: 500px;">
                         <div id="loading" class="text-center my-3">
                             <div class="spinner-border text-primary" role="status" aria-hidden="true"></div>
                             <p class="mt-2 text-muted">加载中…</p>
                         </div>
-                        <button id="scroll-down-button" class="btn btn-primary">
-                            <i class="bi bi-arrow-down-circle"></i>
-                        </button>
                     </div>
                     <div id="select-file-preview" class="p-3 position-absolute"></div>
-                    <form id="chat-form" class="card-footer d-flex align-items-center gap-3 p-3">
-                        <textarea id="message" class="form-control flex-grow-1" rows="2"
+                    <form id="chat-form" class="card-footer d-flex flex-column align-items-stretch gap-3 p-3">
+                        <textarea data-markdown="false" id="message" class="form-control flex-grow-1" rows="2"
                             placeholder="聊点什么吧，Ctrl+Enter发送消息" style="resize: none;"></textarea>
-                        <div class="position-relative d-flex align-items-center">
-                            <input type="file" name="file" id="file" class="d-none" multiple />
-                            <button type="button" id="select-file" class="btn btn-secondary" title="上传文件">
-                                <i class="bi bi-file-earmark-arrow-up"></i>
+                        <div class="d-flex gap-3">
+                            <button type="button" id="insert-md" class="btn btn-secondary" title="插入Markdown语法">
+                                <i class="bi bi-markdown"></i>
+                            </button>
+                            <div class="position-relative d-flex align-items-center">
+                                <input type="file" name="file" id="file" class="d-none" multiple />
+                                <button type="button" id="select-file" class="btn btn-secondary" title="上传文件">
+                                    <i class="bi bi-file-earmark-arrow-up"></i>
+                                </button>
+                            </div>
+                            <button type="submit" id="send-button" class="btn btn-primary">
+                                <i class="bi bi-send me-1"></i>
+                            </button>
+                            <button type="button" id="scroll-down-button" class="btn btn-primary">
+                                <i class="bi bi-arrow-down-circle"></i>
                             </button>
                         </div>
-                        <button type="submit" id="send-button" class="primary">
-                            <i class="bi bi-send me-1"></i>
-                        </button>
                     </form>
                 </div>
             </div>
@@ -152,11 +157,12 @@ $cookieData = json_decode($_COOKIE['user_login_info'], true);
         </div>
     </div>
 
+    <script src="/StaticResources/js/plyr.js"></script>
     <script src="/StaticResources/js/jquery.min.js"></script>
-    <script src="/StaticResources/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.plyr.io/3.6.12/plyr.js"></script>
+    <script src="/StaticResources/js/marked.min.js"></script>
     <script src="/StaticResources/js/highlight.min.js"></script>
     <script src="/StaticResources/js/highlight.prolog.min.js"></script>
+    <script src="/StaticResources/js/bootstrap.bundle.min.js"></script>
     <script src="/StaticResources/js/helper.js?v=<?= FRAMEWORK_VERSION ?>"></script>
     <script src="/StaticResources/js/index.chat.js?v=<?= FRAMEWORK_VERSION ?>"></script>
     <script>

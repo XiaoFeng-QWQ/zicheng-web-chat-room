@@ -52,6 +52,7 @@ try {
                         <thead>
                             <tr>
                                 <th>ID</th>
+                                <th>头像</th>
                                 <th>用户名</th>
                                 <th>注册时间</th>
                                 <th>注册ip</th>
@@ -67,16 +68,15 @@ try {
                             <?php else: ?>
                                 <?php foreach ($usersData as $user): ?>
                                     <tr>
-                                        <td><?php echo htmlspecialchars($user['user_id']); ?></td>
-                                        <td><?php echo htmlspecialchars($user['username']); ?></td>
-                                        <td><?php echo htmlspecialchars($user['created_at']); ?></td>
-                                        <td><?php echo htmlspecialchars($user['register_ip'] ?? '无法获取'); ?></td>
+                                        <td><?= htmlspecialchars($user['user_id']); ?></td>
+                                        <td><img src="<?= htmlspecialchars($user['avatar_url'] ?? '无'); ?>" alt="头像链接失效/无头像"></td>
+                                        <td><?= htmlspecialchars($user['username']); ?></td>
+                                        <td><?= htmlspecialchars($user['created_at']); ?></td>
+                                        <td><?= htmlspecialchars($user['register_ip'] ?? '无法获取'); ?></td>
+                                        <td><?= $user['group_id'] == 1 ? '是' : '否'; ?></td>
                                         <td>
-                                            <?php echo $user['group_id'] == 1 ? '是' : '否'; ?>
-                                        </td>
-                                        <td>
-                                            <button class="btn btn-sm btn-primary" onclick="editUser(<?php echo $user['user_id']; ?>)"><i class="fas fa-edit"></i></button>
-                                            <button class="btn btn-sm btn-danger" onclick="deleteUser(<?php echo $user['user_id']; ?>)"><i class="fas fa-user-slash"></i></button>
+                                            <button class="btn btn-sm btn-primary" onclick="editUser(<?= $user['user_id']; ?>)"><i class="fas fa-edit"></i></button>
+                                            <button class="btn btn-sm btn-danger" onclick="deleteUser(<?= $user['user_id']; ?>)"><i class="fas fa-user-slash"></i></button>
                                         </td>
                                     </tr>
                                 <?php endforeach; ?>
@@ -85,14 +85,14 @@ try {
                     </table>
                     <nav aria-label="Page navigation">
                         <ul class="pagination justify-content-center">
-                            <li class="page-item <?php echo $page <= 1 ? 'disabled' : ''; ?>">
-                                <a class="page-link" href="?page=<?php echo $page - 1; ?>">上一页</a>
+                            <li class="page-item <?= $page <= 1 ? 'disabled' : ''; ?>">
+                                <a class="page-link" href="?page=<?= $page - 1; ?>">上一页</a>
                             </li>
                             <li class="page-item">
-                                <a class="page-link"><?php echo $page ?> / <?php echo $totalPages ?></a>
+                                <a class="page-link"><?= $page ?> / <?= $totalPages ?></a>
                             </li>
-                            <li class="page-item <?php echo $page >= $totalPages ? 'disabled' : ''; ?>">
-                                <a class="page-link" href="?page=<?php echo $page + 1; ?>">下一页</a>
+                            <li class="page-item <?= $page >= $totalPages ? 'disabled' : ''; ?>">
+                                <a class="page-link" href="?page=<?= $page + 1; ?>">下一页</a>
                             </li>
                         </ul>
                     </nav>
@@ -121,10 +121,6 @@ try {
                             </div>
                             <div class="modal-body">
                                 <form method="POST" id="editUserForm">
-                                    <div class="mb-3">
-                                        <label for="username" class="form-label">用户名</label>
-                                        <input type="text" class="form-control" id="username" name="username" value="${userInfo.data.username}" required>
-                                    </div>
                                     <div class="mb-3">
                                         <label for="group_id" class="form-label">用户组ID (1为管理员, 2为普通用户)</label>
                                         <input type="number" class="form-control" id="group_id" name="group_id" value="${userInfo.data.group_id}" required>
@@ -161,8 +157,8 @@ try {
                             if (data.success) location.reload();
                         },
                         error: function(xhr, status, error) {
-                            console.error('Error updating user:', error);
-                            alert(`无法更新用户信息: ${error}`);
+                            console.error(xhr);
+                            alert(`无法更新用户信息: ${xhr.responseText}`);
                         }
                     });
                 });

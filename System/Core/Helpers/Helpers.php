@@ -27,7 +27,7 @@ class Helpers
             'data' => $data,
         ];
         if (defined('FRAMEWORK_DEBUG') && FRAMEWORK_DEBUG) {
-            $response['data']['api_debug'] = [
+            $response['data']['apiDebug'] = [
                 'AppVersion' => FRAMEWORK_VERSION,
                 'backtrace' => debug_backtrace(),
             ];

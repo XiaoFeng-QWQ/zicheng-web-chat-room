@@ -10,30 +10,29 @@ $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 $uuid = isset(explode('/', trim($uri, '/'))[3]) ? explode('/', trim($uri, '/'))[3] : null;
 
 if (!$uuid){
+    // 直接返回所有文件列表
     $result = $file->manageFile('search');
-    // 避免前端知道文件路径
+    // 避免前端知道文件绝对路径
     foreach ($result['files'] as &$file) {
         unset($file['file_path']);
     }
     $helpers->jsonResponse(200, 'true', $result);
 }
-// 验证 API 名称是否符合字母和数字的格式，且长度不超过 30
-if (preg_match('/^[a-zA-Z0-9]{1,30}$/', $uuid)) {
+// 验证 API 名称是否符合字母和数字的格式，且长度不超过 256
+if (preg_match('/^[a-zA-Z0-9]{1,256}$/', $uuid)) {
     // 搜索文件元数据
     $fileInfo = $file->manageFile('search', ['file_uuid', $uuid]);
     // 如果文件存在
     if (!empty($fileInfo)) {
         $fileData = $fileInfo[0]; // 假设查询返回的是文件元数据数组，取第一个文件
         // 获取文件路径和类型
-        $filePath = $_SERVER['DOCUMENT_ROOT'] . $fileData['file_path']; // 拼接绝对路径
+        $filePath = FRAMEWORK_DIR . $fileData['file_path']; // 拼接绝对路径
         $fileName = $fileData['file_name'];
         $fileType = $fileData['file_type'];
         // 验证文件是否存在
         if (file_exists($filePath)) {
-            // 设置合适的文件类型和头部信息以促使浏览器下载文件
             header('Content-Description: File Transfer');
             header('Content-Type: ' . $fileType);
-            header('Content-Disposition: attachment; filename="' . basename($fileName) . '"');
             header('Content-Length: ' . filesize($filePath));
             header('Cache-Control: no-cache, no-store, must-revalidate'); // 防止缓存
             header('Pragma: no-cache');
@@ -45,13 +44,11 @@ if (preg_match('/^[a-zA-Z0-9]{1,30}$/', $uuid)) {
             readfile($filePath);
             exit;
         } else {
-            // 文件不存在时，返回错误信息
             http_response_code(404);
             echo "File not found.";
             exit;
         }
     } else {
-        // 如果没有找到文件元数据，返回 404
         http_response_code(404);
         echo "File not found.";
         exit;

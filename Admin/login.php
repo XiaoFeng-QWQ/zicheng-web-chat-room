@@ -252,24 +252,7 @@ function handleFailedLogin($ip_address, $username, $log)
             <button type="submit" class="btn btn-primary">登录</button>
         </form>
     </div>
-    <span style="
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 0.9rem;
-    color: #6c757d;
-    padding: 10px;
-    width: 100%;
-    text-align: center;
-    position: fixed;
-    bottom: 0;
-    left: 0;
-">
-        &copy; 2024 Powered By:
-        <a href="http://blog.zicheng.icu" target="_blank" rel="noopener noreferrer" style="margin-left: 5px; color: #007bff; text-decoration: none;">
-            小枫_QWQ |
-        </a>&nbsp系统版本[<?= FRAMEWORK_VERSION ?>]
-    </span>
+    <?php require_once FRAMEWORK_APP_PATH . '/Views/module/common.php' ?>
     <script src="/StaticResources/js/jquery.min.js"></script>
     <script src="/StaticResources/js/bootstrap.bundle.min.js"></script>
 </body>

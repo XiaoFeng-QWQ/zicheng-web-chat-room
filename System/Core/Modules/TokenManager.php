@@ -27,7 +27,8 @@ class TokenManager
         try {
             $this->db->beginTransaction();
 
-            $token = bin2hex(random_bytes(32));
+            // 给Token加点盐😋
+            $token = bin2hex(hash('sha256', random_bytes(32) . $userId, true));
             $expiration = date('Y-m-d H:i:s', strtotime($expirationInterval));
             $createdAt = date('Y-m-d H:i:s');
 

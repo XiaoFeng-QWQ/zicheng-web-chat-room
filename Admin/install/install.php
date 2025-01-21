@@ -2,11 +2,23 @@
 require_once __DIR__ . '/../../config.global.php';
 session_start();
 
-if (defined('FRAMEWORK_DATABASE_PATH')) {
+if (FRAMEWORK_INSTALL_LOCK !== false) {
     header('Location: /');
     exit;
 }
 require_once __DIR__ . '/../../vendor/autoload.php';
+
+/**
+ * 处理异常
+ *
+ * @param [type] $e
+ * @return void
+ */
+function HandleException($e)
+{
+    echo sprintf('<div class="alert alert-danger" role="alert">出错了! <pre><code class="language-php">%s</code</pre></div>', $e);
+}
+set_exception_handler('HandleException');
 
 /**
  * 动态返回上一步链接的函数
@@ -35,21 +47,8 @@ define('INSTALL_CONFIG', [
     'ERROR_ADMIN_CREATION_FAILURE' => '管理员用户创建失败。' . INSTALL_STEP_BACK(),
     'ERROR_SITE_CONFIG_FAILURE' => '站点配置创建失败。' . INSTALL_STEP_BACK(),
     'SUCCESS_SESSION_DESTROY' => '销毁临时会话成功。',
-    'SUCCESS' => "安装成功！请在站点目录下的 config.global.php 文件中添加 <pre class='language-php'><code>define('FRAMEWORK_DATABASE_PATH', '%s');</code></pre>"
+    'SUCCESS' => "安装成功！请在站点目录下的 config.global.php 文件中修改 <pre class='language-php'><code>define('FRAMEWORK_INSTALL_LOCK', false);</code></pre>为：<pre class='language-php'><code>define('FRAMEWORK_INSTALL_LOCK', true);</code></pre> 完成了？<a href='/'>点我访问前台</a> 或者 <a href='/Admin/index.php'>点我访问后台</a>。",
 ]);
-
-
-/**
- * 处理异常
- *
- * @param [type] $e
- * @return void
- */
-function HandleException($e)
-{
-    echo sprintf('<div class="alert alert-danger" role="alert">出错了! -> <pre><code class="language-php">%s</code</pre></div>', $e);
-}
-set_exception_handler('HandleException');
 
 function readme()
 {
@@ -63,15 +62,12 @@ function readme()
 function usageTerms()
 {
     $Parsedown = new Parsedown();
-    $usageTerms_file = FRAMEWORK_DIR . '/StaticResources/MarkDown/usageTerms.md';
+    $usageTerms_file = FRAMEWORK_DIR . '/StaticResources/MarkDown/usage.terms.md';
     if (file_exists($usageTerms_file)) {
         return $Parsedown->text(file_get_contents($usageTerms_file));
     }
     return '使用条款文件不存在。';
 }
-
-// 获取步骤
-$step = $_GET['step'] ?? '';
 
 // 生成 CSRF 令牌
 function generateCSRFToken()
@@ -97,7 +93,10 @@ $progressSteps = [
     '0' => 10,
     '1' => 25,
     '2' => 50,
-    '3' => 75,
-    '4' => 100
+    '3' => 100
 ];
 $progress = $progressSteps[$step] ?? 0;
+
+if (defined('FRAMEWORK_DEBUG') && FRAMEWORK_DEBUG)  {
+    var_dump($_SESSION);
+}

@@ -31,15 +31,21 @@ class ChatController
      *
      * @param array $user 用户信息数组
      * @param string $message 发送的消息内容
+     * @param bool $isMarkdown 是否为MD语法
      * @return bool
      */
-    public function sendMessage($user, $message)
+    public function sendMessage($user, $message, $isMarkdown = false): bool
     {
         try {
             $userIP = new User;
             $db = SqlLite::getInstance()->getConnection();
+            if ($isMarkdown === 'true'){
+                $type = 'user.markdown';
+            } else {
+                $type = 'user';
+            }
             $stmt = $db->prepare('INSERT INTO messages (user_name, content, type, created_at, user_ip) VALUES (?, ?, ?, ?, ?)');
-            return $stmt->execute([$user['username'], $message, 'user', date('Y-m-d H:i:s'), $userIP->getIp()]);
+            return $stmt->execute([$user['username'], $message, $type, date('Y-m-d H:i:s'), $userIP->getIp()]);
         } catch (Exception $e) {
             throw new ('发送消息发生错误:' . $e);
         }
@@ -50,9 +56,9 @@ class ChatController
      *
      * @param int $offset 偏移量
      * @param int $limit 限制条数
-     * @return array|bool
+     * @return array
      */
-    public function getMessages($offset = 0, $limit = 10)
+    public function getMessages($offset = 0, $limit = 10): array
     {
         try {
             $db = SqlLite::getInstance()->getConnection();
@@ -85,9 +91,9 @@ class ChatController
             $this->updataOnlineUsers();
 
             return [
-                'total' => $totalMessages, // 返回总数
+                'total' => $totalMessages,
                 'onlineUsers' => $this->getOnlineUsers(),
-                'messages' => $stmt->fetchAll(PDO::FETCH_ASSOC) // 返回消息数组
+                'messages' => $stmt->fetchAll(PDO::FETCH_ASSOC)
             ];
         } catch (PDOException $e) {
             throw new ('获取消息发送错误:' . $e);
@@ -99,7 +105,7 @@ class ChatController
      *
      * @return array
      */
-    public function getAllMessages()
+    public function getAllMessages(): array
     {
         try {
             $db = SqlLite::getInstance()->getConnection();
@@ -143,14 +149,14 @@ class ChatController
      * @param string $user_name
      * @param string $message
      * @param string $type
-     * @return void
+     * @return bool
      */
-    public function insertSystemMessage($user_name, $message, $type)
+    public function insertSystemMessage($user_name, $message, $type): bool
     {
         try {
             $db = SqlLite::getInstance()->getConnection();
             $stmt = $db->prepare('INSERT INTO messages (user_name, content, type, created_at) VALUES (?, ?, ?, ?)');
-            $stmt->execute([$user_name, $message, $type, date('Y-m-d H:i:s')]);
+            return $stmt->execute([$user_name, $message, $type, date('Y-m-d H:i:s')]);
         } catch (PDOException $e) {
             throw new ('插入系统消息发生错误:' .  $e);
         }
@@ -161,7 +167,7 @@ class ChatController
      *
      * @return array 在线用户数据
      */
-    private function getOnlineUsers()
+    private function getOnlineUsers(): array
     {
         // 读取 JSON 文件中的在线用户数据
         if (file_exists(self::ONLINE_USERS_FILE)) {
@@ -175,22 +181,27 @@ class ChatController
     /**
      * 更新在线用户数据
      *
-     * @return void
+     * @return int|false
      */
-    private function updataOnlineUsers(){
-        $userHelpers = new User;
-        $tokenManager = new TokenManager;
-        $userCookieInfo = json_decode($_COOKIE['user_login_info'] ?? '', true);
-        $token = !empty($userCookieInfo['token']) ? $userCookieInfo['token'] : ($_POST['token'] ?? null);
-        $tokenInfo = $token ? $tokenManager->getInfo($token) : null;
-        $userInfo = $userHelpers->getUserInfo(null, $tokenInfo['user_id']);
-        $onlineUsers = $this->getOnlineUsers();
-
-        $onlineUsers[$userInfo['user_id']] = [
-            'user_name' => $userInfo['username'],
-            'avatar_url' => $userInfo['avatar_url'],
-            'last_time' => time()
-        ];
-        file_put_contents(self::ONLINE_USERS_FILE, json_encode($onlineUsers, JSON_UNESCAPED_UNICODE));
+    private function updataOnlineUsers(): int|false
+    {
+        try {
+            $userHelpers = new User;
+            $tokenManager = new TokenManager;
+            $userCookieInfo = json_decode($_COOKIE['user_login_info'] ?? '', true);
+            $token = !empty($userCookieInfo['token']) ? $userCookieInfo['token'] : ($_POST['token'] ?? null);
+            $tokenInfo = $token ? $tokenManager->getInfo($token) : null;
+            $userInfo = $userHelpers->getUserInfo(null, $tokenInfo['user_id']);
+            // 获取在线用户列表并更新
+            $onlineUsers = $this->getOnlineUsers();
+            $onlineUsers[$userInfo['user_id']] = [
+                'user_name' => $userInfo['username'],
+                'avatar_url' => $userInfo['avatar_url'],
+                'last_time' => time()
+            ];
+            return file_put_contents(self::ONLINE_USERS_FILE, json_encode($onlineUsers, JSON_UNESCAPED_UNICODE));
+        } catch (Exception $e) {
+            throw new('更新在线用户列表失败:' . $e);
+        }
     }
 }

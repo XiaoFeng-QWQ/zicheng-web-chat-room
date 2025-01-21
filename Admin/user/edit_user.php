@@ -14,7 +14,6 @@ if (isset($_GET['user_id']) && !empty($_GET['user_id'])) {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // 获取提交的数据并构建数组
             $data = [
-                'username' => $_POST['username'],
                 'group_id' => $_POST['group_id'],
             ];
 
