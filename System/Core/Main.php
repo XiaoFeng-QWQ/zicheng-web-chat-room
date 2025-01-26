@@ -2,6 +2,8 @@
 
 namespace ChatRoom\Core;
 
+use ChatRoom\Core\Helpers\WebSecurity;
+
 /**
  *     _____   _ ________                     ________          __  ____  ____  ____  __  ___
  *    /__  /  (_) ____/ /_  ___  ____  ____ _/ ____/ /_  ____ _/ /_/ __ \/ __ \/ __ \/  |/  /
@@ -43,13 +45,18 @@ class Main
      * 初始化
      *
      */
-    private function init()
+    private function initialize(): void
     {
         require_once __DIR__ . '/../../config.global.php';
-        require_once __DIR__ . '/../../System/Core/Helpers/HandleException.php';
+        require_once FRAMEWORK_DIR . '/System/Core/Helpers/HandleException.php';
+        require_once FRAMEWORK_DIR . '/System/Core/Helpers/Waf.php';
+        set_error_handler('HandleException');
         set_exception_handler('HandleException');
         session_start();
         date_default_timezone_set("Asia/Shanghai");
+        // 创建类实例并执行请求检查
+        $security = new WebSecurity();
+        $security->checkRequest();
     }
 
     /**
@@ -59,18 +66,20 @@ class Main
      */
     public function run(): void
     {
-        $this->init();
-        // 什么？你想要调试？那么不用安装了！
+        $this->initialize();
+
+        // 调试模式直接跳过安装
         if (defined('FRAMEWORK_DEBUG') && FRAMEWORK_DEBUG) {
             exit($this->route->processRoutes());
         }
+
+        // 检查安装状态
         if (!FRAMEWORK_INSTALL_LOCK) {
-            // 滚去给我安装😡！
             header('Location: /Admin/install/index.php');
             exit;
-        } else {
-            // 启动路由
-            $this->route->processRoutes();
         }
+
+        // 启动路由处理
+        $this->route->processRoutes();
     }
 }

@@ -8,6 +8,4 @@ if (defined('FRAMEWORK_DEBUG') && FRAMEWORK_DEBUG) {
         'server_data' => $_SERVER,
     ];
     $helpers->jsonResponse(200, 'true', $response);
-} else {
-    $helpers->jsonResponse(200, 'No debug info available');
 }

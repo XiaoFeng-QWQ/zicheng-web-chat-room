@@ -5,12 +5,13 @@ use Monolog\Handler\StreamHandler;
 use Monolog\Formatter\LineFormatter;
 
 /**
- * 系统异常处理
+ * 自定义错误处理
  *
- * @param Exception $e 异常对象
+ * @param [type] $e
+ * @param boolean $saveLog 是否仅保存日志而不输出错误
  * @return void
  */
-function handleException($e)
+function HandleException($e, $saveLog = false)
 {
     // 获取当前时间并格式化为文件名
     $timestamp = date('Y-m-d');
@@ -28,10 +29,10 @@ function handleException($e)
 
     $logger->pushHandler($streamHandler);
 
-    // 记录错误信息
+    // 记录错误信息，确保 message 为字符串
     $errorMessage = sprintf(
         "Exception:\n%s in %s:%d \nStack trace:\n%s",
-        $e->getMessage(),
+        is_string($e->getMessage()) ? $e->getMessage() : 'No message available',
         $e->getFile(),
         $e->getLine(),
         $e->getTraceAsString()
@@ -39,11 +40,16 @@ function handleException($e)
 
     $logger->error($errorMessage);
 
+    if ($saveLog) {
+        return;
+    }
+
     ob_clean();
 
     // 输出错误信息到屏幕
     echo formatExceptionOutput($e);
 }
+
 
 /**
  * 获取文件中指定行的代码片段

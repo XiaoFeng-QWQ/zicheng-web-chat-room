@@ -2,6 +2,9 @@
 
 namespace ChatRoom\Core\Controller;
 
+use Exception;
+use Throwable;
+
 class ChatCommandVoteController
 {
     private $currentVote = null;  // 当前的投票
@@ -54,7 +57,7 @@ class ChatCommandVoteController
                 $count++;
                 $results .= "{$count}.{$option}<br>";
             }
-            $results .= '<hr>发起时间:' . date('Y-m-d H:m:s', $this->currentVote['startTime']) . '<br>结束时间' . date('Y-m-d H:m:s', $this->currentVote['endTime']);
+            $results .= '<hr>发起时间:' . date('Y-m-d H:m:s', $this->currentVote['startTime']) . '<br>结束时间' . date('Y-m-d H:m:s', $this->currentVote['endTime']) . '<br>请使用 `/投票 [编号]` 参与投票。';
             return $results;;
         }
     }
@@ -65,9 +68,9 @@ class ChatCommandVoteController
      * @param int $option 选择的选项编号
      * @return string 投票结果
      */
-    public function 投票($option)
+    public function 投票($userInfo,$option)
     {
-        $userId = $_SESSION['user_login_info']['user_id'];
+        $userId = $userInfo['user_id'];
         if ($this->currentVote === null) {
             return '当前没有进行中的投票。';
         }
@@ -192,10 +195,15 @@ class ChatCommandVoteController
      */
     private function saveVoteData()
     {
-        $data = [
-            'currentVote' => $this->currentVote,
-            'voters' => $this->voters,
-        ];
-        file_put_contents($this->filePath, json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+        try {
+            $data = [
+                'currentVote' => $this->currentVote,
+                'voters' => $this->voters,
+            ];
+            file_put_contents($this->filePath, json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+        } catch (Throwable $e) {
+            // 处理异常并抛出原始异常信息
+            throw new Exception('保存投票数据时发生错误:' . $e);
+        }
     }
 }

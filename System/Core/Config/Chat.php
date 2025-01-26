@@ -100,6 +100,7 @@ class Chat
             'application/msword',
             'application/vnd.ms-excel',
             'application/vnd.ms-powerpoint',
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
             'application/rtf',
             'application/json',
             //** text **//

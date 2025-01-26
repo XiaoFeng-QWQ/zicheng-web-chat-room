@@ -1,9 +1,5 @@
 <?php
 
-/**
- * API 入口
- */
-
 use ChatRoom\Core\Helpers\SystemSetting;
 use ChatRoom\Core\Database\SqlLite;
 use ChatRoom\Core\Helpers\Helpers;
@@ -61,6 +57,6 @@ try {
 
     $errorMessage = '内部错误，请稍后再试。';
     $statusCode = 500;
-
+    handleException($e, true);
     $helpers->jsonResponse($statusCode, $errorMessage, $getTrace);
 }

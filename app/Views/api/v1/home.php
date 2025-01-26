@@ -15,17 +15,17 @@ $method = isset(explode('/', trim($uri, '/'))[3]) ? explode('/', trim($uri, '/')
 if (preg_match('/^[a-zA-Z0-9]{1,30}$/', $method)) {
     switch ($method) {
         case 'user':
-            $helpers->jsonResponse(200, 'true', ['registerUserCount' => $user->getUserCount(), 'loginStatus' => $user->checkUserLoginStatus()]);
+            $helpers->jsonResponse(200, true, ['registerUserCount' => $user->getUserCount(), 'loginStatus' => $user->checkUserLoginStatus()]);
             break;
         case 'config':
             $response = $SystemSetting->getAllSettings();
-            $helpers->jsonResponse(200, 'true', $response);
+            $helpers->jsonResponse(200, true, $response);
             break;
         default:
-            $helpers->jsonResponse(400, 'false', ['error' => 'Invalid method']);
+            $helpers->jsonResponse(406, false, ['error' => 'Invalid method']);
             break;
     }
 } else {
     // 如果 method 不符合字母数字格式，返回 400 错误
-    $helpers->jsonResponse(400, 'false', ['error' => 'Invalid API method']);
+    $helpers->jsonResponse(400, "Invalid API method");
 }

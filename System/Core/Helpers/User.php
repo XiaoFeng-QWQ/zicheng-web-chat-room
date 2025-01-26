@@ -7,6 +7,7 @@ use Exception;
 use Parsedown;
 use ChatRoom\Core\Database\SqlLite;
 use ChatRoom\Core\Modules\TokenManager;
+use PDOException;
 
 /**
  * 用户辅助类
@@ -40,7 +41,7 @@ class User
         }
 
         // 检查用户名是否只包含字母、数字和下划线
-        return (bool) preg_match('/^[a-zA-Z0-9_]+$/', $username);
+        return (bool)preg_match('/^[a-zA-Z0-9_]+$/', $username);
     }
 
     /**
@@ -72,7 +73,7 @@ class User
 
             return $userInfo ?: [];
         } catch (Exception $e) {
-            throw new ("查询用户信息出错:" . $e);
+            throw new PDOException("查询用户信息出错:" . $e);
         }
     }
 
@@ -88,7 +89,7 @@ class User
             $stmt = $this->db->query("SELECT user_id, username, email, created_at, group_id FROM users");
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (Exception $e) {
-            throw new ("获取所有用户出错:" . $e);
+            throw new PDOException("获取所有用户出错:" . $e);
         }
     }
 
@@ -109,7 +110,7 @@ class User
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (Exception $e) {
-            throw new ("查询带有分页的用户出错:" . $e);
+            throw new PDOException("查询分页用户出错:" . $e);
         }
     }
 
@@ -125,7 +126,7 @@ class User
             $stmt = $this->db->query("SELECT COUNT(*) FROM users");
             return (int)$stmt->fetchColumn();
         } catch (Exception $e) {
-            throw new ("获取用户总数出错:" . $e);
+            throw new PDOException("获取用户总数出错:" . $e);
         }
     }
 
@@ -174,7 +175,7 @@ class User
             if ($db->inTransaction()) {
                 $db->rollBack();
             }
-            throw new ("更新用户信息出错:" . $e);
+            throw new PDOException("更新用户信息出错:" . $e);
         }
     }
 
@@ -204,7 +205,7 @@ class User
             if ($db->inTransaction()) {
                 $db->rollBack();
             }
-            throw new ("删除用户出错:" . $e);
+            throw new PDOException("删除用户出错:" . $e);
         }
     }
 
@@ -239,7 +240,7 @@ class User
 
             return $stmt->fetchColumn() > 0;
         } catch (Exception $e) {
-            throw new ("检查用户名是否被使用出错:" . $e);
+            throw new PDOException("检查用户名是否被使用出错:" . $e);
         }
     }
 
@@ -271,7 +272,7 @@ class User
     }
 
     /**
-     * 获取用户登录状态
+     * 检查用户登录状态
      *
      * @return bool
      */
@@ -290,7 +291,7 @@ class User
             // 使用 TokenManager 验证令牌
             return $this->tokenManager->validateToken($cookieData['token']);
         } catch (Exception $e) {
-            throw new ("获取用户登录状态出错:" . $e);
+            throw new PDOException("获取用户登录状态出错:" . $e);
         }
     }
 }

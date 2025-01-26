@@ -2,7 +2,6 @@
 
 namespace ChatRoom\Core\Database;
 
-use Exception;
 use PDO;
 use PDOException;
 
@@ -16,7 +15,7 @@ class SqlLite
         try {
             // 确保数据库文件存在
             if (empty(FRAMEWORK_DATABASE_PATH) || !is_file(FRAMEWORK_DATABASE_PATH)) {
-                throw new Exception('数据库文件不存在，请检查配置文件！');
+                throw new PDOException('数据库文件不存在，请检查配置文件！');
             }
             $this->connection = new PDO('sqlite:' . FRAMEWORK_DATABASE_PATH);
             $this->connection->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
@@ -24,7 +23,7 @@ class SqlLite
             $this->connection->exec('PRAGMA busy_timeout = 5000;');
             $this->connection->exec('PRAGMA journal_mode=WAL;');
         } catch (PDOException $e) {
-            throw new ('数据库错误：' . $e->getMessage());
+            throw new PDOException('数据库错误：' . $e);
         }
     }
 

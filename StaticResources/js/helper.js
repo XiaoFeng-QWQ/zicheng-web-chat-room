@@ -90,3 +90,90 @@ function parseFileTemplate(template) {
     }
     return null;
 }
+
+// 更新事件
+const updateEvent = () => {
+    $.ajax({
+        url: `/api/v1/event?offset=${eventOffset}&limit=20`,
+        type: 'POST',
+        dataType: 'json',
+        success: function (response) {
+            if (response.code === 200) {
+                const data = response.data;
+                if (Array.isArray(data.event)) {
+                    data.event.forEach(evetn => parsingEvent(evetn));
+                    eventOffset += data.event.length;
+                    console.log('Event:');
+                    console.log('eventOffset:' + eventOffset);
+                    console.table(data.event);
+                    console.log('===========END============');
+                } else {
+                    displayErrorMessage('事件API错误！');
+                }
+            } else {
+                displayErrorMessage('事件API错误！');
+                scrollToBottom();
+            }
+        }
+    });
+}
+
+// 处理事件
+const parsingEvent = (evetn) => {
+    switch (evetn.event_type) {
+        case 'message.revoke': {
+            $(`#${evetn.target_id}`).removeClass('chat-message left right').addClass('user-delete-msg').html(`
+                    <div>${evetn.additional_data}</div>
+                    <span class="timestamp">${evetn.created_at}</span>`);
+            break;
+        }
+        case 'admin.announcement.publish': {
+
+            break;
+        }
+        case 'admin.message.highlight': {
+
+            break;
+        }
+        default: {
+            console.error('未知事件ID: ' + evetn.event_type);
+        }
+    }
+}
+
+/**
+ * 更新网络状态
+ * @param {bool} isOnline 
+ */
+function updateNetworkStatus(isOnline) {
+    const statusElement = $('.network-status');
+    if (isOnline) {
+        // 网络恢复
+        if (!networkStatus) {
+            statusElement.removeClass('alert-warning').addClass('alert-success').html('<strong>成功！</strong>网络已恢复正常。').fadeIn();
+            setTimeout(() => {
+                statusElement.fadeOut();
+            }, 2000);
+            networkStatus = true;
+        }
+    } else {
+        if (networkStatus) {
+            statusElement.addClass('alert-warning').fadeIn().html('<strong>错误！</strong>您的网络连接有问题。');
+            networkStatus = false;
+        }
+    }
+};
+
+function debug() {
+    // 获取当前时间
+    const time = new Date().toISOString();
+    console.debug(`[${time}] Debugging Info:`);
+    console.debug(`offset: ${offset}`);
+    console.debug(`isAtTop: ${isAtTop}`);
+    console.debug(`lastOffset: ${lastOffset}`);
+    console.debug(`lastFetched: ${lastFetched}`);
+    console.debug(`lastScrollTop: ${lastScrollTop}`);
+    console.debug(`isUserScrolling: ${isUserScrolling}`);
+    console.debug(`loadingMessages: ${loadingMessages}`);
+    console.debug('===========END============');
+}

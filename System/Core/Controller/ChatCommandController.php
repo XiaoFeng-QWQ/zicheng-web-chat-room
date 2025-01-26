@@ -4,6 +4,7 @@ namespace ChatRoom\Core\Controller;
 
 use Exception;
 use ChatRoom\Core\Config\Chat;
+use Throwable;
 
 /**
  * 聊天指令控制器
@@ -26,10 +27,13 @@ class ChatCommandController extends ChatController
      * @param array $params 参数列表
      * @return string 返回的响应
      */
-    private function executeCommand($action, $params)
+    private function executeCommand($action, $userInfo, $params)
     {
+        // 将 $userInfo 和 $params 合并，确保 $userInfo 是第一个参数
+        $arguments = array_merge([$userInfo], $params);
+
         if (method_exists($this, $action)) {
-            return call_user_func_array([$this, $action], $params);
+            return call_user_func_array([$this, $action], $arguments);
         } else {
             return '命令配置错误: 函数不存在';
         }
@@ -50,7 +54,7 @@ class ChatCommandController extends ChatController
 
         // 检查指令是否有效
         if (!isset($chatConfig->chatCommandList[$command])) {
-            return false;
+            return '指令无效';
         }
 
         $commandConfig = $chatConfig->chatCommandList[$command];
@@ -59,12 +63,13 @@ class ChatCommandController extends ChatController
 
         // 权限检查：只有管理员才能执行需要管理员权限的指令
         if ($isAdminRequired && $userInfo['group_id'] != 1) {
-            return false;
+            return '权限不足';
         }
 
         // 执行命令并捕获异常
         try {
-            $response = $this->executeCommand($action, $params);
+            // 注意：这里传递的是 $userInfo 和剩余的 $params
+            $response = $this->executeCommand($action, $userInfo, $params);
 
             // 如果是管理员并且指令配置为不可见，则直接返回响应
             if ($isAdminRequired || $commandConfig['iSelf']) {
@@ -73,20 +78,19 @@ class ChatCommandController extends ChatController
 
             // 否则发送消息
             $this->sendMessage($userInfo, $message);
-            $this->insertSystemMessage('system', $response, 'system');
-        } catch (Exception $e) {
-            throw new ('执行聊天指令发生错误:' . $e);
-        }
+            $this->insertSystemMessage('Command', $response, 'command');
 
-        return true;
+            return true;
+        } catch (Throwable $e) {
+            throw new Exception('执行聊天指令发生错误:' . $e);
+        }
     }
 
-
     //////////////////////////////////////////////////////////////////////////
     //|                                                                    |//
     //|                                                                    |//
     //////////////////////////////////////////////////////////////////////////
-    public function 帮助()
+    public function 帮助($userInfo)
     {
         $output = '';
         foreach ($this->chatCommandList  as $command => $details) {
@@ -95,42 +99,42 @@ class ChatCommandController extends ChatController
         return $output;
     }
 
-    public function 重载()
+    public function 重载($userInfo)
     {
         return "<script>offset=0;$('#chat-box').html('');loadChatMessages();</script>";
     }
 
-    public function 清屏()
+    public function 清屏($userInfo)
     {
         return "<script>$('#chat-box').html('');</script>聊天窗口已清空。";
     }
 
-    public function 随机图片($type = 'ycy')
+    public function 随机图片($userInfo, $type = 'ycy')
     {
         $url = "https://t.alcy.cc/{$type}?json&rand=" . rand();
         $imgUrl = file_get_contents($url);
         if ($imgUrl === false) {
             return '无法获取图片数据';
         }
-        return '[!file(path="' . $imgUrl . '", name="photo.jpg", type="image/webp")]';
+        return '[!file(path_"' . $imgUrl . '", name_"photo.jpg", type_"image/webp")]';
     }
 
-    public function 发起投票($topic, ...$options)
+    public function 发起投票($userInfo, $topic, ...$options)
     {
         $vote = new ChatCommandVoteController;
         return $vote->发起投票($topic, ...$options);
     }
-    public function 投票($option)
+    public function 投票($userInfo, $option)
     {
         $vote = new ChatCommandVoteController;
-        return $vote->投票($option);
+        return $vote->投票($userInfo, $option);
     }
-    public function 结束投票()
+    public function 结束投票($userInfo)
     {
         $vote = new ChatCommandVoteController;
         return $vote->结束投票();
     }
-    public function 显示投票结果()
+    public function 显示投票结果($userInfo)
     {
         $vote = new ChatCommandVoteController;
         return $vote->显示投票结果();
@@ -141,12 +145,12 @@ class ChatCommandController extends ChatController
      * 
      */
 
-    public function 全员禁言($reason = 'no reason specified')
+    public function 全员禁言($userInfo, $reason = 'no reason specified')
     {
         // 实现禁止所有人发言的逻辑
         return "所有用户已被禁言，原因: $reason";
     }
-    public function 调试()
+    public function 调试($userInfo)
     {
         return '<div id="debug-info" class="debug-info"><div class="debug-info-header"><h5>调试信息</h5></div><div style="padding: 15px; text-align: justify;" id="debug-content"><strong>服务器时间:</strong><br><code id="server-time">' . date('Y-m-d H:i:s') . '</code><br><strong>会话信息:</strong><br><pre id="session-info">' . var_export($_SESSION, true) . '</pre><strong>服务器信息:</strong><br><pre id="server-info">' . var_export($_SERVER, true) . '</pre></div></div>';
     }

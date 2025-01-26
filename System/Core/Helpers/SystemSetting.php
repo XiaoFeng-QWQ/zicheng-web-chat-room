@@ -43,7 +43,7 @@ class SystemSetting
 
             return null;
         } catch (PDOException $e) {
-            throw new ("获取设置出错:" . $e);
+            throw new PDOException("获取设置出错:" . $e);
         }
     }
 
@@ -71,7 +71,7 @@ class SystemSetting
             $stmt->bindParam(':value', $value, PDO::PARAM_STR);
             $stmt->execute();
         } catch (PDOException $e) {
-            throw new ("设置值出错:" . $e);
+            throw new PDOException("设置值出错:" . $e);
         }
     }
 
@@ -95,7 +95,7 @@ class SystemSetting
 
             return $result;
         } catch (PDOException $e) {
-            throw new ("获取所有设置出错:" . $e);
+            throw new PDOException("获取所有设置出错:" . $e);
         }
     }
 }

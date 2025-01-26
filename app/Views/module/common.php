@@ -2,7 +2,7 @@
     display: flex;
     font-size: 0.9rem;
     color: #6c757d;
-    position: absolute;
+    position: fixed;
     bottom: 0;
     left: 0;
 ">

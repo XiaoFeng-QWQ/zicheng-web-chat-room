@@ -3,6 +3,7 @@
 
 namespace ChatRoom\Core\Controller;
 
+use PDO;
 use Exception;
 use PDOException;
 use Monolog\Logger;
@@ -10,6 +11,7 @@ use ChatRoom\Core\Helpers\User;
 use ChatRoom\Core\Helpers\Helpers;
 use ChatRoom\Core\Database\SqlLite;
 use ChatRoom\Core\Modules\TokenManager;
+use ChatRoom\Core\Controller\ChatController;
 
 class UserController
 {
@@ -18,6 +20,7 @@ class UserController
     private $userHelpers;
     private $tokenManager;
     private $reservedNames;
+    private $chatController;
     /**
      * 系统保留名称
      */
@@ -47,6 +50,7 @@ class UserController
         $this->Helpers = new Helpers;
         $this->userHelpers = new User;
         $this->tokenManager = new TokenManager;
+        $this->chatController = new ChatController;
     }
 
     /**
@@ -87,13 +91,13 @@ class UserController
 
             if ($isSuccessful) {
                 $this->updateLoginInfo($this->validateUsername->getUserInfo($username));
-                $this->insertSystemMessage('system', "欢迎新用户 $username 来到聊天室！", 'system');
+                $this->chatController->insertSystemMessage('system', "欢迎新用户 $username 来到聊天室！", 'system');
                 return $this->Helpers->jsonResponse(200, '注册成功');
             } else {
                 return $this->Helpers->jsonResponse(500, '注册失败，请重试');
             }
         } catch (PDOException $e) {
-            throw new ('注册发生错误:' . $e);
+            throw new PDOException('注册发生错误:' . $e);
             return $this->Helpers->jsonResponse(500, "内部服务器错误。请联系管理员。");
         }
     }
@@ -143,32 +147,13 @@ class UserController
             } else {
                 return $this->Helpers->jsonResponse(200, '登录成功', $this->updateLoginInfo($user));
             }
-        } catch (Exception $e) {
-            throw new ('登录发生错误:' . $e);
+        } catch (PDOException $e) {
+            throw new PDOException('登录发生错误:' . $e);
             if ($return) {
                 return "内部服务器错误。请联系管理员。";
             } else {
                 return $this->Helpers->jsonResponse(500, "内部服务器错误。请联系管理员。");
             }
-        }
-    }
-
-    /**
-     * 插入系统消息到聊天记录
-     *
-     * @param string $user_name
-     * @param string $message
-     * @param string $type
-     * @return void
-     */
-    private function insertSystemMessage($user_name, $message, $type)
-    {
-        try {
-            $db = SqlLite::getInstance()->getConnection();
-            $stmt = $db->prepare('INSERT INTO messages (user_name, content, type, created_at) VALUES (?, ?, ?, ?)');
-            $stmt->execute([$user_name, $message, $type, date('Y-m-d H:i:s')]);
-        } catch (PDOException) {
-            return;
         }
     }
 

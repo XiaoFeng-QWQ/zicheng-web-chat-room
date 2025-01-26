@@ -33,23 +33,11 @@ class App
             'file' => ['/user/logout.php'],
             'cache' => [null]
         ],
-        '/api/user' => [
-            'file' => ['/api/user.php'],
-            'cache' => [null]
-        ],
-        '/api/chat' => [
-            'file' => ['/api/chat.php'],
-            'cache' => [null]
-        ],
-        '/api/captcha' => [
-            'file' => ['/api/captcha.php'],
-            'cache' => []
-        ],
-        '/api/debug' => [
-            'file' => ['/api/debug.php']
-        ],
         '/api/v1/[\s\S]*' => [
-            'file' => ['/api/v1/api.php']
+            'file' => ['/api/v1/API_BASE.php']
+        ],
+        '/doc/api/v1.html' => [
+            'file' => ['/v1apidoc.html']
         ]
     ];
 }

@@ -11,20 +11,19 @@ class Helpers
      * 生成JSON响应(内置exit)
      *
      * @param int $statusCode HTTP状态码
-     * @param string $message 响应消息
+     * @param $message 响应消息
      * @param array $data 返回数据数组
      * @return string JSON格式的响应
      */
-    public function jsonResponse(int $statusCode, string $message, array $data = []): string
+    public function jsonResponse(int $statusCode, $message, array $data = []): string
     {
         header('Content-Type: application/json');
-
         // 构建JSON响应数据
         $response = [
             'APIVersion' => '1.1.0.0',
             'code' => $statusCode,
             'message' => $message,
-            'data' => $data,
+            'data' => $data
         ];
         if (defined('FRAMEWORK_DEBUG') && FRAMEWORK_DEBUG) {
             $response['data']['apiDebug'] = [
@@ -32,7 +31,6 @@ class Helpers
                 'backtrace' => debug_backtrace(),
             ];
         }
-
         exit(json_encode($response, JSON_UNESCAPED_UNICODE));
     }
 

@@ -106,10 +106,8 @@ function handleDatabaseSetup($postData)
         session_destroy();
 
         return '<div class="alert alert-success">' . INSTALL_CONFIG['SUCCESS'] . '</div>';
-    } catch (PDOException $e) {
-        // 事务回滚
-        $pdo->rollBack();
-        throw $e;
+    } catch (Throwable $e) {
+        throw new Exception('安装失败:' . $e);
     }
 }
 

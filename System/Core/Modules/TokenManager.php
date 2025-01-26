@@ -3,6 +3,7 @@
 namespace ChatRoom\Core\Modules;
 
 use ChatRoom\Core\Database\SqlLite;
+use PDOException;
 use Exception;
 use PDO;
 
@@ -62,9 +63,9 @@ class TokenManager
 
             $this->db->commit();
             return $token;
-        } catch (Exception $e) {
+        } catch (PDOException $e) {
             $this->db->rollBack();
-            throw new ("生成 token 发生错误:" . $e);
+            throw new PDOException("生成 token 发生错误:" . $e);
         }
     }
 
@@ -83,8 +84,8 @@ class TokenManager
             $result = $stmt->fetch(PDO::FETCH_ASSOC);
             // 输出结果
             return $result ? true : false;
-        } catch (Exception $e) {
-            throw new ("验证 token 发生错误:" . $e);
+        } catch (PDOException $e) {
+            throw new PDOException("验证 token 发生错误:" . $e);
         }
     }
 
@@ -104,8 +105,8 @@ class TokenManager
             $result = $stmt->fetch(PDO::FETCH_ASSOC);
             // 输出结果
             return $result ? $result : throw new ("获取 token 信息发生错误: 无法获取");
-        } catch (Exception $e) {
-            throw new ("获取 token 信息发生错误:" . $e);
+        } catch (PDOException $e) {
+            throw new PDOException("获取 token 信息发生错误:" . $e);
         }
     }
 }

@@ -8,6 +8,16 @@ CREATE TABLE "admin_login_attempts" (
 	"is_blocked"	INTEGER NOT NULL DEFAULT 0,
 	PRIMARY KEY("id" AUTOINCREMENT)
 );
+DROP TABLE IF EXISTS "events";
+CREATE TABLE "events" (
+	"event_id"	INTEGER,
+	"event_type"	VARCHAR(100) NOT NULL,
+	"user_id"	INT NOT NULL,
+	"target_id"	INT NOT NULL,
+	"created_at"	DATETIME NOT NULL,
+	"additional_data"	TEXT,
+	PRIMARY KEY("event_id" AUTOINCREMENT)
+);
 DROP TABLE IF EXISTS "files";
 CREATE TABLE "files" (
 	"id"	INTEGER UNIQUE,
@@ -37,6 +47,7 @@ CREATE TABLE "messages" (
 	"user_name"	TEXT NOT NULL,
 	"user_ip"	TEXT,
 	"created_at"	DATETIME DEFAULT CURRENT_TIMESTAMP,
+    "status"	TEXT DEFAULT 'active',
 	PRIMARY KEY("id" AUTOINCREMENT)
 );
 DROP TABLE IF EXISTS "system_logs";
@@ -87,6 +98,11 @@ CREATE TABLE "users" (
 DROP INDEX IF EXISTS "admin_login_attempts_index";
 CREATE UNIQUE INDEX "admin_login_attempts_index" ON "admin_login_attempts" (
 	"id"
+);
+DROP INDEX IF EXISTS "events_index";
+CREATE INDEX "events_index" ON "events" (
+	"event_id",
+	"event_type"
 );
 DROP INDEX IF EXISTS "files_index";
 CREATE INDEX "files_index" ON "files" (

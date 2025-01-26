@@ -1,0 +1,105 @@
+<!doctype html>
+<html>
+<head>
+<meta charset='UTF-8'><meta name='viewport' content='width=device-width initial-scale=1'>
+<title>README</title>
+<link rel="stylesheet" href="https://storage-xf.pages.dev/typora/theme/mdtht/style.css"></head>
+<style>
+    @font-face {
+        font-family: QuanPixel;
+        src: url('https://storage-xf.pages.dev/font/QuanPixel.ttf');
+    }
+    *{
+        font-family: QuanPixel !important;
+    }
+</style>
+<body><h1 id='v1-api文档'>V1 API文档</h1>
+<h2 id='返回结构'>返回结构</h2>
+<pre><code class='language-json' lang='json'>{
+  &quot;APIVersion&quot;: &quot;1.1.0.0&quot;,
+  &quot;code&quot;: &quot;int&quot;,
+  &quot;message&quot;: &quot;string&quot;,
+  &quot;data&quot;: []
+}
+</code></pre>
+<h3 id='除非特别说明'><em>除非特别说明</em>：</h3>
+<ul>
+<li><strong>API不存在</strong>：返回 <code>code</code> 400。</li>
+<li><strong>请求成功</strong>：返回 <code>code</code> 200。</li>
+<li><strong>Token未传递</strong>：返回 <code>code</code> 401。</li>
+<li><strong>返回数据</strong>：所有数据均在 <code>data</code> 数组内。</li>
+<li><strong>服务器内部错误</strong>：返回 <code>code</code> 500。</li>
+<li><strong>API名称不符合字母和数字格式</strong>：返回 <code>code</code> 403。</li>
+<li><strong>服务器无法根据客户端请求的内容特性完成请求</strong>：返回 <code>code</code> 406。</li>
+
+</ul>
+<hr />
+<h2 id='必须项'>必须项</h2>
+<h3 id='传递的数据'>传递的数据</h3>
+<ul>
+<li>除了 <code>user captcha</code> 外，所有其他数据均需通过 <code>$_POST[&#39;token&#39;]</code> 进行传递。</li>
+
+</ul>
+<hr />
+<h2 id='聊天'>聊天</h2>
+<p>如果聊天命令执行失败返回 <code>code: 403</code> message并返回出错原因。</p>
+<h3 id='获取消息接口apiv1chatget'>获取消息接口：<code>/api/v1/chat/get</code></h3>
+<h4 id='可选参数'>可选参数：</h4>
+<ul>
+<li><code>GET</code> offset 偏移量</li>
+<li><code>GET</code> limit  限制条数</li>
+
+</ul>
+<pre><code class='language-php' lang='php'>(int)$_GET[&#39;offset&#39;] : 0;
+(int)$_GET[&#39;limit&#39;] : 10;
+</code></pre>
+<h4 id='返回格式'>返回格式：</h4>
+<pre><code class='language-json' lang='json'>{
+  &quot;total&quot;:  int,
+  &quot;onlineUsers&quot;: {
+    &quot;1&quot;: {
+      &quot;user_name&quot;: &quot;XiaoFeng&quot;,
+      &quot;avatar_url&quot;: null,
+      &quot;last_time&quot;: 1737557434
+    }
+  },
+  &quot;messages&quot;: [
+    {
+      &quot;id&quot;: 1,
+      &quot;type&quot;: &quot;system&quot;,
+      &quot;content&quot;: &quot;欢迎XiaoFeng来到聊天室！&quot;,
+      &quot;user_name&quot;: &quot;system&quot;,
+      &quot;user_group_id&quot;: null,
+      &quot;created_at&quot;: &quot;2024-08-07 18:37:28&quot;,
+      &quot;avatar_url&quot;: null,
+      &quot;group_name&quot;: null
+    }
+  ]
+}
+</code></pre>
+<hr />
+<h4 id='说明'>说明</h4>
+<ul>
+<li><p><strong><code>total</code></strong>：消息的总数。</p>
+</li>
+<li><p><strong><code>onlineUsers</code></strong>：当前在线的用户信息，以用户 ID 为键，用户信息为值。</p>
+</li>
+<li><p><strong><code>messages</code></strong>：消息数组，每条消息包含以下字段：</p>
+<ul>
+<li><code>id</code>：消息的唯一标识。</li>
+<li><code>type</code>：消息类型（<code>system | user | user.markdown</code>）。</li>
+<li><code>content</code>：消息内容。</li>
+<li><code>user_name</code>：消息发送者用户名。</li>
+<li><code>user_group_id</code>：用户所属组的ID。</li>
+<li><code>created_at</code>：消息的创建时间。</li>
+<li><code>avatar_url</code>：用户头像的URL（为空时返回NULL）。</li>
+<li><code>group_name</code>：用户所属组的名称。</li>
+
+</ul>
+</li>
+
+</ul>
+<script src="https://storage-xf.pages.dev/typora/theme/mdtht/min.js"></script>
+<script src="https://storage-xf.pages.dev/js/highlight.min.js"></script>
+<script>hljs.highlightAll()</script></body>
+</html>

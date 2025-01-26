@@ -32,10 +32,12 @@ $cookieData = json_decode($_COOKIE['user_login_info'], true);
     <link href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.3.3/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.bootcdn.net/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.6.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://lf26-cdn-tos.bytecdntp.com/cdn/expire-1-M/jquery-contextmenu/3.0-beta.1/jquery.contextMenu.min.css">
     <link rel="stylesheet" href="/StaticResources/css/highlight/vs2015.min.css">
     <link rel="stylesheet" href="/StaticResources/css/index.chat.css?v=<?= FRAMEWORK_VERSION ?>">
     <script>
         const sessionUsername = "<?= $cookieData['username']; ?>"; // 获取用户名
+        let networkStatus = true;
     </script>
 </head>
 
@@ -88,46 +90,44 @@ $cookieData = json_decode($_COOKIE['user_login_info'], true);
             </div>
         </div>
     </nav>
-    <div class="container mt-3">
-        <div class="row justify-content-center">
-            <div>
-                <div id="chat-box-container" class="card shadow-sm">
-                    <div id="chat-box" class="card-body talk" style="overflow-y: auto; max-height: 500px;">
-                        <div id="loading" class="text-center my-3">
-                            <div class="spinner-border text-primary" role="status" aria-hidden="true"></div>
-                            <p class="mt-2 text-muted">加载中…</p>
-                        </div>
-                    </div>
-                    <div id="select-file-preview" class="p-3 position-absolute"></div>
-                    <form id="chat-form" class="card-footer d-flex flex-column align-items-stretch gap-3 p-3">
-                        <textarea data-markdown="false" id="message" class="form-control flex-grow-1" rows="2"
-                            placeholder="聊点什么吧，Ctrl+Enter发送消息" style="resize: none;"></textarea>
-                        <div class="d-flex gap-3">
-                            <button type="button" id="insert-md" class="btn btn-secondary" title="插入Markdown语法">
-                                <i class="bi bi-markdown"></i>
-                            </button>
-                            <div class="position-relative d-flex align-items-center">
-                                <input type="file" name="file" id="file" class="d-none" multiple />
-                                <button type="button" id="select-file" class="btn btn-secondary" title="上传文件">
-                                    <i class="bi bi-file-earmark-arrow-up"></i>
-                                </button>
-                            </div>
-                            <button type="submit" id="send-button" class="btn btn-primary">
-                                <i class="bi bi-send me-1"></i>
-                            </button>
-                            <button type="button" id="scroll-down-button" class="btn btn-primary">
-                                <i class="bi bi-arrow-down-circle"></i>
-                            </button>
-                        </div>
-                    </form>
-                </div>
+    <div id="chat-box-container" class="card shadow-sm">
+        <div class="network-status alert"></div>
+        <div id="chat-box" class="card-body talk">
+            <div id="loading" class="text-center my-3">
+                <div class="spinner-border text-primary" role="status" aria-hidden="true"></div>
+                <p class="mt-2 text-muted">加载中…</p>
             </div>
         </div>
+        <div id="select-file-preview" class="p-3 position-absolute"></div>
+        <form id="chat-form" class="card-footer d-flex flex-column align-items-stretch gap-3 p-3">
+            <div class="d-flex gap-3">
+                <div class="position-relative">
+                    <button type="button" id="insert-md" class="btn btn-secondary" title="插入Markdown语法">
+                        <i class="bi bi-markdown"></i>
+                    </button>
+                </div>
+                <div class="position-relative">
+                    <input type="file" name="file" id="file" class="d-none" multiple />
+                    <button type="button" id="select-file" class="btn btn-secondary" title="上传文件">
+                        <i class="bi bi-file-earmark-arrow-up"></i>
+                    </button>
+                </div>
+                <textarea data-markdown="false" id="message" class="form-control flex-grow-1" rows="1"
+                    placeholder="聊点什么吧，Ctrl+Enter发送消息"></textarea>
+                <div class="position-relative">
+                    <button type="submit" id="send-button" class="btn btn-primary">
+                        <i class="bi bi-send me-1"></i>
+                    </button>
+                </div>
+            </div>
+            <!-- 滚动到底部 -->
+            <button type="button" id="scroll-down-button" class="btn btn-primary">
+                <i class="bi bi-arrow-down-circle"></i>
+            </button>
+        </form>
     </div>
 
-    <!--
-        模态窗
-    -->
+    <!-- 模态窗 -->
     <div class="modal fade" id="logoutModal" aria-labelledby="logoutModalLabel" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -156,15 +156,16 @@ $cookieData = json_decode($_COOKIE['user_login_info'], true);
             </div>
         </div>
     </div>
-
     <script src="/StaticResources/js/plyr.js"></script>
     <script src="/StaticResources/js/jquery.min.js"></script>
     <script src="/StaticResources/js/marked.min.js"></script>
     <script src="/StaticResources/js/highlight.min.js"></script>
     <script src="/StaticResources/js/highlight.prolog.min.js"></script>
     <script src="/StaticResources/js/bootstrap.bundle.min.js"></script>
+    <script src="/StaticResources/js/jquery.contextMenu.min.js"></script>
     <script src="/StaticResources/js/helper.js?v=<?= FRAMEWORK_VERSION ?>"></script>
     <script src="/StaticResources/js/index.chat.js?v=<?= FRAMEWORK_VERSION ?>"></script>
+    <script src="/StaticResources/js/chat.meun.js"></script>
     <script>
         $.ajax({
             type: "GET",

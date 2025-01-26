@@ -4,6 +4,8 @@ namespace ChatRoom\Core\Modules;
 
 use PDO;
 use Exception;
+use Throwable;
+use PDOException;
 use ChatRoom\Core\Database\SqlLite;
 
 class FileUploader
@@ -25,54 +27,46 @@ class FileUploader
      * @param array $file $_FILES
      * @param int $userId 用户ID
      * @return array|false 文件上传成功时返回文件信息，失败时返回 false
+     * @throws Throwable 如果数据库操作失败，将抛出异常
      */
     public function upload($file, $userId): array|bool
     {
-        if ($file['error'] !== UPLOAD_ERR_OK) {
-            return false;
+        try {
+            if ($file['error'] !== UPLOAD_ERR_OK) {
+                return false;
+            }
+            $fileType = mime_content_type($file['tmp_name']);
+            if (!in_array($fileType, $this->allowedTypes)) {
+                return false;
+            }
+            if ($file['size'] > $this->maxSize) {
+                return false;
+            }
+            // 构建上传目录
+            $uploadPath = $this->uploadDir . date('Y/m/d') . "/u_$userId/";
+            if (!is_dir($uploadPath) && !mkdir($uploadPath, 0775, true)) {
+                return false;
+            }
+            $filePath = $uploadPath . $file['name'];
+            if (!move_uploaded_file($file['tmp_name'], $filePath)) {
+                return false;
+            }
+            $uuid = time() . $userId . uniqid();
+            $fileInfo = [
+                'name' => $file['name'],
+                'type' => $file['type'],
+                'size' => round($file['size'] / 1024, 2) . 'KB',
+                'path' => $filePath, //存储实际路径
+                'uuid' => $uuid,
+            ];
+            if (!$this->saveFileInfo($userId, $fileInfo)) {
+                return false;
+            }
+            $fileInfo['url'] = "/api/v1/files/$uuid"; // 返回前端相对路径
+            return $fileInfo;
+        } catch (Throwable $e) {
+            throw new Exception('文件保存失败:' . $e);
         }
-        $fileType = mime_content_type($file['tmp_name']);
-        if (!in_array($fileType, $this->allowedTypes)) {
-            return false;
-        }
-        if ($file['size'] > $this->maxSize) {
-            return false;
-        }
-        // 构建上传目录
-        $uploadPath = $this->uploadDir . date('Y/m/d') . "/u_$userId/";
-        if (!is_dir($uploadPath) && !mkdir($uploadPath, 0777, true)) {
-            return false;
-        }
-        $filePath = $uploadPath . $file['name'];
-        if (!move_uploaded_file($file['tmp_name'], $filePath)) {
-            return false;
-        }
-        $uuid = md5(time() . $userId . uniqid());
-        $fileInfo = [
-            'name' => $file['name'],
-            'type' => $file['type'],
-            'size' => round($file['size'] / 1024, 2) . 'KB',
-            'path' => $filePath,
-            'uuid' => $uuid,
-            'url' => $this->getFileUrl($userId, $file['name']),
-        ];
-        if (!$this->saveFileInfo($userId, $fileInfo)) {
-            return false;
-        }
-        $fileInfo['url'] = "/api/v1/files/$uuid"; // 返回前端相对路径
-        return $fileInfo;
-    }
-
-    /**
-     * 生成文件 URL
-     *
-     * @param int $userId 用户ID
-     * @param string $fileName 文件名
-     * @return string 返回文件的相对 URL
-     */
-    private function getFileUrl($userId, $fileName): string
-    {
-        return "/StaticResources/uploads/" . date('Y/m/d') . "/u_$userId/$fileName";
     }
 
     /**
@@ -81,6 +75,7 @@ class FileUploader
      * @param int $userId 用户ID
      * @param array $fileData 文件信息
      * @return bool 返回是否成功
+     * @throws PDOException 如果数据库操作失败，将抛出异常
      */
     private function saveFileInfo($userId, $fileData): bool
     {
@@ -91,7 +86,7 @@ class FileUploader
                 $fileData['name'],
                 $fileData['type'],
                 $fileData['size'],
-                $fileData['url'],
+                $fileData['path'],
                 $fileData['uuid'],
                 date('Y-m-d H:i:s'),
                 $userId,
@@ -100,8 +95,8 @@ class FileUploader
             $db = SqlLite::getInstance()->getConnection();
             $stmt = $db->prepare($query);
             return $stmt->execute($params);
-        } catch (Exception $e) {
-            throw new ('文件信息插入数据库出错:' . $e);
+        } catch (PDOException $e) {
+            throw new PDOException('文件信息插入数据库出错:' . $e);
         }
     }
 
@@ -143,9 +138,10 @@ class FileUploader
     }
 
     /**
-     * 获取所有文件
-     * 返回所有文件信息
+     * 获取所有文件并返回所有文件信息
+     * 
      * @return array
+     * @throws PDOException 如果数据库操作失败，将抛出异常
      */
     private function getAllFiles(): array
     {
@@ -163,8 +159,8 @@ class FileUploader
                 'total' => $total, // 返回总数
                 'files' => $files // 返回消息数组
             ];
-        } catch (Exception $e) {
-            throw new ("获取文件列表失败:" . $e);
+        } catch (PDOException $e) {
+            throw new PDOException("获取文件列表失败:" . $e);
         }
     }
 
@@ -173,6 +169,7 @@ class FileUploader
      *
      * @param array $condition 搜索条件，可以是文件名、文件类型等
      * @return array 返回符合条件的文件列表
+     * @throws PDOException 如果数据库操作失败，将抛出异常
      */
     private function searchFiles($condition): array
     {
@@ -192,8 +189,8 @@ class FileUploader
             $stmt->execute();
             $results = $stmt->fetchAll();
             return $results;
-        } catch (Exception $e) {
-            throw new ("搜索文件失败:" . $e);
+        } catch (PDOException $e) {
+            throw new PDOException("搜索文件失败: " . $e);
         }
     }
 
@@ -202,6 +199,7 @@ class FileUploader
      *
      * @param string $fileUuid 文件的 UUID
      * @return bool 返回删除是否成功
+     * @throws PDOException 如果数据库操作失败，将抛出异常
      */
     private function deleteFile($fileUuid): bool
     {
@@ -223,8 +221,8 @@ class FileUploader
             $updateStmt->execute([$fileUuid]);
 
             return true;
-        } catch (Exception $e) {
-            throw new ("删除文件失败:" . $e);
+        } catch (PDOException $e) {
+            throw new PDOException("删除文件失败:" . $e);
         }
     }
 }
