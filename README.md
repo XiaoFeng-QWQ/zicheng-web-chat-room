@@ -1,10 +1,8 @@
-<center> <h1>子辰网页聊天室</h1> </center>
+<img src="StaticResources/image/logo.svg" alt="Logo" style="zoom: 200%;" />
 
-![Logo](https://image.lolimi.cn/2024/12/01/674c7b46aa3c1.png)  
-![GitHub Activity](https://repobeats.axiom.co/api/embed/56704d7e8efdf560da335270c21f4bc46db73ada.svg)
-
-**发布页**: [https://bri6.cn/archives/405.html](https://bri6.cn/archives/405.html)  
-**开源主仓库**: [GitHub](https://github.com/XiaoFeng-QWQ/zicheng-web-chat-room)  
+**发布页**: [https://blog.bri6.cn/archives/zichenchatrom.html](https://blog.bri6.cn/archives/zichenchatrom.html)
+下载地址：
+**开源主仓库**: [GitHub](https://github.com/XiaoFeng-QWQ/zicheng-web-chat-room)
 **开源镜像**: [Gitee](https://gitee.com/XiaoFengQWQ/zichen-web-chat-room) (可能不保证实时更新)
 
 ---
@@ -30,19 +28,18 @@
 ## 部署说明
 
 ### 1. PHP 配置要求
-确保您的服务器安装了以下 PHP 扩展：
-
-- curl
+确保您的服务器安装了以下 PHP 扩展(默认情况下虚拟主机厂商已开启)：
 - gd
 - intl
-- mbstring
+- curl
 - sqlite3
+- mbstring
 - pdo_sqlite
+- mime_content_type
 
-### 2. Nginx 配置
+### 2. 伪静态配置
 
-如果使用 Nginx 作为 Web 服务器，请参考以下伪静态规则：
-
+如果使用 Nginx 作为 Web 服务器，请使用以下伪静态规则：
 ```nginx
 # 处理目录请求，避免尾部斜杠
 if (!-d $request_filename){
@@ -64,6 +61,8 @@ if ($rule_2 = "21"){
 }
 ```
 
+如果使用的是Apache则不需要手动配置
+
 ---
 
 ## 已实现的功能
@@ -71,6 +70,8 @@ if ($rule_2 = "21"){
 - ✅ 完整的后台管理功能
 - ✅ 文件上传功能
 - ✅ 上传文件预览功能
+- ✅ 消息撤回
+- ✅ 聊天事件处理
 
 ---
 
@@ -81,8 +82,8 @@ if ($rule_2 = "21"){
 1. **Fork 本仓库**：点击页面右上角的 Fork 按钮。
 2. **创建新分支**：在本地创建一个新的分支。
 3. **提交代码更改**：进行代码修改并提交到您的分支。
-4. **提交 Pull Request**：将您的修改提请求合并到主仓库。
-
+4. **提交 Pull Request**：将您的修改提请求合并到主仓库。  
+![GitHub Activity](https://repobeats.axiom.co/api/embed/56704d7e8efdf560da335270c21f4bc46db73ada.svg)
 ---
 
 ## 联系方式
