@@ -51,17 +51,6 @@ class Events
             $stmt->bindParam(':offset', $offset, PDO::PARAM_INT);
             $stmt->execute();
             $events = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            // 解🐎user信息，让前端处理更容易！😋
-            // foreach ($events as &$event) {
-            //     if (isset($event['user']) && !empty($event['user'])) {
-            //         $userData = json_decode($event['user'], true);
-            //         if (json_last_error() === JSON_ERROR_NONE) {
-            //             $event['user'] = $userData;
-            //         } else {
-            //             $event['user'] = null; // 如果 JSON 解码失败，设置为 null
-            //         }
-            //     }
-            // }
             return $events ?? [];
         } catch (PDOException $e) {
             throw new PDOException('获取事件列表发生错误: ' . $e->getMessage());

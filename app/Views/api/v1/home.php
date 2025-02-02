@@ -15,7 +15,15 @@ $method = isset(explode('/', trim($uri, '/'))[3]) ? explode('/', trim($uri, '/')
 if (preg_match('/^[a-zA-Z0-9]{1,30}$/', $method)) {
     switch ($method) {
         case 'user':
-            $helpers->jsonResponse(200, true, ['registerUserCount' => $user->getUserCount(), 'loginStatus' => $user->checkUserLoginStatus()]);
+            $userData = $user->getUserInfoByEnv();
+            unset($userData['password']);
+            $helpers->jsonResponse(200, true, [
+                'registerUserCount' => $user->getUserCount(),
+                'userdata' => [
+                    'loginStatus' => $user->checkUserLoginStatus(),
+                    'data' => $userData,
+                ]
+            ]);
             break;
         case 'config':
             $response = $SystemSetting->getAllSettings();

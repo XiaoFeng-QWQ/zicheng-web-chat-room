@@ -13,6 +13,11 @@ use Monolog\Formatter\LineFormatter;
  */
 function HandleException($e, $saveLog = false)
 {
+    if (!$e instanceof Exception) {
+        ob_clean();
+        return $saveLog;
+    }
+
     // 获取当前时间并格式化为文件名
     $timestamp = date('Y-m-d');
     $logFile = FRAMEWORK_DIR . '/Writable/logs/' . $timestamp . '.log';
@@ -49,6 +54,7 @@ function HandleException($e, $saveLog = false)
     // 输出错误信息到屏幕
     echo formatExceptionOutput($e);
 }
+
 
 
 /**

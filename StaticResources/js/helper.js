@@ -103,10 +103,6 @@ const updateEvent = () => {
                 if (Array.isArray(data.event)) {
                     data.event.forEach(evetn => parsingEvent(evetn));
                     eventOffset += data.event.length;
-                    console.log('Event:');
-                    console.log('eventOffset:' + eventOffset);
-                    console.table(data.event);
-                    console.log('===========END============');
                 } else {
                     displayErrorMessage('事件API错误！');
                 }
@@ -122,7 +118,7 @@ const updateEvent = () => {
 const parsingEvent = (evetn) => {
     switch (evetn.event_type) {
         case 'message.revoke': {
-            $(`#${evetn.target_id}`).removeClass('chat-message left right').addClass('user-delete-msg').html(`
+            $(`#${evetn.target_id}`).removeClass('chat-message left right').addClass('event').html(`
                     <div>${evetn.additional_data}</div>
                     <span class="timestamp">${evetn.created_at}</span>`);
             break;
@@ -165,7 +161,6 @@ function updateNetworkStatus(isOnline) {
 };
 
 function debug() {
-    // 获取当前时间
     const time = new Date().toISOString();
     console.debug(`[${time}] Debugging Info:`);
     console.debug(`offset: ${offset}`);

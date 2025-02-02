@@ -1,5 +1,5 @@
 let isUserScrolling = false;
-let offset = 1;
+let offset = 0;
 let eventOffset = 0;
 let lastFetched = null;
 let lastScrollTop = 0;
@@ -186,11 +186,10 @@ const displayMessage = (message, isSelf) => {
     const timestamp = `<span class="timestamp">${message.created_at}</span>`;
     const messageTypeClass = {
         system: 'alert alert-info system-msg',
-        command: 'alert alert-info system-msg',
         warning: 'alert alert-warning system-msg',
         error: 'alert alert-danger system-msg',
         info: 'alert alert-primary system-msg',
-        'event.delete': 'user-delete-msg',
+        'event.delete': 'event',
     }[message.type] || 'chat-message';
     const avatar = message.avatar_url
         ? `<img src="${message.avatar_url}" alt="avatar" class="avatar">`
@@ -204,7 +203,7 @@ const displayMessage = (message, isSelf) => {
         <div class="${messageTypeClass} ${isSelf ? 'right' : 'left'}" id="${message.id}" data-msg-id="${message.id}">
             <div class="message-content">
                 ${username}
-                <div>${formattedContent}</div>
+                <div class="message-content-text">${formattedContent}</div>
                 ${timestamp}
             </div>
         </div>`;

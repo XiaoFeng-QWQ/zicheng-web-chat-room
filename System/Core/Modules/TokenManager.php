@@ -109,4 +109,22 @@ class TokenManager
             throw new PDOException("获取 token 信息发生错误:" . $e);
         }
     }
+
+    /**
+     * 删除指定用户 ID TOKEN
+     *
+     * @param int $userId
+     * @return bool
+     */
+    public function delet(int $userId): bool
+    {
+        try {
+            $sql = "DELETE FROM user_tokens WHERE user_id = :user_id";
+            $stmt = $this->db->prepare($sql);
+            $stmt->bindParam(':user_id', $userId, PDO::PARAM_STR);
+            return $stmt->execute();
+        } catch (PDOException $e) {
+            throw new PDOException("删除 token 发生错误:" . $e);
+        }
+    }
 }

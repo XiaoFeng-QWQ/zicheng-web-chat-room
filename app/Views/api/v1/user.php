@@ -7,7 +7,7 @@ use ChatRoom\Core\Modules\TokenManager;
 use ChatRoom\Core\Helpers\SystemSetting;
 use ChatRoom\Core\Controller\UserController;
 
-$isLogin = new User;
+$userHelpers = new User;
 $tokenManager = new TokenManager;
 $userController = new UserController;
 $setting = new SystemSetting(SqlLite::getInstance()->getConnection());
@@ -46,11 +46,11 @@ if (preg_match('/^[a-zA-Z0-9]{1,30}$/', $method)) {
                 $helpers->jsonResponse(400, UserController::CAPTCHA_ERROR);
             }
         case 'logout':
-            // 判断是否已经退出登录
-            if (!$isLogin->checkUserLoginStatus()) {
-                exit(header("Location: /user/login" . $helpers->getGetParams('callBack'))); // 重定向到登录页面
+            if ($userHelpers->checkUserLoginStatus()) {
+                setcookie('user_login_info', '', time() - 3600, '/');
+                $helpers->jsonResponse(200, $tokenManager->delet($userHelpers->getUserInfoByEnv()['user_id']));
             }
-            setcookie('user_login_info', '', time() - 3600, '/');
+            $helpers->jsonResponse(200, true);
             break;
         default:
             $helpers->jsonResponse(400, UserController::INVALID_METHOD_MESSAGE);

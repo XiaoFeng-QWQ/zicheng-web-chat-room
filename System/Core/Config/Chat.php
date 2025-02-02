@@ -21,6 +21,12 @@ class Chat
             'iSelf' =>  true, // 发送消息后是否仅自己能看见
             'isAdmin' => false // 是否需要管理员权限
         ],
+        '/ai' => [
+            'action' => ['ai'], // 对应ChatCommandController类函数名
+            'notes' => ['ai聊天(暂不支持上下文)'], // 指令说明
+            'iSelf' =>  false, // 发送消息后是否仅自己能看见
+            'isAdmin' => false // 是否需要管理员权限
+        ],
         '/随机图片' => [
             'action' => ['随机图片'],
             'notes' => ['后面参数见:https://t.alcy.cc/ | 随机二次元图片'],

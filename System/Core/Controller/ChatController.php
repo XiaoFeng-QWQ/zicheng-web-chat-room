@@ -133,7 +133,7 @@ class ChatController
     /**
      * 获取消息
      *
-     * @param int $offset 偏移量
+     * @param int $offset 偏移量 (当前页数 - 1) * 每页条数
      * @param int $limit 限制条数
      * @return array
      */
@@ -207,9 +207,10 @@ class ChatController
     public function insertSystemMessage($user_name, $message, $type): bool
     {
         try {
+            $userIP = new User;
             $db = SqlLite::getInstance()->getConnection();
-            $stmt = $db->prepare('INSERT INTO messages (user_name, content, type, created_at) VALUES (?, ?, ?, ?)');
-            return $stmt->execute([$user_name, $message, $type, date('Y-m-d H:i:s')]);
+            $stmt = $db->prepare('INSERT INTO messages (user_name, content, type, created_at, user_ip) VALUES (?, ?, ?, ?, ?)');
+            return $stmt->execute([$user_name, $message, $type, date('Y-m-d H:i:s'), $userIP->getIp()]);
         } catch (PDOException $e) {
             throw new PDOException('插入系统消息发生错误:' .  $e);
         }

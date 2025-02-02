@@ -1,4 +1,4 @@
-<img src="StaticResources/image/logo.svg" alt="Logo" style="zoom: 200%;" />
+<center><img src="/StaticResources/image/logo.png" alt="Logo"/></center>
 
 **发布页**: [https://blog.bri6.cn/archives/zichenchatrom.html](https://blog.bri6.cn/archives/zichenchatrom.html)
 下载地址：

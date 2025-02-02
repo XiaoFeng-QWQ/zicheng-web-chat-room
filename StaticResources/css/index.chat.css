@@ -126,16 +126,12 @@ img {
     border: 1px solid #ddd;
 }
 
-.event-msg {
-    display: none;
-}
-
-.user-delete-msg {
+.event {
     text-align: center;
     padding: 10px;
 }
 
-.user-delete-msg .username {
+.event .username {
     display: none;
 }
 

@@ -99,6 +99,43 @@ class ChatCommandController extends ChatController
         return $output;
     }
 
+    public function ai($userInfo, $msg)
+    {
+
+        $url = "https://spark-api-open.xf-yun.com/v1/chat/completions";
+        $data = [
+            "model" => "lite", // 指定请求的模型
+            "messages" => [
+                [
+                    "role" => "user",
+                    "content" => $msg
+                ]
+            ]
+        ];
+        $headers = [
+            "Authorization: Bearer 你的APIPassword"
+        ];
+        // 初始化cURL会话
+        $ch = curl_init($url);
+        // 滚草泥马，不验证SSL证书
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+        curl_setopt($ch, CURLOPT_POST, 1);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+        // 执行cURL请求
+        $response = curl_exec($ch);
+        // 检查是否有错误
+        if (curl_errno($ch)) {
+            echo 'cURL error: ' . curl_error($ch);
+        }
+        // 关闭cURL会话
+        curl_close($ch);
+        return json_decode($response, true)['choices']['0']['message']['content'];
+    }
+
     public function 重载($userInfo)
     {
         return "<script>offset=0;$('#chat-box').html('');loadChatMessages();</script>";

@@ -21,10 +21,7 @@ $method = isset(explode('/', trim($uri, '/'))[3]) ? explode('/', trim($uri, '/')
 if (preg_match('/^[a-zA-Z0-9]{1,30}$/', $method)) {
 
     $message = htmlspecialchars(trim($_POST['message'] ?? ''), ENT_QUOTES, 'UTF-8');
-    $userCookieInfo = json_decode($_COOKIE['user_login_info'] ?? '', true);
-    $token = !empty($userCookieInfo['token']) ? $userCookieInfo['token'] : ($_POST['token'] ?? null);
-    $tokenInfo = $token ? $tokenManager->getInfo($token) : null;
-    $userInfo = $userHelpers->getUserInfo(null, $tokenInfo['user_id']);
+    $userInfo = $userHelpers->getUserInfoByEnv();
 
     switch ($method) {
         case 'send':

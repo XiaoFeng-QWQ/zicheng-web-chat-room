@@ -3,8 +3,6 @@
 
 namespace ChatRoom\Core\Controller;
 
-use PDO;
-use Exception;
 use PDOException;
 use Monolog\Logger;
 use ChatRoom\Core\Helpers\User;
@@ -16,6 +14,7 @@ use ChatRoom\Core\Controller\ChatController;
 class UserController
 {
 
+    private $event;
     public $Helpers;
     private $userHelpers;
     private $tokenManager;
@@ -47,6 +46,7 @@ class UserController
          */
         $this->reservedNames = ['system', 'root', 'admin'];
 
+        $this->event = new Events;
         $this->Helpers = new Helpers;
         $this->userHelpers = new User;
         $this->tokenManager = new TokenManager;
@@ -165,10 +165,7 @@ class UserController
     private function updateLoginInfo(array $user)
     {
         // 移除无用信息
-        unset($user['email']);
         unset($user['password']);
-        unset($user['register_ip']);
-
         $user['token'] = $this->tokenManager->generateToken($user['user_id'], '+1 year');
         setcookie(
             'user_login_info',

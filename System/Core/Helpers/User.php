@@ -3,11 +3,12 @@
 namespace ChatRoom\Core\Helpers;
 
 use PDO;
+use Throwable;
 use Exception;
 use Parsedown;
+use PDOException;
 use ChatRoom\Core\Database\SqlLite;
 use ChatRoom\Core\Modules\TokenManager;
-use PDOException;
 
 /**
  * 用户辅助类
@@ -74,6 +75,40 @@ class User
             return $userInfo ?: [];
         } catch (Exception $e) {
             throw new PDOException("查询用户信息出错:" . $e);
+        }
+    }
+
+    /**
+     * 根据当前环境获取用户信息
+     * --------------------
+     * 返回结构与数据库一致
+     *
+     * @return array
+     */
+    public function getUserInfoByEnv(): array
+    {
+        try {
+            $tokenManager = new TokenManager;
+            $userHelpers = new User();
+            // 获取会话中的用户信息
+            $userCookieInfo = json_decode($_COOKIE['user_login_info'] ?? '', true);
+            // 如果会话中有用户信息，则使用会话信息获取用户信息
+            if (!empty($userCookieInfo) && !empty($userCookieInfo['token'])) {
+                $token = $userCookieInfo['token'];
+                $return = $userHelpers->getUserInfo(null, $userCookieInfo['user_id']);
+            } else {
+                // 否则，直接使用 POST 参数中的 token 获取信息
+                $token = $_POST['token'] ?? null;
+                $tokenInfo = $token ? $tokenManager->getInfo($token) : null;
+                $return = $userHelpers->getUserInfo(null, $tokenInfo['user_id']);
+            }
+            // 返回用户信息，附加 token
+            if ($token) {
+                $return['token'] .= $token;
+            }
+            return $return;
+        } catch (Throwable $e) {
+            throw new Exception('根据当前环境获取用户信息出错：' . $e);
         }
     }
 

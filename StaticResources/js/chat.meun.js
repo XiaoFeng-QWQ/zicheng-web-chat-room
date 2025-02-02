@@ -3,24 +3,13 @@ $(function () {
         selector: '.chat-message',
         callback: function (key, options) {
             const targetElement = options.$trigger;
-            console.log('Menu:');
-            console.log(targetElement);
-            console.log($(targetElement).attr('data-msg-id'));
-            console.log(key);
-            console.log('===========END============');
             // 发送撤回请求
             if (key === 'user.delete') {
                 $.ajax({
                     url: `/api/v1/chat/delete?id=${$(targetElement).attr('data-msg-id')}`,
                     type: 'GET',
                     success: function (response) {
-                        if (response.code === 200) {
-                            $(`[data-msg-id="${$(targetElement).
-                                attr('data-msg-id')}"]`).
-                                removeClass('chat-message right active-message').
-                                addClass('user-delete-msg').
-                                html(`你撤回了一条消息`);
-                        } else {
+                        if (!response.code === 200) {
                             alert(response.message || '撤回失败，请稍后重试');
                         }
                     },
