@@ -44,13 +44,13 @@ if (preg_match('/^[a-zA-Z0-9]{1,256}$/', $uuid)) {
             readfile($filePath);
             exit;
         } else {
+            ob_clean();
             http_response_code(404);
-            echo "File not found.";
             exit;
         }
     } else {
+        ob_clean();
         http_response_code(404);
-        echo "File not found.";
         exit;
     }
 } else {

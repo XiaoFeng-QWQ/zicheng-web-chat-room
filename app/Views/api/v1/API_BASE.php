@@ -1,14 +1,14 @@
 <?php
 
+use ChatRoom\Core\Database\Base;
 use ChatRoom\Core\Helpers\SystemSetting;
-use ChatRoom\Core\Database\SqlLite;
 use ChatRoom\Core\Helpers\Helpers;
 use ChatRoom\Core\Helpers\User;
 
 try {
     $helpers = new Helpers();
     $userHelpers = new User();
-    $systemSetting = new SystemSetting(SqlLite::getInstance()->getConnection());
+    $systemSetting = new SystemSetting(Base::getInstance()->getConnection());
     $enableCrossDomain = $systemSetting->getSetting('api_enable_cross_domain');
     $allowedDomains = explode(',', $systemSetting->getSetting('api_cross_domain_allowlist') ?? ''); // 获取允许的域名
 

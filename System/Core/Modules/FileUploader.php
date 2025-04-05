@@ -6,16 +6,18 @@ use PDO;
 use Exception;
 use Throwable;
 use PDOException;
-use ChatRoom\Core\Database\SqlLite;
+use ChatRoom\Core\Database\Base;
 
 class FileUploader
 {
     private $allowedTypes;
     private $maxSize;
     private $uploadDir;
+    private $db;
 
     public function __construct($allowedTypes, $maxSize)
     {
+        $this->db = Base::getInstance()->getConnection();
         $this->allowedTypes = $allowedTypes;
         $this->maxSize = $maxSize;
         $this->uploadDir = FRAMEWORK_DIR . "/StaticResources/uploads/";
@@ -65,7 +67,7 @@ class FileUploader
             $fileInfo['url'] = "/api/v1/files/$uuid"; // 返回前端相对路径
             return $fileInfo;
         } catch (Throwable $e) {
-            throw new Exception('文件保存失败:' . $e);
+            throw new Exception('文件保存失败:' . $e->getMessage());
         }
     }
 
@@ -92,11 +94,10 @@ class FileUploader
                 $userId,
             ];
 
-            $db = SqlLite::getInstance()->getConnection();
-            $stmt = $db->prepare($query);
+            $stmt = $this->db->prepare($query);
             return $stmt->execute($params);
         } catch (PDOException $e) {
-            throw new PDOException('文件信息插入数据库出错:' . $e);
+            throw new PDOException('文件信息插入数据库出错:' . $e->getMessage());
         }
     }
 
@@ -132,9 +133,8 @@ class FileUploader
                     return $this->deleteFile($fileUuid);
                 }
                 break;
-            default:
-                return false;
         }
+        return false;
     }
 
     /**
@@ -147,12 +147,11 @@ class FileUploader
     {
         try {
             $query = "SELECT * FROM files WHERE status = 'active'";
-            $db = SqlLite::getInstance()->getConnection();
-            $stmt = $db->query($query);
+            $stmt = $this->db->query($query);
             $files = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
             $countQuery = "SELECT COUNT(*) as total FROM files WHERE status = 'active'";
-            $totalStmt = $db->query($countQuery);
+            $totalStmt = $this->db->query($countQuery);
             $total = $totalStmt->fetch(PDO::FETCH_ASSOC)['total'];
 
             return [
@@ -160,7 +159,7 @@ class FileUploader
                 'files' => $files // 返回消息数组
             ];
         } catch (PDOException $e) {
-            throw new PDOException("获取文件列表失败:" . $e);
+            throw new PDOException("获取文件列表失败:" . $e->getMessage());
         }
     }
 
@@ -182,15 +181,14 @@ class FileUploader
             }
 
             // 执行查询
-            $db = SqlLite::getInstance()->getConnection();
             $sql = "SELECT * FROM files WHERE $condition[0] = :value AND status = 'active'";
-            $stmt = $db->prepare($sql);
+            $stmt = $this->db->prepare($sql);
             $stmt->bindParam(':value', $condition[1]);
             $stmt->execute();
             $results = $stmt->fetchAll();
             return $results;
         } catch (PDOException $e) {
-            throw new PDOException("搜索文件失败: " . $e);
+            throw new PDOException("搜索文件失败: " . $e->getMessage());
         }
     }
 
@@ -206,8 +204,7 @@ class FileUploader
         try {
             // 获取文件路径
             $query = "SELECT file_path FROM files WHERE file_uuid = ? AND status = 'active'";
-            $db = SqlLite::getInstance()->getConnection();
-            $stmt = $db->prepare($query);
+            $stmt = $this->db->prepare($query);
             $stmt->execute([$fileUuid]);
             $file = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -217,12 +214,12 @@ class FileUploader
 
             // 更新文件状态
             $updateQuery = "UPDATE files SET status = 'deleted' WHERE file_uuid = ?";
-            $updateStmt = $db->prepare($updateQuery);
+            $updateStmt = $this->db->prepare($updateQuery);
             $updateStmt->execute([$fileUuid]);
 
             return true;
         } catch (PDOException $e) {
-            throw new PDOException("删除文件失败:" . $e);
+            throw new PDOException("删除文件失败:" . $e->getMessage());
         }
     }
 }

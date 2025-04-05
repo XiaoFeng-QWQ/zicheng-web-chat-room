@@ -4,9 +4,10 @@ namespace ChatRoom\Core;
 
 /**
  * 路由类
- * 
+ *
  */
 
+use Exception;
 use ChatRoom\Core\Config\App;
 use ChatRoom\Core\Helpers\Error;
 
@@ -15,34 +16,32 @@ class Route
     private array $routeRules;
     private App $appConfig;
     private string $currentUri;
-    private Error $error;
 
     public function __construct()
     {
         $this->appConfig = new App();
         $this->currentUri = filter_var($_SERVER['REQUEST_URI'], FILTER_SANITIZE_URL);
         $this->routeRules = $this->appConfig->routeRules;
-        $this->error = new Error();
     }
 
     public function processRoutes(): void
     {
         if (empty($this->currentUri)) {
-            $this->error->http('400', "400 Bad Request URI：$this->currentUri");
-            return;
+            throw new Exception("400 Bad Request URI：$this->currentUri");
         }
 
         $handler = $this->findHandler($this->currentUri);
+        $error = new Error();
         if ($handler) {
             $filePath = realpath(FRAMEWORK_APP_PATH . '/Views' . $handler['file'][0]);
 
             if ($filePath && is_file($filePath)) {
                 include $filePath;
             } else {
-                $this->error->http('404', "路由规则配置错误，视图文件{$filePath}不存在！", "路由规则配置错误");
+                $error->http(404, '404 路由规则配置错误，视图文件不存在！', '404 页面不存在');
             }
         } else {
-            $this->error->http('404', '404 页面不存在，请刷新重试', "您访问的页面：$this->currentUri 不存在");
+            $error->http(404, '404 路由规则配置错误，未找到匹配的路由！', '404 页面不存在');
         }
     }
 

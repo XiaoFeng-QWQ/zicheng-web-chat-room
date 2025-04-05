@@ -203,7 +203,7 @@ class ChatCommandVoteController
             file_put_contents($this->filePath, json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
         } catch (Throwable $e) {
             // 处理异常并抛出原始异常信息
-            throw new Exception('保存投票数据时发生错误:' . $e);
+            throw new Exception('保存投票数据时发生错误:' . $e->getMessage());
         }
     }
 }

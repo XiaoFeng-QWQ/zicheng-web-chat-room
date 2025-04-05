@@ -8,10 +8,10 @@ session_start();
 use ChatRoom\Core\Helpers\User;
 use Gregwar\Captcha\PhraseBuilder;
 use ChatRoom\Core\Helpers\Helpers;
-use ChatRoom\Core\Database\SqlLite;
 use ChatRoom\Core\Helpers\SystemLog;
 use ChatRoom\Core\Modules\TokenManager;
 use ChatRoom\Core\Controller\UserController;
+use ChatRoom\Core\Database\Base;
 
 // 声明全局变量
 global $errorMessage;
@@ -40,7 +40,7 @@ function authenticateUser($username, $password)
 {
     // 引入全局变量
     global $errorMessage;
-    $db = SqlLite::getInstance()->getConnection();
+    $db = Base::getInstance()->getConnection();
 
     $helpers = new Helpers;
     $UserHelpers = new User();
@@ -95,7 +95,7 @@ function authenticateUser($username, $password)
 function clearLoginAttempts($ip_address)
 {
     // 引入全局变量
-    $db = SqlLite::getInstance()->getConnection();
+    $db = Base::getInstance()->getConnection();
 
     try {
         $db->prepare('DELETE FROM admin_login_attempts WHERE ip_address = :ip_address')->execute(['ip_address' => $ip_address]);
@@ -109,7 +109,7 @@ function clearLoginAttempts($ip_address)
 function handleFailedLogin($ip_address, $username, $log)
 {
     // 引入全局变量
-    $db = SqlLite::getInstance()->getConnection();
+    $db = Base::getInstance()->getConnection();
     $last_attempt = date('Y-m-d H:i:s');
 
     try {

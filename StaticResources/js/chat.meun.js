@@ -9,7 +9,7 @@ $(function () {
                     url: `/api/v1/chat/delete?id=${$(targetElement).attr('data-msg-id')}`,
                     type: 'GET',
                     success: function (response) {
-                        if (!response.code === 200) {
+                        if (response.code !== 200) {
                             alert(response.message || '撤回失败，请稍后重试');
                         }
                     },
@@ -17,25 +17,21 @@ $(function () {
                         alert('请求失败，请检查网络或稍后再试');
                     }
                 });
-            } else {
-                // 设为精华
+            } else if (key === 'user.reply') {
+                // 触发引用消息事件
+                $(document).trigger('message:reply', [targetElement.attr('data-msg-id')]);
             }
         },
         items: {
+            "user.reply": {
+                name: "引用",
+                icon: "fa-reply"
+            },
+            "sep1": "---------",
             "user.delete": {
                 name: "撤回",
                 icon: "delete"
             },
-            "admin.essential": {
-                name: "设为精华(未实现)",
-                icon: "edit"
-            },
-            "sep1": "---------",
-            "quit": {
-                name: "退出", icon: function () {
-                    return 'context-menu-icon context-menu-icon-quit';
-                }
-            }
         }
     });
 
@@ -53,12 +49,6 @@ $(function () {
                     "clear": {
                         name: "清屏",
                         icon: "fa-eraser"
-                    },
-                    "sep1": "---------",
-                    "quit": {
-                        name: "退出", icon: function () {
-                            return 'context-menu-icon context-menu-icon-quit';
-                        }
                     }
                 }
             });

@@ -3,6 +3,20 @@
     font-family: Menlo, Consolas, Monaco, Liberation Mono, Lucida Console, ui-monospace;
 }
 
+:root {
+    --layout-padding: clamp(0.5rem, 3vw, 2rem);
+}
+
+@keyframes highlight {
+    0% {
+        background-color: rgba(76, 175, 80, 0.3);
+    }
+
+    100% {
+        background-color: transparent;
+    }
+}
+
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background-color: #f4f7fc;
@@ -15,15 +29,125 @@ body {
     border: none;
 }
 
-#chat-box-container {
-    background-color: #fff;
+/* 通知权限提示样式 */
+#notification-permission-hint {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 1100;
+}
+
+/* Toast通知样式 */
+.toast {
+    min-width: 250px;
+}
+
+/* @提及自动补全样式 */
+#at-mention-suggestions {
+    position: absolute;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 4px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    max-height: 200px;
+    overflow-y: auto;
+    display: none;
+}
+
+.at-mention-suggestion {
+    padding: 8px 12px;
+    cursor: pointer;
+}
+
+.at-mention-suggestion:hover {
+    background-color: #f0f0f0;
+}
+
+/* 被@消息的高亮样式 */
+.mentioned-message {
+    background-color: rgba(255, 235, 59, 0.3);
+    border-left: 3px solid #FFC107;
+}
+
+/* 引用预览样式 */
+#reply-preview {
+    background-color: #f5f5f5;
+    border-left: 3px solid #4CAF50;
+    padding: 8px;
+    margin-bottom: 10px;
+    border-radius: 4px;
+    position: relative;
+    max-width: 50%;
+}
+
+.reply-preview-content {
+    display: flex;
+    align-items: center;
+}
+
+.reply-message {
+    color: #666;
+    margin-left: 5px;
+    flex-grow: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+#cancel-reply {
+    padding: 0;
+    margin-left: 10px;
+    color: #999;
+}
+
+/* 消息中的引用预览 */
+.message-content .reply-preview {
+    background-color: rgba(0, 0, 0, 0.05);
+    border-left: 2px solid #4CAF50;
+    padding: 5px;
+    margin-bottom: 5px;
+    border-radius: 3px;
+    font-size: 0.9em;
+}
+
+.message-content .reply-message {
+    color: #666;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* 高亮被定位的消息 */
+.highlighted-message {
+    animation: highlight 2s ease-out;
+    border: 2px solid #4CAF50;
+    border-radius: 5px;
+}
+
+/* 定位按钮样式 */
+.locate-original {
+    padding: 0 5px;
+    color: #4CAF50;
+    font-size: 0.8em;
+}
+
+.locate-original:hover {
+    color: #3e8e41;
+    text-decoration: none;
+}
+
+#chat-box-container {
+    background-color: #ffffff;
     overflow: hidden;
     border-radius: 8px;
     display: flex;
-    max-height: 93vh;
-    min-height: 93vh;
+    margin: 0 auto;
+    max-width: min(1400px, 100% - 2*var(--layout-padding));
+    max-height: calc(100vh - 100px);
+    min-height: calc(100vh - 100px);
     flex-direction: column;
+    margin-top: 20px;
 }
 
 /* Chat Box */
@@ -129,6 +253,7 @@ img {
 .event {
     text-align: center;
     padding: 10px;
+    color: #c1c1c1;
 }
 
 .event .username {

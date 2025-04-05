@@ -4,29 +4,22 @@
 namespace ChatRoom\Core\Controller;
 
 use PDOException;
-use Monolog\Logger;
 use ChatRoom\Core\Helpers\User;
+use ChatRoom\Core\Database\Base;
 use ChatRoom\Core\Helpers\Helpers;
-use ChatRoom\Core\Database\SqlLite;
 use ChatRoom\Core\Modules\TokenManager;
 use ChatRoom\Core\Controller\ChatController;
 
 class UserController
 {
-
-    private $event;
+    private $db;
     public $Helpers;
-    private $userHelpers;
+    private $chatController;
     private $tokenManager;
     private $reservedNames;
-    private $chatController;
-    /**
-     * 系统保留名称
-     */
-    private $validateUsername;
+    private $userHelpers;
 
     // 状态常量
-    const LOG_LEVEL = Logger::ERROR;
     const CAPTCHA_ERROR = '验证码错误';
     const INVALID_METHOD_MESSAGE = '无效的方法。';
     const METHOD_NOT_PROVIDED_MESSAGE = '方法未提供。';
@@ -39,14 +32,14 @@ class UserController
      */
     public function __construct()
     {
-        $this->validateUsername = new User;
+        $this->userHelpers = new User;
         /**
          * ！警告！
          * ！请勿修改此处保留字符，可能会出现意想不到的情况！
          */
         $this->reservedNames = ['system', 'root', 'admin'];
 
-        $this->event = new Events;
+        $this->db = Base::getInstance()->getConnection();
         $this->Helpers = new Helpers;
         $this->userHelpers = new User;
         $this->tokenManager = new TokenManager;
@@ -62,7 +55,7 @@ class UserController
     {
         try {
             // 验证用户名
-            if (!$this->validateUsername->validateUsername($username)) {
+            if (!$this->userHelpers->validateUsername($username)) {
                 return $this->Helpers->jsonResponse(400, '用户名不合法，必须长度在3到20字符之间和不能有中文和特殊字符');
             }
 
@@ -80,24 +73,22 @@ class UserController
             }
 
             // 检查用户名是否重复
-            if ($this->validateUsername->isUsernameTaken($username)) {
+            if ($this->userHelpers->isUsernameTaken($username)) {
                 return $this->Helpers->jsonResponse(400, '用户名已被注册');
             }
-
             $passwordHash = password_hash($password, PASSWORD_DEFAULT);
-            $db = SqlLite::getInstance()->getConnection();
-            $stmt = $db->prepare('INSERT INTO users (username, password, created_at, register_ip) VALUES (?, ?, ?, ?)');
+            $stmt = $this->db->prepare('INSERT INTO users (username, password, created_at, register_ip) VALUES (?, ?, ?, ?)');
             $isSuccessful = $stmt->execute([$username, $passwordHash, date('Y-m-d H:i:s'), $this->userHelpers->getIp()]);
 
             if ($isSuccessful) {
-                $this->updateLoginInfo($this->validateUsername->getUserInfo($username));
+                $this->updateLoginInfo($this->userHelpers->getUserInfo($username));
                 $this->chatController->insertSystemMessage('system', "欢迎新用户 $username 来到聊天室！", 'system');
                 return $this->Helpers->jsonResponse(200, '注册成功');
             } else {
                 return $this->Helpers->jsonResponse(500, '注册失败，请重试');
             }
         } catch (PDOException $e) {
-            throw new PDOException('注册发生错误:' . $e);
+            throw new PDOException('注册发生错误:' . $e->getMessage());
             return $this->Helpers->jsonResponse(500, "内部服务器错误。请联系管理员。");
         }
     }
@@ -111,7 +102,7 @@ class UserController
     {
         try {
             // 验证用户名
-            if (!$this->validateUsername->validateUsername($username)) {
+            if (!$this->userHelpers->validateUsername($username)) {
                 if ($return) {
                     return "用户名不合法，必须长度在3到20字符之间和不能有中文和特殊字符";
                 } else {
@@ -127,7 +118,7 @@ class UserController
                 }
             }
             // 使用getUserInfo来获取用户信息
-            $user = $this->validateUsername->getUserInfo($username);
+            $user = $this->userHelpers->getUserInfo($username);
             if (empty($user)) {
                 if ($return) {
                     return "用户名不存在";
@@ -148,7 +139,7 @@ class UserController
                 return $this->Helpers->jsonResponse(200, '登录成功', $this->updateLoginInfo($user));
             }
         } catch (PDOException $e) {
-            throw new PDOException('登录发生错误:' . $e);
+            throw new PDOException('登录发生错误:' . $e->getMessage());
             if ($return) {
                 return "内部服务器错误。请联系管理员。";
             } else {

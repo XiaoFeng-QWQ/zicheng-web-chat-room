@@ -1,10 +1,10 @@
 <?php
 require_once FRAMEWORK_APP_PATH . '/Views/module/user.auth.head.php';
 
-use ChatRoom\Core\Database\SqlLite;
+use ChatRoom\Core\Database\Base;
 use ChatRoom\Core\Helpers\SystemSetting;
 
-$setting = new SystemSetting(SqlLite::getInstance()->getConnection());
+$setting = new SystemSetting(Base::getInstance()->getConnection());
 ?>
 
 <div class="user-login-auth-image"></div>

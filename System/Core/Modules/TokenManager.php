@@ -2,7 +2,7 @@
 
 namespace ChatRoom\Core\Modules;
 
-use ChatRoom\Core\Database\SqlLite;
+use ChatRoom\Core\Database\Base;
 use PDOException;
 use Exception;
 use PDO;
@@ -13,7 +13,7 @@ class TokenManager
 
     public function __construct()
     {
-        $this->db = SqlLite::getInstance()->getConnection();
+        $this->db = Base::getInstance()->getConnection();
     }
 
     /**
@@ -27,9 +27,16 @@ class TokenManager
     {
         try {
             $this->db->beginTransaction();
+            // 随机选择一个加密算法
+            $hashAlgorithms = [
+                'sha256',
+                'sha512',
+                'md5',
+                'sha1'
+            ];
+            $selectedAlgorithm = $hashAlgorithms[array_rand($hashAlgorithms)];
+            $token = bin2hex(hash($selectedAlgorithm, random_bytes(32) . $userId . time(), true));
 
-            // 给Token加点盐😋
-            $token = bin2hex(hash('sha256', random_bytes(32) . $userId, true));
             $expiration = date('Y-m-d H:i:s', strtotime($expirationInterval));
             $createdAt = date('Y-m-d H:i:s');
 
@@ -50,7 +57,6 @@ class TokenManager
                 $stmtUpdate->bindParam(':user_id', $userId, PDO::PARAM_INT);
                 $stmtUpdate->execute();
             } else {
-                // 如果不存在，执行插入
                 $sqlInsert = "INSERT INTO user_tokens (user_id, token, expiration, created_at, updated_at) VALUES (:user_id, :token, :expiration, :created_at, :updated_at)";
                 $stmtInsert = $this->db->prepare($sqlInsert);
                 $stmtInsert->bindParam(':user_id', $userId, PDO::PARAM_INT);
@@ -65,7 +71,7 @@ class TokenManager
             return $token;
         } catch (PDOException $e) {
             $this->db->rollBack();
-            throw new PDOException("生成 token 发生错误:" . $e);
+            throw new PDOException("生成 token 发生错误:" . $e->getMessage());
         }
     }
 
@@ -85,7 +91,7 @@ class TokenManager
             // 输出结果
             return $result ? true : false;
         } catch (PDOException $e) {
-            throw new PDOException("验证 token 发生错误:" . $e);
+            throw new PDOException("验证 token 发生错误:" . $e->getMessage());
         }
     }
 
@@ -106,7 +112,7 @@ class TokenManager
             // 输出结果
             return $result ? $result : throw new ("获取 token 信息发生错误: 无法获取");
         } catch (PDOException $e) {
-            throw new PDOException("获取 token 信息发生错误:" . $e);
+            throw new PDOException("获取 token 信息发生错误:" . $e->getMessage());
         }
     }
 
@@ -124,7 +130,7 @@ class TokenManager
             $stmt->bindParam(':user_id', $userId, PDO::PARAM_STR);
             return $stmt->execute();
         } catch (PDOException $e) {
-            throw new PDOException("删除 token 发生错误:" . $e);
+            throw new PDOException("删除 token 发生错误:" . $e->getMessage());
         }
     }
 }

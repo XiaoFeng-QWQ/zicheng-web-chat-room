@@ -1,9 +1,5 @@
 <?php
 require_once __DIR__ . "/module/head.php";
-
-// 查询消息数据
-$statement = $db->query('SELECT id, user_name, content, created_at FROM messages');
-$messages = $statement->fetchAll(PDO::FETCH_ASSOC);
 ?>
 <div class="row">
     <div class="col-md-12">
@@ -43,6 +39,7 @@ $messages = $statement->fetchAll(PDO::FETCH_ASSOC);
                                 <th>用户名</th>
                                 <th>发布IP</th>
                                 <th>内容</th>
+                                <th>类型</th>
                                 <th>创建时间</th>
                                 <th>操作</th>
                             </tr>

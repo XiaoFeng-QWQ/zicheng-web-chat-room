@@ -1,3 +1,8 @@
+/* 通用设置 */
+* {
+    font-family: Menlo, Consolas, Monaco, Liberation Mono, Lucida Console, ui-monospace;
+}
+
 body {
     display: flex;
     justify-content: center;
@@ -82,39 +87,6 @@ body {
     cursor: pointer;
     border-radius: 5px;
     margin-top: 6px;
-}
-
-@media screen and (min-width: 768px) {
-    .container {
-        flex-direction: row;
-        /* 在平板及以上设备上改为行方向 */
-    }
-
-    .user-auth-container {
-        width: 50%;
-        /* 占据一半宽度 */
-    }
-
-    .user-login-auth-image {
-        display: block;
-        /* 平板及以上设备显示 */
-        background: url('https://api.vvhan.com/api/bing') no-repeat center center;
-        background-size: cover;
-        width: 50%;
-        /* 占据一半宽度 */
-        background-position: right;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-    }
-
-    .user-register-auth-image {
-        display: block;
-        /* 平板及以上设备显示 */
-        background: url('https://api.vvhan.com/api/wallpaper/views') no-repeat center center;
-        background-size: cover;
-        width: 50%;
-        /* 占据一半宽度 */
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-    }
 }
 
 @media screen and (min-width: 1200px) {

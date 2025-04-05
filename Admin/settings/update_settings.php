@@ -28,9 +28,19 @@ try {
 
     if (!empty($_POST['nav_link'])) {
         $navLinks = $_POST['nav_link'] ?? [];
-        $navLinksJson = json_encode($navLinks, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+        $navLinksJson = serialize($navLinks);
         $systemSetting->setSetting('nav_link', $navLinksJson);
         $updatedSettings[] = '更新自定义导航栏其他链接';
+    }
+
+    if (!empty($_POST['login_left_image'])) {
+        $systemSetting->setSetting('login_left_image', $_POST['login_left_image']);
+        $updatedSettings[] = '更新登录左侧图片';
+    }
+
+    if (!empty($_POST['register_left_image'])) {
+        $systemSetting->setSetting('register_left_image', $_POST['register_left_image']);
+        $updatedSettings[] = '更新注册左侧图片';
     }
 
     if (!empty($_POST['user_agreement'])) {
@@ -49,8 +59,8 @@ try {
     }
 
     if (!empty($_POST['backup_database'])) {
-        $backupFilePath = dirname(FRAMEWORK_DATABASE_PATH) . '/backup.database_' . date('Ymd_His') . '.db';
-        if (!copy(FRAMEWORK_DATABASE_PATH, $backupFilePath)) {
+        $backupFilePath = dirname(FRAMEWORK_DATABASE['host']) . '/backup.database_' . date('Ymd_His') . '.db';
+        if (!copy(FRAMEWORK_DATABASE['host'], $backupFilePath)) {
             throw new Exception('数据库文件备份失败。');
         }
         $updatedSettings[] = "备份数据库到：$backupFilePath";

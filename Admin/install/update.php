@@ -2,7 +2,7 @@
 require_once __DIR__ . '/../../config.global.php';
 require_once __DIR__ . '/../../vendor/autoload.php';
 
-use ChatRoom\Core\Database\SqlLite;
+use ChatRoom\Core\Database\Base;
 
 if (defined('FRAMEWORK_DATABASE_PATH')) {
     if ($_SERVER['REQUEST_METHOD'] == 'POST') {
@@ -12,21 +12,44 @@ if (defined('FRAMEWORK_DATABASE_PATH')) {
             return htmlspecialchars(trim($input)); // 修剪输入并使用更安全的清理
         }
 
-        // 执行数据库更新操作
         function updateDatabase($db)
         {
-            $db->exec("
-            CREATE TABLE IF NOT EXISTS events (
-                event_id INTEGER PRIMARY KEY AUTOINCREMENT,
-                event_type VARCHAR(100) NOT NULL,
-                user_id INT NOT NULL,
-                target_id INT NOT NULL,
-                created_at DATETIME NOT NULL,
-                additional_data TEXT)");
-            $db->exec("CREATE INDEX IF NOT EXISTS events_index ON events (event_id, event_type)");
-            $db->exec("ALTER TABLE messages ADD COLUMN status TEXT DEFAULT 'active'");
+            // 为 messages 表添加 reply_to 列
+            try {
+                // 检查 reply_to 列是否已存在
+                $result = $db->query("PRAGMA table_info(messages)");
+                $columns = $result->fetchAll(PDO::FETCH_ASSOC);
+                $hasReplyTo = false;
+
+                foreach ($columns as $column) {
+                    if ($column['name'] === 'reply_to') {
+                        $hasReplyTo = true;
+                        break;
+                    }
+                }
+
+                if (!$hasReplyTo) {
+                    $db->exec("ALTER TABLE messages ADD COLUMN reply_to INTEGER DEFAULT NULL");
+                }
+            } catch (PDOException $e) {
+                throw new PDOException("Error adding reply_to column: " . $e->getMessage());
+            }
+
+            // 删除旧索引（如果存在）
+            try {
+                $db->exec("DROP INDEX IF EXISTS messages_index");
+            } catch (PDOException $e) {
+                throw new PDOException("Error dropping old index: " . $e->getMessage());
+            }
+
+            // 创建新索引（包含 reply_to）
+            $db->exec("CREATE UNIQUE INDEX IF NOT EXISTS messages_index ON messages (
+                id,
+                content,
+                reply_to
+            )");
         }
-        $db = SqlLite::getInstance()->getConnection();
+        $db = Base::getInstance()->getConnection();
 
         // 获取并验证输入的密钥与文件名
         $keyInput = sanitizeInput($_POST['updateKey']);
@@ -72,7 +95,7 @@ if (defined('FRAMEWORK_DATABASE_PATH')) {
 
     <body>
         <div class="container mt-5">
-            <h1 class="text-center">子辰聊天室数据库更新 - 从2.1.0.0 到 2.2.0.0</h1>
+            <h1 class="text-center">子辰聊天室数据库更新 - 从2.2.1.0 到 2.3.1.0</h1>
             <p>请在当前目录下创建以下文件并填写正确的内容以进行权限验证。</p>
             <p><?= isset($error) ? $error : '' ?></p>
             <form id="updateForm" method="POST" action="">

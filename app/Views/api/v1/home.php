@@ -1,10 +1,10 @@
 <?php
 
 use ChatRoom\Core\Helpers\User;
-use ChatRoom\Core\Database\SqlLite;
+use ChatRoom\Core\Database\Base;
 use ChatRoom\Core\Helpers\SystemSetting;
 
-$db = SqlLite::getInstance()->getConnection();
+$db = Base::getInstance()->getConnection();
 $SystemSetting = new SystemSetting($db);
 $user = new User;
 

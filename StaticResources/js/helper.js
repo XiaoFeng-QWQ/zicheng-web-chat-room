@@ -1,3 +1,85 @@
+// 定义常量
+const MESSAGE_INDEX_KEY = 'chat_messages_index';  // 存储消息ID列表
+const MESSAGE_DATA_PREFIX = 'msg_';              // 单个消息存储的前缀
+const MAX_CACHED_MESSAGES = 200;                 // 最大缓存消息数
+const MESSAGE_CACHE_KEY = 'chat_messages_cache';
+const CACHE_EXPIRATION = 24 * 60 * 60 * 1000; // 24小时缓存有效期
+/**
+ * 保存或更新消息到缓存
+ * @param {Array|Object} messages - 要保存的消息数组或单个消息对象
+ * @param {boolean} updateMode - 是否为更新模式（true时更新现有消息，false时追加新消息）
+ */
+function saveMessagesToCache(messages, updateMode = false) {
+    // 获取当前索引 - 这里应该使用MESSAGE_INDEX_KEY
+    let index = JSON.parse(localStorage.getItem(MESSAGE_INDEX_KEY)) || [];
+
+    // 标准化输入
+    const messagesToSave = Array.isArray(messages) ? messages : [messages];
+
+    // 更新索引和存储
+    messagesToSave.forEach(msg => {
+        if (!msg.id) {
+            console.error('消息缺少id字段，无法缓存:', msg);
+            return;
+        }
+
+        const storageKey = MESSAGE_DATA_PREFIX + msg.id;
+
+        if (updateMode) {
+            // 更新现有消息
+            const existingMsg = JSON.parse(localStorage.getItem(storageKey));
+            if (existingMsg) {
+                localStorage.setItem(storageKey, JSON.stringify({
+                    ...existingMsg,
+                    ...msg,
+                    updated_at: new Date().toISOString()
+                }));
+            } else {
+                // 新消息添加到索引
+                index.push(msg.id);
+                localStorage.setItem(storageKey, JSON.stringify(msg));
+            }
+        } else {
+            // 只添加新消息
+            if (!index.includes(msg.id)) {
+                index.push(msg.id);
+                localStorage.setItem(storageKey, JSON.stringify(msg));
+            }
+        }
+    });
+
+    // 维护索引大小
+    if (index.length > MAX_CACHED_MESSAGES) {
+        const toRemove = index.slice(0, index.length - MAX_CACHED_MESSAGES);
+        toRemove.forEach(id => {
+            localStorage.removeItem(MESSAGE_DATA_PREFIX + id);
+        });
+        index = index.slice(-MAX_CACHED_MESSAGES);
+    }
+
+    // 保存更新后的索引
+    localStorage.setItem(MESSAGE_INDEX_KEY, JSON.stringify(index));
+}
+// 从缓存加载消息
+function loadMessagesFromCache() {
+    const cacheData = localStorage.getItem(MESSAGE_CACHE_KEY);
+    if (!cacheData) return null;
+
+    try {
+        const parsedData = JSON.parse(cacheData);
+
+        // 检查缓存是否过期
+        if (Date.now() - parsedData.timestamp > CACHE_EXPIRATION) {
+            localStorage.removeItem(MESSAGE_CACHE_KEY);
+            return null;
+        }
+
+        return parsedData.messages;
+    } catch (e) {
+        console.error('Failed to parse cached messages', e);
+        return null;
+    }
+}
 /**
  * 获取指定cookie
  * @param {*} key 
@@ -91,36 +173,19 @@ function parseFileTemplate(template) {
     return null;
 }
 
-// 更新事件
-const updateEvent = () => {
-    $.ajax({
-        url: `/api/v1/event?offset=${eventOffset}&limit=20`,
-        type: 'POST',
-        dataType: 'json',
-        success: function (response) {
-            if (response.code === 200) {
-                const data = response.data;
-                if (Array.isArray(data.event)) {
-                    data.event.forEach(evetn => parsingEvent(evetn));
-                    eventOffset += data.event.length;
-                } else {
-                    displayErrorMessage('事件API错误！');
-                }
-            } else {
-                displayErrorMessage('事件API错误！');
-                scrollToBottom();
-            }
-        }
-    });
-}
-
 // 处理事件
-const parsingEvent = (evetn) => {
-    switch (evetn.event_type) {
+const parsingEvent = (event) => {
+    switch (event.event_type) {
         case 'message.revoke': {
-            $(`#${evetn.target_id}`).removeClass('chat-message left right').addClass('event').html(`
-                    <div>${evetn.additional_data}</div>
-                    <span class="timestamp">${evetn.created_at}</span>`);
+            $(`#${event.target_id}`).removeClass('chat-message left right').addClass('event').html(`
+                    <div>${event.additional_data}</div>
+                    <span class="timestamp">${event.created_at}</span>`);
+            const newMessage = {
+                id: event.target_id,
+                content: event.additional_data,
+                created_at: event.created_at,
+            };
+            saveMessagesToCache(newMessage, true);
             break;
         }
         case 'admin.announcement.publish': {
@@ -132,7 +197,7 @@ const parsingEvent = (evetn) => {
             break;
         }
         default: {
-            console.error('未知事件ID: ' + evetn.event_type);
+            console.error('未知事件ID: ' + event.event_type);
         }
     }
 }
@@ -160,15 +225,101 @@ function updateNetworkStatus(isOnline) {
     }
 };
 
-function debug() {
-    const time = new Date().toISOString();
-    console.debug(`[${time}] Debugging Info:`);
-    console.debug(`offset: ${offset}`);
-    console.debug(`isAtTop: ${isAtTop}`);
-    console.debug(`lastOffset: ${lastOffset}`);
-    console.debug(`lastFetched: ${lastFetched}`);
-    console.debug(`lastScrollTop: ${lastScrollTop}`);
-    console.debug(`isUserScrolling: ${isUserScrolling}`);
-    console.debug(`loadingMessages: ${loadingMessages}`);
-    console.debug('===========END============');
+// 更新引用预览的函数
+function updateReplyPreview() {
+    if (!quotedMessage) return;
+    const preview = $('#reply-preview');
+    preview.html(`
+        <div class="reply-preview-content">
+            <span>回复 ${quotedMessage.username}:</span>
+            <div class="reply-message">${quotedMessage.content.substring(0, 50)}${quotedMessage.content.length > 50 ? '...' : ''}</div>
+            <button type="button" id="cancel-reply" class="btn btn-sm btn-link">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    `).show();
+    $('#message').val(`@${quotedMessage.username}`);
+    $('#cancel-reply').click(function (e) {
+        e.preventDefault();
+        quotedMessage = null;
+        $('#reply-preview').hide().empty();
+    });
 }
+
+const setupAtMentionAutocomplete = () => {
+    const messageInput = $('#message');
+
+    messageInput.on('input', function () {
+        const cursorPos = this.selectionStart;
+        const textBeforeCursor = this.value.substring(0, cursorPos);
+        const atPos = textBeforeCursor.lastIndexOf('@');
+
+        if (atPos >= 0 && (atPos === 0 || textBeforeCursor[atPos - 1] === ' ')) {
+            const searchTerm = textBeforeCursor.substring(atPos + 1).toLowerCase();
+            const matchedUsers = onlineUsersList.filter(user =>
+                user.toLowerCase().includes(searchTerm)
+            );
+
+            if (matchedUsers.length > 0) {
+                showAtMentionSuggestions(matchedUsers, atPos);
+            } else {
+                hideAtMentionSuggestions();
+            }
+        } else {
+            hideAtMentionSuggestions();
+        }
+    });
+
+    // 点击外部隐藏建议框
+    $(document).on('click', function (e) {
+        if (!$(e.target).closest('#at-mention-suggestions').length &&
+            !$(e.target).is(messageInput)) {
+            hideAtMentionSuggestions();
+        }
+    });
+};
+
+const showAtMentionSuggestions = (users, atPos) => {
+    let suggestionsBox = $('#at-mention-suggestions');
+    if (suggestionsBox.length === 0) {
+        suggestionsBox = $('<div id="at-mention-suggestions"></div>');
+        $('body').append(suggestionsBox);
+    }
+
+    suggestionsBox.empty();
+    users.forEach(user => {
+        const userElement = $('<div class="at-mention-suggestion"></div>')
+            .text(user)
+            .click(function () {
+                const messageInput = $('#message');
+                const currentValue = messageInput.val();
+                const cursorPos = messageInput[0].selectionStart;
+
+                // 替换 @username 部分
+                const newValue = currentValue.substring(0, atPos) + '@' + user + ' ' +
+                    currentValue.substring(cursorPos);
+
+                messageInput.val(newValue);
+                messageInput.focus();
+                messageInput[0].setSelectionRange(atPos + user.length + 2, atPos + user.length + 2);
+                hideAtMentionSuggestions();
+            });
+        suggestionsBox.append(userElement);
+    });
+
+    // 定位建议框
+    const messageInput = $('#message');
+    const inputOffset = messageInput.offset();
+    const inputHeight = messageInput.outerHeight();
+
+    suggestionsBox.css({
+        position: 'absolute',
+        left: inputOffset.left + atPos * 8, // 粗略估计字符宽度
+        top: inputOffset.top - inputHeight - 50,
+        display: 'block'
+    });
+};
+
+const hideAtMentionSuggestions = () => {
+    $('#at-mention-suggestions').hide();
+};

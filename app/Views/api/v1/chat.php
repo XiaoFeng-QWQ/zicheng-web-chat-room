@@ -24,8 +24,11 @@ if (preg_match('/^[a-zA-Z0-9]{1,30}$/', $method)) {
     $userInfo = $userHelpers->getUserInfoByEnv();
 
     switch ($method) {
+        // API控制器
         case 'send':
-            $isMarkdown = $_POST['isMarkdown'];
+            $isMarkdown = empty($_POST['isMarkdown']) ? false : (bool)$_POST['isMarkdown'];
+            $replyTo = isset($_POST['replyTo']) ? (int)$_POST['replyTo'] : null;
+
             // 处理上传文件
             if (isset($_FILES['file']) && $_FILES['file']['error'] === UPLOAD_ERR_OK) {
                 $uploadedFile = new FileUploader($chatConfig->uploadFile['allowTypes'], $chatConfig->uploadFile['maxSize']);
@@ -44,10 +47,14 @@ if (preg_match('/^[a-zA-Z0-9]{1,30}$/', $method)) {
                 );
             }
 
-            // 检查是否有消息或发送
+            // 检查消息内容和回复标识符
             if (empty($message)) {
-                $helpers->jsonResponse(406, '消息内容不能为空或选择的太大');
-                return;
+                $helpers->jsonResponse(406, '消息内容不能为空');
+            }
+
+            // 检查 $replyTo 是否为 null，如果不为 null，再验证它的合法性
+            if ($replyTo !== null && (!is_numeric($replyTo) || $replyTo <= 0)) {
+                $helpers->jsonResponse(406, '无效的回复标识符');
             }
 
             // 检查是否是命令
@@ -62,7 +69,7 @@ if (preg_match('/^[a-zA-Z0-9]{1,30}$/', $method)) {
             }
 
             // 调用ChatController处理消息发送
-            if ($chatController->sendMessage($userInfo, $message, $isMarkdown)) {
+            if ($chatController->sendMessage($userInfo, $message, $isMarkdown, $replyTo)) {
                 $helpers->jsonResponse(200, ChatController::MESSAGE_SUCCESS);
             } else {
                 $helpers->jsonResponse(406, ChatController::MESSAGE_SEND_FAILED);
@@ -95,8 +102,10 @@ if (preg_match('/^[a-zA-Z0-9]{1,30}$/', $method)) {
         case 'get':
             $offset = isset($_GET['offset']) ? (int)$_GET['offset'] : 0;
             $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 10;
+            $eventOffset = isset($_GET['eventOffset']) ? (int)$_GET['eventOffset'] : 0;
+            $eventLimit = isset($_GET['eventLimit']) ? (int)$_GET['eventLimit'] : 10;
 
-            $result = $chatController->getMessages($offset, $limit);
+            $result = $chatController->getMessages($offset, $limit, $eventOffset, $eventLimit);
             if (!$result) {
                 $helpers->jsonResponse(406, ChatController::MESSAGE_FETCH_FAILED);
             } else {

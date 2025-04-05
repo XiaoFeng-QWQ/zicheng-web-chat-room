@@ -2,15 +2,15 @@
 
 use ChatRoom\Core\Helpers\User;
 use Gregwar\Captcha\PhraseBuilder;
-use ChatRoom\Core\Database\SqlLite;
 use ChatRoom\Core\Modules\TokenManager;
 use ChatRoom\Core\Helpers\SystemSetting;
 use ChatRoom\Core\Controller\UserController;
+use ChatRoom\Core\Database\Base;
 
 $userHelpers = new User;
 $tokenManager = new TokenManager;
 $userController = new UserController;
-$setting = new SystemSetting(SqlLite::getInstance()->getConnection());
+$setting = new SystemSetting(Base::getInstance()->getConnection());
 
 $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 $method = isset(explode('/', trim($uri, '/'))[3]) ? explode('/', trim($uri, '/'))[3] : null;

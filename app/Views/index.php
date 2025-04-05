@@ -1,10 +1,10 @@
 <?php
 
 use ChatRoom\Core\Helpers\SystemSetting;
-use ChatRoom\Core\Database\SqlLite;
+use ChatRoom\Core\Database\Base;
 use ChatRoom\Core\Helpers\User;
 
-$db = SqlLite::getInstance()->getConnection();
+$db = Base::getInstance()->getConnection();
 $SystemSetting = new SystemSetting($db);
 $user = new User;
 if (!$user->checkUserLoginStatus()) {
@@ -32,7 +32,7 @@ $cookieData = json_decode($_COOKIE['user_login_info'], true);
     <link href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.3.3/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.bootcdn.net/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.6.0/css/all.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://lf26-cdn-tos.bytecdntp.com/cdn/expire-1-M/jquery-contextmenu/3.0-beta.1/jquery.contextMenu.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-contextmenu/2.7.1/jquery.contextMenu.min.css">
     <link rel="stylesheet" href="/StaticResources/css/highlight/vs2015.min.css">
     <link rel="stylesheet" href="/StaticResources/css/index.chat.css?v=<?= FRAMEWORK_VERSION ?>">
     <script>
@@ -61,6 +61,11 @@ $cookieData = json_decode($_COOKIE['user_login_info'], true);
                             // 获取导航链接的设置
                             $navLinks = $SystemSetting->getSetting('nav_link');
                             if ($navLinks) {
+                                $navLinks = unserialize($navLinks);
+                            } else {
+                                $navLinks = null;
+                            }
+                            if ($navLinks) {
                                 foreach ($navLinks as $item) {
                                     echo "
                                     <li>
@@ -77,6 +82,11 @@ $cookieData = json_decode($_COOKIE['user_login_info'], true);
                     <li class="nav-item">
                         <span>在线用户(<span id="online-users-list-count"></span>)</span>
                         <a id="online-users-list"></a>
+                    </li>
+                    <li class="nav-item">
+                        <button class="btn btn-outline-secondary nav-link" data-bs-toggle="modal" data-bs-target="#cssCustomizeModal">
+                            <i class="bi bi-palette"></i> 自定义界面
+                        </button>
                     </li>
                     <?php if ($cookieData['group_id'] === 1) : ?>
                         <li class="nav-item">
@@ -100,6 +110,7 @@ $cookieData = json_decode($_COOKIE['user_login_info'], true);
         </div>
         <div id="select-file-preview" class="p-3 position-absolute"></div>
         <form id="chat-form" class="card-footer d-flex flex-column align-items-stretch gap-3 p-3">
+            <div id="reply-preview" style="display: none;"></div>
             <div class="d-flex gap-3">
                 <div class="position-relative">
                     <button type="button" id="insert-md" class="btn btn-secondary" title="插入Markdown语法">
@@ -156,6 +167,29 @@ $cookieData = json_decode($_COOKIE['user_login_info'], true);
             </div>
         </div>
     </div>
+    <div class="modal fade" id="cssCustomizeModal" aria-labelledby="cssCustomizeModalLabel" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="cssCustomizeModalLabel">界面自定义设置</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="关闭"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="cssCustomizeForm">
+                        <div class="mb-3">
+                            <h6 class="mb-3">自定义CSS</small></h6>
+                            <textarea class="form-control font-monospace" id="customCss" rows="5" placeholder="输入自定义CSS代码..."></textarea>
+                            <div class="form-text">例如: .chat-message { border-radius: 15px; }</div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" id="resetCssSettings">恢复默认</button>
+                    <button type="button" class="btn btn-primary" id="saveCssSettings">保存设置</button>
+                </div>
+            </div>
+        </div>
+    </div>
     <script src="/StaticResources/js/plyr.js"></script>
     <script src="/StaticResources/js/jquery.min.js"></script>
     <script src="/StaticResources/js/marked.min.js"></script>
@@ -163,6 +197,7 @@ $cookieData = json_decode($_COOKIE['user_login_info'], true);
     <script src="/StaticResources/js/highlight.prolog.min.js"></script>
     <script src="/StaticResources/js/bootstrap.bundle.min.js"></script>
     <script src="/StaticResources/js/jquery.contextMenu.min.js"></script>
+    <script src="/StaticResources/js/notification.js?v=<? FRAMEWORK_VERSION ?>"></script>
     <script src="/StaticResources/js/helper.js?v=<?= FRAMEWORK_VERSION ?>"></script>
     <script src="/StaticResources/js/index.chat.js?v=<?= FRAMEWORK_VERSION ?>"></script>
     <script src="/StaticResources/js/chat.meun.js"></script>
@@ -182,6 +217,92 @@ $cookieData = json_decode($_COOKIE['user_login_info'], true);
                 $('#chatroom-user-count').text('undefined');
             }
         });
+
+
+        // 等待DOM加载完成
+        document.addEventListener('DOMContentLoaded', function() {
+            // 加载保存的设置
+            loadCssSettings();
+
+            // 主题预设按钮点击事件
+            document.querySelectorAll('.theme-preset').forEach(button => {
+                button.addEventListener('click', function() {
+                    // 移除其他按钮的active类
+                    document.querySelectorAll('.theme-preset').forEach(btn => {
+                        btn.classList.remove('active');
+                    });
+
+                    // 给当前按钮添加active类
+                    this.classList.add('active');
+
+                    // 应用主题预设
+                    applyThemePreset(this.dataset.theme);
+                });
+            });
+
+            // 保存设置按钮点击事件
+            document.getElementById('saveCssSettings').addEventListener('click', function() {
+                saveCssSettings();
+                bootstrap.Modal.getInstance(document.getElementById('cssCustomizeModal')).hide();
+            });
+
+            // 重置设置按钮点击事件
+            document.getElementById('resetCssSettings').addEventListener('click', function() {
+                if (confirm('确定要恢复默认设置吗？所有自定义设置将被重置。')) {
+                    resetCssSettings();
+                }
+            });
+        });
+
+        // 保存CSS设置
+        function saveCssSettings() {
+            const settings = {
+                customCss: document.getElementById('customCss').value
+            };
+
+            localStorage.setItem('chatCssSettings', JSON.stringify(settings));
+            applyCssSettings(settings);
+        }
+
+        // 加载CSS设置
+        function loadCssSettings() {
+            const savedSettings = localStorage.getItem('chatCssSettings');
+            if (savedSettings) {
+                const settings = JSON.parse(savedSettings);
+                document.getElementById('customCss').value = settings.customCss;
+
+                // 应用设置
+                applyCssSettings(settings);
+            }
+        }
+
+        // 应用CSS设置
+        function applyCssSettings(settings) {
+            const root = document.documentElement;
+
+            // 应用自定义CSS
+            let customStyle = document.getElementById('custom-css-style');
+            if (!customStyle) {
+                customStyle = document.createElement('style');
+                customStyle.id = 'custom-css-style';
+                document.head.appendChild(customStyle);
+            }
+            customStyle.textContent = settings.customCss;
+        }
+
+        // 重置CSS设置
+        function resetCssSettings() {
+            localStorage.removeItem('chatCssSettings');
+            document.getElementById('customCss').value = '';
+            // 应用默认设置
+            applyThemePreset('default');
+
+            // 移除自定义样式
+            const customStyle = document.getElementById('custom-css-style');
+            if (customStyle) {
+                customStyle.remove();
+            }
+        }
     </script>
 </body>
 

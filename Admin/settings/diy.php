@@ -8,21 +8,15 @@ $systemSetting = new SystemSetting($db);
 // 获取设置
 $navLinkSetting = $systemSetting->getSetting('nav_link');
 
-// 如果是 JSON 字符串，解码为数组
-if (is_string($navLinkSetting)) {
-    $navLinkSetting = json_decode($navLinkSetting, true);
-}
-
-// 如果为空则初始化为空数组
-if (!is_array($navLinkSetting)) {
-    $navLinkSetting = [];
-}
+$navLinkSetting = is_array($navLinkSetting) ? $navLinkSetting : unserialize($navLinkSetting);
 ?>
 
 <form action="/Admin/settings/update_settings.php" method="post">
     <h2>自定义设置</h2>
     <hr>
     <div id="nav-links-container">
+        <h3>导航链接设置</h3>
+        <button type="button" class="btn btn-secondary" id="add-link">添加链接</button>
         <?php foreach ($navLinkSetting as $index => $link): ?>
             <div class="nav-link-item mb-3" data-index="<?= $index ?>">
                 <label class="form-label">链接名称</label>
@@ -33,8 +27,18 @@ if (!is_array($navLinkSetting)) {
             </div>
         <?php endforeach; ?>
     </div>
+    <hr>
+    <div class="mb-3">
+        <h3>登录注册左侧图片</h3>
+        <label class="form-label">登录左侧图片</label>
+        <input type="url" name="login_left_image" class="form-control" value="<?= htmlspecialchars($systemSetting->getSetting('login_left_image') ?? '', ENT_QUOTES) ?>">
+        <small class="form-text text-muted">请填写图片的URL地址</small>
+        <br>
+        <label class="form-label">注册左侧图片</label>
+        <input type="url" name="register_left_image" class="form-control" value="<?= htmlspecialchars($systemSetting->getSetting('register_left_image') ?? '', ENT_QUOTES) ?>">
+        <small class="form-text text-muted">请填写图片的URL地址</small>
+    </div>
     <div class="btn-group">
-        <button type="button" class="btn btn-secondary" id="add-link">添加链接</button>
         <button type="submit" class="btn btn-primary">保存设置</button>
     </div>
 </form>

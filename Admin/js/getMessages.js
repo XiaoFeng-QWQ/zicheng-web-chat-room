@@ -30,7 +30,7 @@ function loadMessages(page) {
         const tbody = $('#message-table tbody');
         tbody.empty();
 
-        messages.forEach(({ id, user_name, user_ip, content, created_at }) => {
+        messages.forEach(({ id, user_name, user_ip, content, created_at, type }) => {
             const row = `
                 <tr>
                     <td><input type="checkbox" class="select-checkbox form-check-input"></td>
@@ -38,6 +38,7 @@ function loadMessages(page) {
                     <td>${user_name}</td>
                     <td>${user_ip}</td>
                     <td>${content}</td>
+                    <td>${type}</td>
                     <td>${created_at}</td>
                     <td>
                         <button class="btn btn-sm btn-primary edit-button" data-id="${id}"><i class="fas fa-edit"></i></button>

@@ -7,13 +7,15 @@ use Exception;
 use Throwable;
 use PDOException;
 use ChatRoom\Core\Helpers\User;
+use ChatRoom\Core\Database\Base;
 use ChatRoom\Core\Helpers\Helpers;
-use ChatRoom\Core\Database\SqlLite;
+use ChatRoom\Core\Controller\Events;
 use ChatRoom\Core\Modules\TokenManager;
 
 class ChatController
 {
     public $Helpers;
+    private $db;
 
     // 状态消息常量
     const MESSAGE_SUCCESS = true;
@@ -25,30 +27,42 @@ class ChatController
     public function __construct()
     {
         $this->Helpers = new Helpers;
+        $this->db = Base::getInstance()->getConnection();
     }
 
     /**
-     * 发送消息
+     * 发送消息（增加回复功能）
      *
      * @param array $user 用户信息数组
      * @param string $message 发送的消息内容
      * @param bool $isMarkdown 是否为MD语法
+     * @param int|null $replyTo 回复的消息ID
      * @return bool
      */
-    public function sendMessage($user, $message, $isMarkdown = false): bool
+    public function sendMessage($user, $message, $isMarkdown = false, $replyTo = null): bool
     {
         try {
             $userIP = new User;
-            $db = SqlLite::getInstance()->getConnection();
             if ($isMarkdown === 'true') {
                 $type = 'user.markdown';
             } else {
                 $type = 'user';
             }
-            $stmt = $db->prepare('INSERT INTO messages (user_name, content, type, created_at, user_ip) VALUES (?, ?, ?, ?, ?)');
-            return $stmt->execute([$user['username'], $message, $type, date('Y-m-d H:i:s'), $userIP->getIp()]);
+
+            $stmt = $this->db->prepare('INSERT INTO messages 
+                (user_name, content, type, created_at, user_ip, reply_to) 
+                VALUES (?, ?, ?, ?, ?, ?)');
+
+            return $stmt->execute([
+                $user['username'],
+                $message,
+                $type,
+                date('Y-m-d H:i:s'),
+                $userIP->getIp(),
+                $replyTo
+            ]);
         } catch (PDOException $e) {
-            throw new PDOException('发送消息发生错误:' . $e);
+            throw new PDOException('发送消息发生错误:' . $e->getMessage());
         }
     }
 
@@ -61,7 +75,7 @@ class ChatController
     public function getMessagesByConditions(array $conditions): ?array
     {
         try {
-            $db = SqlLite::getInstance()->getConnection();
+
             $query = 'SELECT 
                     messages.id,
                     messages.type,
@@ -113,7 +127,7 @@ class ChatController
                 $query .= ' WHERE ' . implode(' AND ', $whereClauses);
             }
 
-            $stmt = $db->prepare($query);
+            $stmt = $this->db->prepare($query);
             foreach ($params as $param => $value) {
                 $stmt->bindValue($param, $value);
             }
@@ -133,48 +147,75 @@ class ChatController
     /**
      * 获取消息
      *
-     * @param int $offset 偏移量 (当前页数 - 1) * 每页条数
+     * @param int $offset 偏移量
      * @param int $limit 限制条数
+     * @param int $eventOffset 事件偏移量
+     * @param int $eventLimit 事件限制条数
      * @return array
      */
-    public function getMessages($offset = 0, $limit = 10): array
+    public function getMessages($offset = 0, $limit = 10, $eventOffset, $eventLimit): array
     {
         try {
-            $db = SqlLite::getInstance()->getConnection();
+            $event = new Events;
             $query =
                 'SELECT 
-                    messages.id,
-                    messages.type,
-                    messages.content,
-                    messages.user_name,
-                    users.group_id AS user_group_id,
-                    messages.created_at AS created_at,
-                    users.avatar_url,
-                    groups.group_name,
-                    messages.status
-                FROM messages
-                LEFT JOIN users ON messages.user_name = users.username
-                LEFT JOIN groups ON users.group_id = groups.group_id
-                WHERE messages.status = "active"
-                ORDER BY messages.id ASC
+                    m.id,
+                    m.type,
+                    m.content,
+                    m.user_name,
+                    u.group_id AS user_group_id,
+                    m.created_at AS created_at,
+                    u.avatar_url,
+                    g.group_name,
+                    m.status,
+                    m.reply_to,
+                    rm.user_name AS reply_user_name,
+                    rm.content AS reply_content
+                FROM messages m
+                LEFT JOIN users u ON m.user_name = u.username
+                LEFT JOIN groups g ON u.group_id = g.group_id
+                LEFT JOIN messages rm ON m.reply_to = rm.id
+                ORDER BY m.id ASC
                 LIMIT :limit OFFSET :offset';
 
-            $stmt = $db->prepare($query);
+            $stmt = $this->db->prepare($query);
             $stmt->bindValue(':limit', (int)$limit, PDO::PARAM_INT);
             $stmt->bindValue(':offset', (int)$offset, PDO::PARAM_INT);
-
             $stmt->execute();
 
             $messages = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
             $this->updataOnlineUsers();
 
+            foreach ($messages as &$message) {
+                if ($message['type'] === 'event.delete') {
+                    $eventConditions = [
+                        'target_id' => $message['id'],
+                    ];
+                    $events = $event->getEventsByConditions($eventConditions);
+                    if ($events) {
+                        $message['content'] = $events[0]['additional_data'];
+                    }
+                }
+
+                // 添加回复消息数据
+                if ($message['reply_to']) {
+                    $message['reply'] = [
+                        'id' => $message['reply_to'],
+                        'user_name' => $message['reply_user_name'],
+                        'content' => $message['reply_content']
+                    ];
+                }
+                unset($message['reply_user_name'], $message['reply_content']);
+            }
+
             return [
                 'onlineUsers' => $this->getOnlineUsers(),
-                'messages' => $messages
+                'messages' => $messages,
+                'events' => $event->getEvents($eventOffset, $eventLimit),
             ];
         } catch (PDOException $e) {
-            throw new PDOException('获取消息发送错误:' . $e);
+            throw new PDOException('获取消息发送错误:' . $e->getMessage());
         }
     }
 
@@ -186,13 +227,13 @@ class ChatController
     public function getMessageCount(): array
     {
         try {
-            $db = SqlLite::getInstance()->getConnection();
+
             $countQuery = 'SELECT COUNT(*) as total FROM messages';
-            $totalStmt = $db->query($countQuery);
+            $totalStmt = $this->db->query($countQuery);
             $totalMessages = $totalStmt->fetch(PDO::FETCH_ASSOC)['total'];
             return ['total' => $totalMessages];
         } catch (PDOException $e) {
-            throw new PDOException('获取消息总数发生错误:' . $e);
+            throw new PDOException('获取消息总数发生错误:' . $e->getMessage());
         }
     }
 
@@ -208,11 +249,11 @@ class ChatController
     {
         try {
             $userIP = new User;
-            $db = SqlLite::getInstance()->getConnection();
-            $stmt = $db->prepare('INSERT INTO messages (user_name, content, type, created_at, user_ip) VALUES (?, ?, ?, ?, ?)');
+
+            $stmt = $this->db->prepare('INSERT INTO messages (user_name, content, type, created_at, user_ip) VALUES (?, ?, ?, ?, ?)');
             return $stmt->execute([$user_name, $message, $type, date('Y-m-d H:i:s'), $userIP->getIp()]);
         } catch (PDOException $e) {
-            throw new PDOException('插入系统消息发生错误:' .  $e);
+            throw new PDOException('插入系统消息发生错误:' .  $e->getMessage());
         }
     }
 
@@ -225,22 +266,16 @@ class ChatController
     public function recycleMessage($messageId, $tips): bool
     {
         try {
-            $db = SqlLite::getInstance()->getConnection();
-            // 更新消息为已删除状态
-            $sqlUpdate = "UPDATE messages SET status = :delete WHERE id = :id";
-            $stmtUpdate = $db->prepare($sqlUpdate);
-            $stmtUpdate->bindValue(':delete', 'delete', PDO::PARAM_STR);
+            $sqlUpdate = "UPDATE messages SET status = :status, type = :type WHERE id = :id";
+            $stmtUpdate = $this->db->prepare($sqlUpdate);
+            $stmtUpdate->bindValue(':status', 'delete', PDO::PARAM_STR);
+            $stmtUpdate->bindValue(':type', 'event.delete', PDO::PARAM_STR);
             $stmtUpdate->bindParam(':id', $messageId, PDO::PARAM_INT);
             $result = $stmtUpdate->execute();
 
-            // 插入系统消息
-            if ($result) {
-                $this->insertSystemMessage('system', $tips, 'event.delete');
-            }
-
             return $result;
         } catch (PDOException $e) {
-            throw new PDOException('回收消息失败: ' . $e);
+            throw new PDOException('回收消息失败: ' . $e->getMessage());
         }
     }
 
@@ -283,7 +318,7 @@ class ChatController
             ];
             return file_put_contents(self::ONLINE_USERS_FILE, json_encode($onlineUsers, JSON_UNESCAPED_UNICODE));
         } catch (Throwable $e) {
-            throw new Exception('更新在线用户列表失败:' . $e);
+            throw new Exception('更新在线用户列表失败:' . $e->getMessage());
         }
     }
 }

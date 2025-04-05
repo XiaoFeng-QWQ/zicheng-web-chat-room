@@ -1,11 +1,11 @@
 <?php
 
+use ChatRoom\Core\Database\Base;
 use ChatRoom\Core\Helpers\User;
 use ChatRoom\Core\Helpers\Helpers;
-use ChatRoom\Core\Database\SqlLite;
 use ChatRoom\Core\Helpers\SystemSetting;
 
-$setting = new SystemSetting(SqlLite::getInstance()->getConnection());
+$setting = new SystemSetting(Base::getInstance()->getConnection());
 $UserHelpers = new User();
 $helpers = new Helpers;
 
@@ -33,6 +33,40 @@ if ($UserHelpers->checkUserLoginStatus()) {
     <link rel="stylesheet" href="/StaticResources/css/user.auth.css?v=<?php echo FRAMEWORK_VERSION ?>">
     <link rel="stylesheet" href="/StaticResources/css/module.rest.css">
     <meta name="description" content="<?= $setting->getSetting('site_description') ?>">
+    <style>
+        @media screen and (min-width: 768px) {
+            .container {
+                flex-direction: row;
+                /* 在平板及以上设备上改为行方向 */
+            }
+
+            .user-auth-container {
+                width: 50%;
+                /* 占据一半宽度 */
+            }
+
+            .user-login-auth-image {
+                display: block;
+                /* 平板及以上设备显示 */
+                background: url('<?= $setting->getSetting('login_left_image') ?>') no-repeat center center;
+                background-size: cover;
+                width: 50%;
+                /* 占据一半宽度 */
+                background-position: right;
+                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            }
+
+            .user-register-auth-image {
+                display: block;
+                /* 平板及以上设备显示 */
+                background: url('<?= $setting->getSetting('register_left_image') ?>') no-repeat center center;
+                background-size: cover;
+                width: 50%;
+                /* 占据一半宽度 */
+                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            }
+        }
+    </style>
 </head>
 
 <body>

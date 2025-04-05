@@ -82,7 +82,7 @@ class ChatCommandController extends ChatController
 
             return true;
         } catch (Throwable $e) {
-            throw new Exception('执行聊天指令发生错误:' . $e);
+            throw new Exception('执行聊天指令发生错误:' . $e->getMessage());
         }
     }
 
