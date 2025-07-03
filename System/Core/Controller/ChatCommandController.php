@@ -191,4 +191,43 @@ class ChatCommandController extends ChatController
     {
         return '<div id="debug-info" class="debug-info"><div class="debug-info-header"><h5>调试信息</h5></div><div style="padding: 15px; text-align: justify;" id="debug-content"><strong>服务器时间:</strong><br><code id="server-time">' . date('Y-m-d H:i:s') . '</code><br><strong>会话信息:</strong><br><pre id="session-info">' . var_export($_SESSION, true) . '</pre><strong>服务器信息:</strong><br><pre id="server-info">' . var_export($_SERVER, true) . '</pre></div></div>';
     }
+    public function handleNoticeCommand($userInfo, ...$options)
+    {
+        // 验证是否为管理员
+        if ($userInfo['group_id'] !== 1) {
+            return '权限不足，只有管理员可以发布公告';
+        }
+
+        // 验证必要字段
+        if (empty($options[0]) || empty($options[1])) {
+            return '公告标题和内容不能为空';
+        }
+
+        // 设置值
+        $noticeData = [
+            'title' => '',
+            'content' => '',
+            'is_sticky' => false,
+            'force_read' => false,
+            'publisher' => $userInfo['username'],
+            'created_at' => date('Y-m-d H:i:s')
+        ];
+        $noticeData['title'] = $options[0];
+        $noticeData['content'] = htmlspecialchars_decode($options[1]); // 既然是管理员了，带html很合理吧（
+        $noticeData['is_sticky'] = (isset($options[2]) && $userInfo['group_id'] === 1) ? $options[2] : false;
+        $noticeData['force_read'] = (isset($options[3]) && $userInfo['group_id'] === 1) ? $options[3] : false;
+        $noticeData['publisher'] = $userInfo['username'];
+        $noticeData['created_at'] = date('Y-m-d H:i:s');
+
+        // 创建公告事件
+        $events = new Events();
+        $result = $events->createEvent(
+            'admin.push.notice',
+            $userInfo['user_id'],
+            0, // 使用0作为target_id，因为公告没有特定目标
+            $noticeData
+        );
+
+        return $result ? '公告发布成功' : '公告发布失败';
+    }
 }

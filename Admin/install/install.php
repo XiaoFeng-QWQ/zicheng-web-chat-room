@@ -96,7 +96,7 @@ class InstallHandler
         }
 
         $Parsedown = new Parsedown();
-        $Parsedown->setSafeMode(true);
+        //$Parsedown->setSafeMode(true);
         return $Parsedown->text($content);
     }
 
@@ -347,19 +347,22 @@ PHP;
                 'driver' => $postData['driver'] === 'sqlite' ? 'sqlite' : 'mysql',
                 'host' => htmlspecialchars($postData['host'] ?? 'localhost', ENT_QUOTES, 'UTF-8'),
                 'port' => (int)($postData['port'] ?? ($postData['driver'] === 'mysql' ? 3306 : 0)),
-                'dbname' => htmlspecialchars($postData['dbname'] ?? '', ENT_QUOTES, 'UTF-8'),
+                'dbname' => htmlspecialchars(
+                    $postData['driver'] === 'sqlite'
+                        ? ($postData['sqlite_dbname'] ?? '')
+                        : ($postData['dbname'] ?? ''),
+                    ENT_QUOTES,
+                    'UTF-8'
+                ),
                 'dbusername' => htmlspecialchars($postData['dbusername'] ?? '', ENT_QUOTES, 'UTF-8'),
                 'dbpassword' => $postData['dbpassword'] ?? '',
                 'charset' => htmlspecialchars($postData['charset'] ?? 'utf8mb4', ENT_QUOTES, 'UTF-8'),
             ];
 
-            // 写入配置文件
-            self::writeConfigFile($dbConfig);
-
             // 导入SQL
             $pdo = self::importSQL($dbConfig);
 
-            // 设置管理员和站点
+            // 设置管理员和站点预配置
             self::setupAdminAndSite($pdo, [
                 'admin_name' => $_SESSION['admin_name'],
                 'admin_pass' => $_SESSION['admin_pass'],
@@ -373,6 +376,8 @@ PHP;
             session_unset();
             session_destroy();
 
+            // 写入配置文件
+            self::writeConfigFile($dbConfig);
             return '<div class="alert alert-success">' . InstallConfig::SUCCESS . '</div>';
         } catch (Exception $e) {
             return '<div class="alert alert-danger">' . $e->getMessage() . self::getBackLink('3') . '</div>';

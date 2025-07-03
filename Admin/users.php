@@ -23,81 +23,78 @@ try {
 }
 ?>
 
-<div class="row">
-    <div class="col-md-12">
-        <div class="card mb-4">
-            <div class="card-header">
-                <i class="fas fa-users"></i> 用户管理
+
+<div class="card">
+    <div class="card-header">
+        <i class="fas fa-users"></i> 用户管理
+    </div>
+    <div class="card-body">
+        <h5 class="card-title">用户列表</h5>
+        <div class="row mb-3">
+            <div class="col-md-4">
+                <input type="text" id="search-user-input" class="form-control" placeholder="搜索用户...">
             </div>
-            <div class="card-body">
-                <h5 class="card-title">用户列表</h5>
-                <div class="row mb-3">
-                    <div class="col-md-4">
-                        <input type="text" id="search-user-input" class="form-control" placeholder="搜索用户...">
-                    </div>
-                    <div class="col-md-4">
-                        <select id="filter-status" class="form-control">
-                            <option value="">筛选状态</option>
-                            <option value="正常">正常</option>
-                            <option value="禁用">禁用</option>
-                            <!-- 更多状态选项 -->
-                        </select>
-                    </div>
-                    <div class="col-md-4">
-                        <input type="date" id="filter-reg-date" class="form-control">
-                    </div>
-                </div>
-                <div class="table-responsive">
-                    <table class="table table-striped" id="user-table">
-                        <thead>
+            <div class="col-md-4">
+                <select id="filter-status" class="form-control">
+                    <option value="">筛选状态</option>
+                    <option value="正常">正常</option>
+                    <option value="禁用">禁用</option>
+                    <!-- 更多状态选项 -->
+                </select>
+            </div>
+            <div class="col-md-4">
+                <input type="date" id="filter-reg-date" class="form-control">
+            </div>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-striped" id="user-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>头像</th>
+                        <th>用户名</th>
+                        <th>注册时间</th>
+                        <th>注册ip</th>
+                        <th>是否为管理员</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php if (empty($usersData)): ?>
+                        <tr>
+                            <td colspan="6" class="text-center">暂无用户数据</td>
+                        </tr>
+                    <?php else: ?>
+                        <?php foreach ($usersData as $user): ?>
                             <tr>
-                                <th>ID</th>
-                                <th>头像</th>
-                                <th>用户名</th>
-                                <th>注册时间</th>
-                                <th>注册ip</th>
-                                <th>是否为管理员</th>
-                                <th>操作</th>
+                                <td><?= htmlspecialchars($user['user_id']); ?></td>
+                                <td><img src="<?= htmlspecialchars($user['avatar_url'] ?? '无'); ?>" alt="头像链接失效/无头像"></td>
+                                <td><?= htmlspecialchars($user['username']); ?></td>
+                                <td><?= htmlspecialchars($user['created_at']); ?></td>
+                                <td><?= htmlspecialchars($user['register_ip'] ?? '无法获取'); ?></td>
+                                <td><?= $user['group_id'] == 1 ? '是' : '否'; ?></td>
+                                <td>
+                                    <button class="btn btn-sm btn-primary" onclick="editUser(<?= $user['user_id']; ?>)"><i class="fas fa-edit"></i></button>
+                                    <button class="btn btn-sm btn-danger" onclick="deleteUser(<?= $user['user_id']; ?>)"><i class="fas fa-user-slash"></i></button>
+                                </td>
                             </tr>
-                        </thead>
-                        <tbody>
-                            <?php if (empty($usersData)): ?>
-                                <tr>
-                                    <td colspan="6" class="text-center">暂无用户数据</td>
-                                </tr>
-                            <?php else: ?>
-                                <?php foreach ($usersData as $user): ?>
-                                    <tr>
-                                        <td><?= htmlspecialchars($user['user_id']); ?></td>
-                                        <td><img src="<?= htmlspecialchars($user['avatar_url'] ?? '无'); ?>" alt="头像链接失效/无头像"></td>
-                                        <td><?= htmlspecialchars($user['username']); ?></td>
-                                        <td><?= htmlspecialchars($user['created_at']); ?></td>
-                                        <td><?= htmlspecialchars($user['register_ip'] ?? '无法获取'); ?></td>
-                                        <td><?= $user['group_id'] == 1 ? '是' : '否'; ?></td>
-                                        <td>
-                                            <button class="btn btn-sm btn-primary" onclick="editUser(<?= $user['user_id']; ?>)"><i class="fas fa-edit"></i></button>
-                                            <button class="btn btn-sm btn-danger" onclick="deleteUser(<?= $user['user_id']; ?>)"><i class="fas fa-user-slash"></i></button>
-                                        </td>
-                                    </tr>
-                                <?php endforeach; ?>
-                            <?php endif; ?>
-                        </tbody>
-                    </table>
-                    <nav aria-label="Page navigation">
-                        <ul class="pagination justify-content-center">
-                            <li class="page-item <?= $page <= 1 ? 'disabled' : ''; ?>">
-                                <a class="page-link" href="?page=<?= $page - 1; ?>">上一页</a>
-                            </li>
-                            <li class="page-item">
-                                <a class="page-link"><?= $page ?> / <?= $totalPages ?></a>
-                            </li>
-                            <li class="page-item <?= $page >= $totalPages ? 'disabled' : ''; ?>">
-                                <a class="page-link" href="?page=<?= $page + 1; ?>">下一页</a>
-                            </li>
-                        </ul>
-                    </nav>
-                </div>
-            </div>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </tbody>
+            </table>
+            <nav aria-label="Page navigation">
+                <ul class="pagination justify-content-center">
+                    <li class="page-item <?= $page <= 1 ? 'disabled' : ''; ?>">
+                        <a class="page-link" href="?page=<?= $page - 1; ?>">上一页</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link"><?= $page ?> / <?= $totalPages ?></a>
+                    </li>
+                    <li class="page-item <?= $page >= $totalPages ? 'disabled' : ''; ?>">
+                        <a class="page-link" href="?page=<?= $page + 1; ?>">下一页</a>
+                    </li>
+                </ul>
+            </nav>
         </div>
     </div>
 </div>

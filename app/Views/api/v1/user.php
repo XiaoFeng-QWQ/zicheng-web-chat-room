@@ -7,55 +7,122 @@ use ChatRoom\Core\Helpers\SystemSetting;
 use ChatRoom\Core\Controller\UserController;
 use ChatRoom\Core\Database\Base;
 
-$userHelpers = new User;
-$tokenManager = new TokenManager;
-$userController = new UserController;
-$setting = new SystemSetting(Base::getInstance()->getConnection());
+class UserAPI
+{
+    private $userHelpers;
+    private $tokenManager;
+    private $userController;
+    private $setting;
+    private $helpers;
 
-$uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
-$method = isset(explode('/', trim($uri, '/'))[3]) ? explode('/', trim($uri, '/'))[3] : null;
-
-// 验证 API 名称是否符合字母和数字的格式，且长度不超过 30
-if (preg_match('/^[a-zA-Z0-9]{1,30}$/', $method)) {
-    // 读取和解析输入的 JSON 数据
-    $input = json_decode(file_get_contents('php://input'), true);
-    $captcha = $input['captcha'] ?? '';
-    $username = $input['username'] ?? '';
-    $password = $input['password'] ?? '';
-    $confirmPassword = $method === 'register' ? $input['confirm_password'] ?? '' : null;
-    switch ($method) {
-        case 'register':
-            if ($setting->getSetting('enable_user_registration') === true) {
-                if (isset($_SESSION['captcha']) && PhraseBuilder::comparePhrases($_SESSION['captcha'], $captcha)) {
-                    unset($_SESSION['captcha']);
-                    exit($userController->register($username, $password, $confirmPassword));
-                } else {
-                    // 验证码错误
-                    unset($_SESSION['captcha']);
-                    $helpers->jsonResponse(400, UserController::CAPTCHA_ERROR);
-                }
-            }
-            $helpers->jsonResponse(403, UserController::DISABLE_USER_REGIDTRATION);
-        case 'login':
-            if (isset($_SESSION['captcha']) && PhraseBuilder::comparePhrases($_SESSION['captcha'], $captcha)) {
-                unset($_SESSION['captcha']);
-                $userController->login($username, $password);
-            } else {
-                // 验证码错误
-                unset($_SESSION['captcha']);
-                $helpers->jsonResponse(400, UserController::CAPTCHA_ERROR);
-            }
-        case 'logout':
-            if ($userHelpers->checkUserLoginStatus()) {
-                setcookie('user_login_info', '', time() - 3600, '/');
-                $helpers->jsonResponse(200, $tokenManager->delet($userHelpers->getUserInfoByEnv()['user_id']));
-            }
-            $helpers->jsonResponse(200, true);
-            break;
-        default:
-            $helpers->jsonResponse(400, UserController::INVALID_METHOD_MESSAGE);
+    public function __construct($helpers)
+    {
+        $this->userHelpers = new User();
+        $this->tokenManager = new TokenManager();
+        $this->userController = new UserController();
+        $this->setting = new SystemSetting(Base::getInstance()->getConnection());
+        $this->helpers = $helpers;
     }
-} else {
-    // 如果 method 不符合字母数字格式，返回 400 错误
-    $helpers->jsonResponse(400, "Invalid API method");
+
+    public function handleRequest()
+    {
+        $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+        $method = $this->getMethodFromUri($uri);
+
+        if (!$this->validateMethod($method)) {
+            $this->helpers->jsonResponse(400, "Invalid API method");
+            return;
+        }
+
+        $input = json_decode(file_get_contents('php://input'), true) ?: [];
+
+        switch ($method) {
+            case 'register':
+                $this->handleRegister($input);
+                break;
+            case 'login':
+                $this->handleLogin($input);
+                break;
+            case 'logout':
+                $this->handleLogout();
+                break;
+            default:
+                $this->helpers->jsonResponse(400, UserController::INVALID_METHOD_MESSAGE);
+        }
+    }
+
+    private function getMethodFromUri($uri)
+    {
+        $parts = explode('/', trim($uri, '/'));
+        return $parts[3] ?? null;
+    }
+
+    private function validateMethod($method)
+    {
+        return preg_match('/^[a-zA-Z0-9]{1,30}$/', $method);
+    }
+
+    private function handleRegister($input)
+    {
+        if ($this->setting->getSetting('enable_user_registration') !== true) {
+            $this->helpers->jsonResponse(403, UserController::DISABLE_USER_REGIDTRATION);
+            return;
+        }
+
+        if (!$this->validateCaptcha($input['captcha'] ?? '')) {
+            $this->helpers->jsonResponse(400, UserController::CAPTCHA_ERROR);
+            return;
+        }
+
+        $result = $this->userController->register(
+            $input['username'] ?? '',
+            $input['password'] ?? '',
+            $input['confirm_password'] ?? ''
+        );
+
+        $this->helpers->jsonResponse($result['status'] ?? 400, $result['message'] ?? '');
+    }
+
+    private function handleLogin($input)
+    {
+        if (!$this->validateCaptcha($input['captcha'] ?? '')) {
+            $this->helpers->jsonResponse(400, UserController::CAPTCHA_ERROR);
+            return;
+        }
+
+        $result = $this->userController->login(
+            $input['username'] ?? '',
+            $input['password'] ?? ''
+        );
+
+        $this->helpers->jsonResponse($result['status'] ?? 400, $result['message'] ?? '');
+    }
+
+    private function handleLogout()
+    {
+        if (!$this->userHelpers->getUserInfoByEnv()) {
+            $this->helpers->jsonResponse(401, "未登录或登录已过期");
+            return;
+        }
+
+        if ($this->userHelpers->checkUserLoginStatus()) {
+            setcookie('user_login_info', '', time() - 3600, '/');
+            $this->helpers->jsonResponse(200, $this->tokenManager->delet($this->userHelpers->getUserInfoByEnv()['user_id']));
+        } else {
+            $this->helpers->jsonResponse(200, true);
+        }
+    }
+
+    private function validateCaptcha($captcha)
+    {
+        if (!isset($_SESSION['captcha']) || !PhraseBuilder::comparePhrases($_SESSION['captcha'], $captcha)) {
+            unset($_SESSION['captcha']);
+            return false;
+        }
+        unset($_SESSION['captcha']);
+        return true;
+    }
 }
+
+// 实例化并处理请求
+(new UserAPI($helpers))->handleRequest();

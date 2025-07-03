@@ -68,7 +68,7 @@ try {
 
     // 设置更新成功后
     $settingsSummary = implode('，', $updatedSettings);
-    header("Location: /Admin/settings.php?success=true&msg= $settingsSummary 成功");
+    header("Location: /Admin/settings.php?success=true&msg=" . urlencode("$settingsSummary 设置成功")); 
     exit;
 } catch (Exception $e) {
     header("Location: /Admin/settings.php?success=false&msg=" . urlencode($e));

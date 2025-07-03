@@ -1,59 +1,54 @@
 <?php
 require_once __DIR__ . "/module/head.php";
 ?>
-<div class="row">
-    <div class="col-md-12">
-        <div class="card mb-4">
-            <div class="card-header">
-                <i class="fas fa-comments"></i> 消息管理
+<div class="card">
+    <div class="card-header">
+        <i class="fas fa-comments"></i> 消息管理
+    </div>
+    <div class="card-body">
+        <h5 class="card-title">消息列表</h5>
+        <div class="row mb-3">
+            <div class="col-md-4">
+                <input type="text" id="search-input" class="form-control" placeholder="搜索消息...">
             </div>
-            <div class="card-body">
-                <h5 class="card-title">消息列表</h5>
-                <div class="row mb-3">
-                    <div class="col-md-4">
-                        <input type="text" id="search-input" class="form-control" placeholder="搜索消息...">
-                    </div>
-                    <div class="col-md-4">
-                        <input type="text" id="filter-sender" class="form-control" placeholder="输入发送者...">
-                    </div>
-                    <div class="col-md-4">
-                        <input type="date" id="filter-date" class="form-control">
-                    </div>
-                </div>
-                <div class="select-all-container d-flex align-items-center">
-                    <input type="checkbox" id="msg-select-all" class="form-check-input">
-                    <label for="select-all">全选</label>
-                    <button id="msg-delete-selected" class="btn btn-danger btn-sm ms-2">
-                        <i class="fas fa-trash-alt"></i> 删除选中
-                    </button>
-                    <button id="refresh-list" class="btn btn-secondary btn-sm ms-auto" onclick="loadMessages()">
-                        <i class="fas fa-sync-alt"></i> 刷新列表
-                    </button>
-                </div>
-                <div class="table-responsive">
-                    <table id="message-table" class="table table-fixed-header">
-                        <thead>
-                            <tr>
-                                <th>选中</th>
-                                <th>ID</th>
-                                <th>用户名</th>
-                                <th>发布IP</th>
-                                <th>内容</th>
-                                <th>类型</th>
-                                <th>创建时间</th>
-                                <th>操作</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <div id="loading" class="text-center my-3" style="display: none;">
-                                <div class="spinner-border" role="status" aria-hidden="true"></div>
-                                <p>加载中…</p>
-                            </div>
-                        </tbody>
-                    </table>
-                    <ul class="messagesPagination pagination justify-content-center"></ul>
-                </div>
+            <div class="col-md-4">
+                <input type="text" id="filter-sender" class="form-control" placeholder="输入发送者...">
             </div>
+            <div class="col-md-4">
+                <input type="date" id="filter-date" class="form-control">
+            </div>
+        </div>
+        <div class="select-all-container d-flex align-items-center">
+            <input type="checkbox" id="msg-select-all" class="form-check-input">
+            <label for="select-all">全选</label>
+            <button id="msg-delete-selected" class="btn btn-danger btn-sm ms-2">
+                <i class="fas fa-trash-alt"></i> 回收选中
+            </button>
+            <button id="refresh-list" class="btn btn-secondary btn-sm ms-auto" onclick="loadMessages()">
+                <i class="fas fa-sync-alt"></i> 刷新列表
+            </button>
+        </div>
+        <div class="table-responsive">
+            <table id="message-table" class="table table-fixed-header">
+                <thead>
+                    <tr>
+                        <th>选中</th>
+                        <th>ID</th>
+                        <th>用户名</th>
+                        <th>发布IP</th>
+                        <th>内容</th>
+                        <th>类型</th>
+                        <th>创建时间</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <div id="loading" class="text-center my-3" style="display: none;">
+                        <div class="spinner-border" role="status" aria-hidden="true"></div>
+                        <p>加载中…</p>
+                    </div>
+                </tbody>
+            </table>
+            <ul class="messagesPagination pagination justify-content-center"></ul>
         </div>
     </div>
 </div>
@@ -75,6 +70,7 @@ require_once __DIR__ . "/module/head.php";
         </div>
     </div>
 </div>
+<script src="js/getMessages.js?<?php echo FRAMEWORK_VERSION ?>"></script>
 <?php
 require_once __DIR__ . '/module/footer.php';
 ?>

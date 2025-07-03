@@ -26,9 +26,15 @@ class Helpers
             'data' => $data
         ];
         if (defined('FRAMEWORK_DEBUG') && FRAMEWORK_DEBUG) {
+            $memoryPeakUsage = memory_get_peak_usage();
+            $memoryUsage = memory_get_usage();
+            $includedFiles = get_included_files();
             $response['data']['apiDebug'] = [
                 'AppVersion' => FRAMEWORK_VERSION,
                 'backtrace' => debug_backtrace(),
+                'memoryUsage' => $memoryUsage,
+                'memoryPeakUsage' => $memoryPeakUsage,
+                'includedFiles' => $includedFiles,
             ];
         }
         exit(json_encode($response, JSON_UNESCAPED_UNICODE));

@@ -54,26 +54,25 @@ $log = new SystemLog($db);
 $logs = $log->getLogs(5);
 ?>
 
-<div class="row">
-    <!-- 概览 -->
-    <div class="card mb-4">
-        <div class="card-header">
-            <i class="fas fa-chart-line"></i> <?= htmlspecialchars($SystemSetting->getSetting('site_name')) ?>概览
-        </div>
-        <div class="card-body">
-            <h5 class="card-title">聊天室管理</h5>
-            <p class="card-text">您可以在此处管理用户、消息列表和设置。</p>
-            <hr>
-            <div class="row mt-4">
-                <?php
-                $statsCards = [
-                    ['title' => '今日消息', 'icon' => 'fa-comments', 'value' => $stats['messages_today'], 'class' => 'bg-success'],
-                    ['title' => '消息总数', 'icon' => 'fa-comments', 'value' => $stats['total_messages'], 'class' => 'bg-info'],
-                    ['title' => '新注册', 'icon' => 'fa-user-plus', 'value' => $stats['new_users_today'], 'class' => 'bg-warning text-dark'],
-                    ['title' => '总用户数', 'icon' => 'fa-users', 'value' => $stats['total_users'], 'class' => 'bg-primary'],
-                ];
-                foreach ($statsCards as $card) {
-                    echo "
+<!-- 概览 -->
+<div class="card">
+    <div class="card-header">
+        <i class="fas fa-chart-line"></i> <?= htmlspecialchars($SystemSetting->getSetting('site_name')) ?>概览
+    </div>
+    <div class="card-body">
+        <h5 class="card-title">聊天室管理</h5>
+        <p class="card-text">您可以在此处管理用户、消息列表和设置。</p>
+        <hr>
+        <div class="row mt-4">
+            <?php
+            $statsCards = [
+                ['title' => '今日消息', 'icon' => 'fa-comments', 'value' => $stats['messages_today'], 'class' => 'bg-success'],
+                ['title' => '消息总数', 'icon' => 'fa-comments', 'value' => $stats['total_messages'], 'class' => 'bg-info'],
+                ['title' => '新注册', 'icon' => 'fa-user-plus', 'value' => $stats['new_users_today'], 'class' => 'bg-warning text-dark'],
+                ['title' => '总用户数', 'icon' => 'fa-users', 'value' => $stats['total_users'], 'class' => 'bg-primary'],
+            ];
+            foreach ($statsCards as $card) {
+                echo "
                     <div class='col-md-3 col-sm-6 mb-3'>
                         <div class='card {$card['class']} text-white h-100'>
                             <div class='card-body'>
@@ -82,39 +81,38 @@ $logs = $log->getLogs(5);
                             </div>
                         </div>
                     </div>";
-                }
-                ?>
-            </div>
-            <div class="mt-4">
-                <div class="card">
-                    <div class="card-header">
-                        <i class="fas fa-history"></i> 最近活动日志
-                    </div>
-                    <div class="card-body">
-                        <ul class="list-group list-group-flush">
-                            <?php
-                            foreach ($logs as $log) {
-                                echo "<li class='list-group-item'>[{$log['log_type']}] " . htmlspecialchars($log['message']) . " - " . htmlspecialchars($log['created_at']) . "</li>";
-                            }
-                            ?>
-                        </ul>
-                    </div>
+            }
+            ?>
+        </div>
+        <div class="mt-4">
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-history"></i> 最近活动日志
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        <?php
+                        foreach ($logs as $log) {
+                            echo "<li class='list-group-item'>[{$log['log_type']}] " . htmlspecialchars($log['message']) . " - " . htmlspecialchars($log['created_at']) . "</li>";
+                        }
+                        ?>
+                    </ul>
                 </div>
             </div>
-            <div class="row mt-4">
-                <div class="col-12">
-                    <div class="card">
-                        <div class="card-header d-flex justify-content-between align-items-center">
-                            <div>
-                                <i class="fas fa-chart-bar"></i> 近31天用户和消息增长图表(如需查看完整信息，请导出为CSV)
-                            </div>
-                            <button class="btn btn-success me-2" id="exportButton" type="button">
-                                <i class="fas fa-file-csv me-1"></i> 导出数据为CSV
-                            </button>
+        </div>
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <div>
+                            <i class="fas fa-chart-bar"></i> 近31天用户和消息增长图表(如需查看完整信息，请导出为CSV)
                         </div>
-                        <div class="card-body">
-                            <canvas id="trendChart"></canvas>
-                        </div>
+                        <button class="btn btn-success me-2" id="exportButton" type="button">
+                            <i class="fas fa-file-csv me-1"></i> 导出数据为CSV
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="trendChart"></canvas>
                     </div>
                 </div>
             </div>

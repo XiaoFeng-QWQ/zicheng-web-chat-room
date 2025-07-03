@@ -4,127 +4,200 @@ use ChatRoom\Core\Config\Chat;
 use ChatRoom\Core\Helpers\User;
 use ChatRoom\Core\Controller\Events;
 use ChatRoom\Core\Modules\FileUploader;
-use ChatRoom\Core\Modules\TokenManager;
 use ChatRoom\Core\Controller\ChatController;
 use ChatRoom\Core\Controller\ChatCommandController;
 
-$event = new Events;
-$chatConfig = new Chat;
-$userHelpers = new User;
-$tokenManager = new TokenManager;
-$chatController = new ChatController;
+class ChatAPI
+{
+    private $event;
+    private $chatConfig;
+    private $userHelpers;
+    private $chatController;
+    private $helpers;
 
-$uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
-$method = isset(explode('/', trim($uri, '/'))[3]) ? explode('/', trim($uri, '/'))[3] : null;
-
-// 验证 API 名称是否符合字母和数字的格式，且长度不超过 30
-if (preg_match('/^[a-zA-Z0-9]{1,30}$/', $method)) {
-
-    $message = htmlspecialchars(trim($_POST['message'] ?? ''), ENT_QUOTES, 'UTF-8');
-    $userInfo = $userHelpers->getUserInfoByEnv();
-
-    switch ($method) {
-        // API控制器
-        case 'send':
-            $isMarkdown = empty($_POST['isMarkdown']) ? false : (bool)$_POST['isMarkdown'];
-            $replyTo = isset($_POST['replyTo']) ? (int)$_POST['replyTo'] : null;
-
-            // 处理上传文件
-            if (isset($_FILES['file']) && $_FILES['file']['error'] === UPLOAD_ERR_OK) {
-                $uploadedFile = new FileUploader($chatConfig->uploadFile['allowTypes'], $chatConfig->uploadFile['maxSize']);
-                $uploadedFile = $uploadedFile->upload($_FILES['file'], $userInfo['user_id']);
-                if ($uploadedFile === false) {
-                    $helpers->jsonResponse(406, '文件上传失败或此文件类型不允许');
-                }
-
-                // 将文件信息插入到消息模板中
-                $message .= sprintf(
-                    '<br>[!file(path_"%s", name_"%s", type_"%s", size_"%s", download_"true")]',
-                    $uploadedFile['url'],
-                    $uploadedFile['name'],
-                    $uploadedFile['type'],
-                    $uploadedFile['size']
-                );
-            }
-
-            // 检查消息内容和回复标识符
-            if (empty($message)) {
-                $helpers->jsonResponse(406, '消息内容不能为空');
-            }
-
-            // 检查 $replyTo 是否为 null，如果不为 null，再验证它的合法性
-            if ($replyTo !== null && (!is_numeric($replyTo) || $replyTo <= 0)) {
-                $helpers->jsonResponse(406, '无效的回复标识符');
-            }
-
-            // 检查是否是命令
-            if (strpos($message, '/') === 0) {
-                $chatCommandController = new ChatCommandController();
-                $commandResponse = $chatCommandController->command($message, $userInfo);
-
-                // 判断命令执行结果，返回相应的JSON响应
-                $status = $commandResponse ? 200 : 403;
-                $message = $commandResponse ?: '执行失败或权限不足';
-                $helpers->jsonResponse($status, $message);
-            }
-
-            // 调用ChatController处理消息发送
-            if ($chatController->sendMessage($userInfo, $message, $isMarkdown, $replyTo)) {
-                $helpers->jsonResponse(200, ChatController::MESSAGE_SUCCESS);
-            } else {
-                $helpers->jsonResponse(406, ChatController::MESSAGE_SEND_FAILED);
-            }
-            break;
-        case 'delete':
-            // 撤回消息->检查权限如果是管理员可强制撤回->对应消息ID状态标记为delete->插入一条type为user.delete的消息类型
-            $msgId = isset($_GET['id']) ? $_GET['id'] : '0';
-            $msgData = $chatController->getMessagesByConditions(['messageId' => $msgId]);
-            if ($msgData === null) {
-                $helpers->jsonResponse(404, '消息未找到');
-                exit;
-            }
-            if ($userInfo['group_id'] === 1 || $msgData[0]['user_name'] === $userInfo['username']) {
-                // 根据撤回者的身份和消息的创建者判断撤回内容
-                if ($userInfo['group_id'] === 1 && $msgData[0]['user_name'] !== $userInfo['username']) {
-                    // 管理员撤回成员的消息
-                    $messageContent = '管理员 ' . $userInfo['username'] . ' 撤回了一条成员消息';
-                } elseif ($msgData[0]['user_name'] === $userInfo['username']) {
-                    $messageContent = $userInfo['username'] . ' 撤回了一条消息';
-                }
-                // 创建事件
-                $event->createEvent('message.revoke', $userInfo['user_id'], $msgId, $messageContent);
-                $chatController->recycleMessage($msgId, $messageContent);
-                $helpers->jsonResponse(200, ChatController::MESSAGE_SUCCESS);
-            } else {
-                $helpers->jsonResponse(406, '撤回失败：非自己消息');
-            }
-            break;
-        case 'get':
-            $offset = isset($_GET['offset']) ? (int)$_GET['offset'] : 0;
-            $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 10;
-            $eventOffset = isset($_GET['eventOffset']) ? (int)$_GET['eventOffset'] : 0;
-            $eventLimit = isset($_GET['eventLimit']) ? (int)$_GET['eventLimit'] : 10;
-
-            $result = $chatController->getMessages($offset, $limit, $eventOffset, $eventLimit);
-            if (!$result) {
-                $helpers->jsonResponse(406, ChatController::MESSAGE_FETCH_FAILED);
-            } else {
-                $helpers->jsonResponse(200, true, $result);
-            }
-            break;
-        case 'get-message-count':
-            $result = $chatController->getMessageCount();
-            if (!$result) {
-                $helpers->jsonResponse(406, '获取消息总数失败');
-            } else {
-                $helpers->jsonResponse(200, true, $result);
-            }
-            break;
-        default:
-            // 无效的请求方法
-            $helpers->jsonResponse(406, ChatController::MESSAGE_INVALID_REQUEST);
+    public function __construct($helpers)
+    {
+        $this->event = new Events();
+        $this->chatConfig = new Chat();
+        $this->userHelpers = new User();
+        $this->chatController = new ChatController();
+        $this->helpers = $helpers;
     }
-} else {
-    // 如果 method 不符合字母数字格式，返回 400 错误
-    $helpers->jsonResponse(400, "Invalid API method");
+
+    public function handleRequest()
+    {
+        $this->authenticateUser();
+
+        $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+        $method = $this->getMethodFromUri($uri);
+
+        if (!$this->validateMethod($method)) {
+            $this->helpers->jsonResponse(400, "Invalid API method");
+            return;
+        }
+
+        $userInfo = $this->userHelpers->getUserInfoByEnv();
+
+        switch ($method) {
+            case 'send':
+                $this->handleSendMessage($userInfo);
+                break;
+            case 'delete':
+                $this->handleDeleteMessage($userInfo);
+                break;
+            case 'get':
+                $this->handleGetMessages();
+                break;
+            case 'get-message-count':
+                $this->handleGetMessageCount();
+                break;
+            default:
+                $this->helpers->jsonResponse(406, ChatController::MESSAGE_INVALID_REQUEST);
+        }
+    }
+
+    private function authenticateUser()
+    {
+        if (!$this->userHelpers->getUserInfoByEnv()) {
+            $this->helpers->jsonResponse(401, "未登录或登录已过期");
+            exit;
+        }
+    }
+
+    private function getMethodFromUri($uri)
+    {
+        $parts = explode('/', trim($uri, '/'));
+        return $parts[3] ?? null;
+    }
+
+    private function validateMethod($method)
+    {
+        return preg_match('/^[a-zA-Z0-9]{1,30}$/', $method);
+    }
+
+    private function handleSendMessage($userInfo)
+    {
+        $message = htmlspecialchars(trim($_POST['message'] ?? ''), ENT_QUOTES, 'UTF-8');
+        $isMarkdown = $_POST['isMarkdown'] ?? false;
+        $replyTo = isset($_POST['replyTo']) ? (int)$_POST['replyTo'] : null;
+
+        // 处理文件上传
+        if (isset($_FILES['file']) && $_FILES['file']['error'] === UPLOAD_ERR_OK) {
+            $message = $this->handleFileUpload($userInfo, $message);
+        }
+
+        if (empty($message)) {
+            $this->helpers->jsonResponse(406, '消息内容不能为空');
+            return;
+        }
+
+        if ($replyTo !== null && $replyTo <= 0) {
+            $this->helpers->jsonResponse(406, '无效的回复标识符');
+            return;
+        }
+
+        // 检查是否是命令
+        if (strpos($message, '/') === 0) {
+            $this->handleCommand($message, $userInfo);
+            return;
+        }
+
+        // 发送普通消息
+        if ($this->chatController->sendMessage($userInfo, $message, $isMarkdown, $replyTo)) {
+            $this->helpers->jsonResponse(200, ChatController::MESSAGE_SUCCESS);
+        } else {
+            $this->helpers->jsonResponse(406, ChatController::MESSAGE_SEND_FAILED);
+        }
+    }
+
+    private function handleFileUpload($userInfo, $message)
+    {
+        $uploader = new FileUploader(
+            $this->chatConfig->uploadFile['allowTypes'],
+            $this->chatConfig->uploadFile['maxSize']
+        );
+
+        $file = $uploader->upload($_FILES['file'], $userInfo['user_id']);
+        if ($file === false) {
+            $this->helpers->jsonResponse(406, '文件上传失败或此文件类型不允许');
+            exit;
+        }
+
+        return $message . sprintf(
+            '<br>[!file(path_"%s", name_"%s", type_"%s", size_"%s", download_"true")]',
+            '/api/v1/files/' . $file['md5'],
+            $file['name'],
+            $file['type'],
+            $file['size']
+        );
+    }
+
+    private function handleCommand($message, $userInfo)
+    {
+        $commandController = new ChatCommandController();
+        $response = $commandController->command($message, $userInfo);
+
+        $status = $response ? 200 : 403;
+        $message = $response ?: '执行失败或权限不足';
+        $this->helpers->jsonResponse($status, $message);
+    }
+
+    private function handleDeleteMessage($userInfo)
+    {
+        $msgId = $_GET['id'] ?? '0';
+        $msgData = $this->chatController->getMessagesByConditions(['messageId' => $msgId]);
+
+        if ($msgData === null) {
+            $this->helpers->jsonResponse(404, '消息未找到');
+            return;
+        }
+
+        if ($userInfo['group_id'] === 1 || $msgData[0]['user_name'] === $userInfo['username']) {
+            $messageContent = $this->getRevokeMessageContent($userInfo, $msgData[0]);
+
+            $this->event->createEvent('message.revoke', $userInfo['user_id'], $msgId, $messageContent);
+            $this->chatController->recycleMessage($msgId);
+            $this->helpers->jsonResponse(200, ChatController::MESSAGE_SUCCESS);
+        } else {
+            $this->helpers->jsonResponse(406, '撤回失败：非自己消息');
+        }
+    }
+
+    private function getRevokeMessageContent($userInfo, $msgData)
+    {
+        if ($userInfo['group_id'] === 1 && $msgData['user_name'] !== $userInfo['username']) {
+            return '管理员 ' . $userInfo['username'] . ' 撤回了一条成员消息';
+        }
+        return $userInfo['username'] . ' 撤回了一条消息';
+    }
+
+    private function handleGetMessages()
+    {
+        $offset = isset($_GET['offset']) ? (int)$_GET['offset'] : 0;
+        $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 10;
+        $eventOffset = isset($_GET['eventOffset']) ? (int)$_GET['eventOffset'] : 0;
+        $eventLimit = isset($_GET['eventLimit']) ? (int)$_GET['eventLimit'] : 10;
+
+        $result = $this->chatController->getMessages($offset, $limit, $eventOffset, $eventLimit);
+
+        if (!$result) {
+            $this->helpers->jsonResponse(406, ChatController::MESSAGE_FETCH_FAILED);
+        } else {
+            $this->helpers->jsonResponse(200, true, $result);
+        }
+    }
+
+    private function handleGetMessageCount()
+    {
+        $result = $this->chatController->getMessageCount();
+
+        if (!$result) {
+            $this->helpers->jsonResponse(406, '获取消息总数失败');
+        } else {
+            $this->helpers->jsonResponse(200, true, $result);
+        }
+    }
 }
+
+// 实例化并处理请求
+(new ChatAPI($helpers))->handleRequest();

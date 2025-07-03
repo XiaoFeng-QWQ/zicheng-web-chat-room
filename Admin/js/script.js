@@ -1,39 +1,9 @@
-// 初始化 Pjax
-$(document).pjax('a:not(a[target="_blank"],a[no-pjax])', {
-    container: 'main',
-    fragment: 'main',
-    timeout: 20000
-});
-
-// Pjax 请求发送时显示进度条
-$(document).on('pjax:send', NProgress.start);
-
-// Pjax 请求结束时隐藏进度条并重新绑定表单事件
-$(document).on('pjax:end', function () {
-    NProgress.done();
-    bindEvents();
-    loadMessages('1')
-});
-
 /**
  * 绑定事件
  */
 function bindEvents() {
     $('#search-input, #filter-sender, #filter-date').on('input change', filterMessages);
     $('#search-user-input, #filter-status, #filter-reg-date').on('input change', filterUsers);
-    $('#settings .list-group-item').on('click', function (e) {
-        e.preventDefault(); // 阻止默认的链接跳转行为
-        let settingsContentName = $(this).attr('contentName');
-        $('#settingsContainer').attr('contentName', settingsContentName);
-        $('#settingsContainer .card-body').load('settings/' + settingsContentName);
-        // 更改链接，添加 #名称
-        window.location.hash = settingsContentName;
-    });
-
-    // 加载默认内容（是这样的：首先获取链接后面的，如果没有就获取contentName）
-    let defaultSettingsContentName = window.location.hash ? window.location.hash.substring(1) : $('#settingsContainer').attr('contentName');
-    $('#settingsContainer .card-body').load('settings/' + defaultSettingsContentName);
-    msgBindEvents()
 }
 
 /**
@@ -58,6 +28,7 @@ function filterMessages() {
         $(this).toggle(matchesSearch && matchesSender && matchesDate);
     });
 }
+
 /**
  * 用户过滤
  */

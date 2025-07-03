@@ -289,7 +289,7 @@ require_once __DIR__ . '/install.php';
                             <label for="driver" class="form-label">数据库类型</label>
                             <select class="form-select" id="driver" name="driver" required>
                                 <option value="mysql">MySQL</option>
-                                <option value="sqlite">SQLite</option>
+                                <option value="sqlite">SQLite(纯文件存储)</option>
                             </select>
                         </div>
 
@@ -335,7 +335,7 @@ require_once __DIR__ . '/install.php';
                         <div id="sqliteConfig" class="database-config">
                             <div class="form-group">
                                 <label for="sqlite_dbname" class="form-label">数据库文件名</label>
-                                <input type="text" class="form-control" id="sqlite_dbname" name="dbname" value="database.db" required>
+                                <input type="text" class="form-control" id="sqlite_dbname" name="sqlite_dbname" value="<?= uniqid() ?>.db" required>
                                 <small class="form-text text-muted">
                                     数据库文件将存储在 Writable 目录下
                                 </small>

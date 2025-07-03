@@ -37,7 +37,7 @@ class UserController
          * ！警告！
          * ！请勿修改此处保留字符，可能会出现意想不到的情况！
          */
-        $this->reservedNames = ['system', 'root', 'admin'];
+        $this->reservedNames = ['system', 'root'];
 
         $this->db = Base::getInstance()->getConnection();
         $this->Helpers = new Helpers;

@@ -39,17 +39,20 @@ class ChatController
      * @param int|null $replyTo 回复的消息ID
      * @return bool
      */
-    public function sendMessage($user, $message, $isMarkdown = false, $replyTo = null): bool
+    public function sendMessage($user, $message, $isMarkdown = false, $replyTo = null, $isNotice = false): bool
     {
         try {
+            $type = 'user';
             $userIP = new User;
+            $db = Base::getInstance()->getConnection();
             if ($isMarkdown === 'true') {
                 $type = 'user.markdown';
-            } else {
-                $type = 'user';
+            }
+            if ($isNotice) {
+                $type = 'admin.notice';
             }
 
-            $stmt = $this->db->prepare('INSERT INTO messages 
+            $stmt = $db->prepare('INSERT INTO messages 
                 (user_name, content, type, created_at, user_ip, reply_to) 
                 VALUES (?, ?, ?, ?, ?, ?)');
 
@@ -153,7 +156,7 @@ class ChatController
      * @param int $eventLimit 事件限制条数
      * @return array
      */
-    public function getMessages($offset = 0, $limit = 10, $eventOffset, $eventLimit): array
+    public function getMessages($offset = 0, $limit = 10, $eventOffset = 0, $eventLimit = 10): array
     {
         try {
             $event = new Events;
@@ -263,7 +266,7 @@ class ChatController
      * @param int $messageId
      * @return bool 返回操作是否成功
      */
-    public function recycleMessage($messageId, $tips): bool
+    public function recycleMessage($messageId): bool
     {
         try {
             $sqlUpdate = "UPDATE messages SET status = :status, type = :type WHERE id = :id";

@@ -13,7 +13,6 @@ try {
     $allowedDomains = explode(',', $systemSetting->getSetting('api_cross_domain_allowlist') ?? ''); // 获取允许的域名
 
     $URI = parse_url($_SERVER['REQUEST_URI'])['path'];
-    $notRequiresValidationToken = ['user', 'captcha'];
     $apiName = basename(explode('/', $URI)[3]);  // 提取 API 名称部分并避免路径穿越
 
     if ($enableCrossDomain) {
@@ -35,14 +34,6 @@ try {
 
     $apiFile = __DIR__ . "/$apiName.php";
 
-    // 如果不是不需要验证token的API，需要验证用户是否登录或传递token
-    if (!in_array($apiName, $notRequiresValidationToken)) {
-        if (!$userHelpers->checkUserLoginStatus()) {
-            if (empty($_POST['token'])) {
-                $helpers->jsonResponse(401, '未传递TOKEN!');
-            }
-        }
-    }
     // 确保文件存在
     if (!file_exists($apiFile)) {
         $helpers->jsonResponse(404, 'API 不存在!');
@@ -55,8 +46,5 @@ try {
         $getTrace = [];
     }
 
-    $errorMessage = '内部错误，请稍后再试。';
-    $statusCode = 500;
     handleException($e, true);
-    $helpers->jsonResponse($statusCode, $errorMessage, $getTrace);
 }

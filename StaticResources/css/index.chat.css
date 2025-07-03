@@ -140,7 +140,7 @@ body {
 #chat-box-container {
     background-color: #ffffff;
     overflow: hidden;
-    border-radius: 8px;
+    border-radius: unset;
     display: flex;
     margin: 0 auto;
     max-width: min(1400px, 100% - 2*var(--layout-padding));
@@ -361,19 +361,132 @@ pre code.hljs {
     padding: 1em;
 }
 
-.plyr {
-    max-height: 100%;
-}
-
-.plyr--audio {
-    padding-top: 50vh;
-}
-
+/* 文件预览的iframe */
 iframe {
-    max-height: 100%;
     width: 100%;
-    height: 100%;
+    height: 99%;
     border: none;
+}
+
+.floating-file-preview {
+    z-index: 1050;
+    position: fixed;
+    width: 600px;
+    height: 300px;
+    cursor: move;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+
+    /* 边框效果增强 */
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+}
+
+.floating-file-preview::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg,
+            rgba(255, 255, 255, 0.1) 0%,
+            rgba(255, 255, 255, 0) 100%);
+    z-index: -1;
+    border-radius: inherit;
+}
+
+.file-preview-header {
+    padding: 8px 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.file-preview-header span {
+    font-weight: bold;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 200px;
+}
+
+.file-preview-actions {
+    display: flex;
+    gap: 4px;
+}
+
+.floating-file-preview .btn-sm {
+    padding: 0.15rem 0.3rem;
+    font-size: 0.75rem;
+}
+
+.floating-file-preview-content {
+    padding: 12px;
+    max-height: 250px;
+    overflow: auto;
+}
+
+/* 文件管理样式 */
+#fileManagerModal .modal-body {
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+.file-preview-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.file-preview-item {
+    width: 150px;
+    border: 1px solid #dee2e6;
+    border-radius: 5px;
+    padding: 10px;
+    text-align: center;
+    transition: all 0.3s;
+}
+
+.file-preview-item:hover {
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    transform: translateY(-2px);
+}
+
+.file-preview-icon {
+    font-size: 3rem;
+    margin-bottom: 10px;
+    color: #6c757d;
+}
+
+.file-preview-name {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 0.9rem;
+}
+
+.file-actions {
+    margin-top: 10px;
+    display: flex;
+    justify-content: space-around;
+}
+
+.file-actions .btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.8rem;
+}
+
+/* 表格样式 */
+#fileListBody tr {
+    cursor: pointer;
+}
+
+#fileListBody tr:hover {
+    background-color: #f8f9fa;
 }
 
 /* Loading屏幕样式 */
@@ -405,6 +518,22 @@ iframe {
     margin: 0;
     font-size: 1.2rem;
     color: #333;
+}
+
+/* 公告发布按钮样式 */
+#publishNotice {
+    margin-left: 10px;
+    color: white;
+}
+
+/* 公告表单样式 */
+#noticeFormModal .modal-body {
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+#noticeContent {
+    min-height: 150px;
 }
 
 /* 大屏幕设备（桌面） */

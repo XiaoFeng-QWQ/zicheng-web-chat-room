@@ -115,21 +115,6 @@ class User
                 }
             }
 
-            // 3. 如果仍然没有用户信息，返回空数组或默认信息
-            if (empty($userInfo)) {
-                return [
-                    'user_id' => 0,
-                    'username' => 'Guest',
-                    'group_id' => 0,
-                    'token' => $token ?? ''
-                ];
-            }
-
-            // 附加token信息
-            if ($token) {
-                $userInfo['token'] = $token;
-            }
-
             return $userInfo;
         } catch (Throwable $e) {
             throw new Exception('根据当前环境获取用户信息出错：' . $e->getMessage());

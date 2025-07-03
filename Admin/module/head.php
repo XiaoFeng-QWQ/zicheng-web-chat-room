@@ -1,5 +1,9 @@
 <?php
 require_once __DIR__ . "/../helper/common.php";
+
+use ChatRoom\Core\Helpers\User;
+
+$UserHelpers = new User();
 ?>
 <!DOCTYPE html>
 <html lang="zh-CN">
@@ -17,7 +21,7 @@ require_once __DIR__ . "/../helper/common.php";
     <script src="/StaticResources/js/chart.umd.min.js"></script>
 </head>
 
-<body class="d-flex flex-column min-vh-100">
+<body class="d-flex min-vh-100">
     <header>
         <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
             <div class="container-fluid">
@@ -49,6 +53,5 @@ require_once __DIR__ . "/../helper/common.php";
             </div>
         </nav>
     </header>
-    <div id="NProgress"></div>
 
     <main class="container mt-5 flex-shrink-0" style="padding-top: 20px;max-width: 99%;">

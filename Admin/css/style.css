@@ -22,6 +22,10 @@ body {
     color: #fff !important;
 }
 
+.card-header:first-child {
+    border-radius: 0;
+}
+
 .card {
     border: none;
     box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);

@@ -20,7 +20,7 @@ class FileUploader
         $this->db = Base::getInstance()->getConnection();
         $this->allowedTypes = $allowedTypes;
         $this->maxSize = $maxSize;
-        $this->uploadDir = FRAMEWORK_DIR . "/StaticResources/uploads/";
+        $this->uploadDir = FRAMEWORK_DIR . "/Writable/uploads";
     }
 
     /**
@@ -45,26 +45,41 @@ class FileUploader
                 return false;
             }
             // 构建上传目录
-            $uploadPath = $this->uploadDir . date('Y/m/d') . "/u_$userId/";
+            $uploadPath = $this->uploadDir . "/u_$userId";
             if (!is_dir($uploadPath) && !mkdir($uploadPath, 0775, true)) {
                 return false;
             }
-            $filePath = $uploadPath . $file['name'];
+            $md5 = md5_file($file['tmp_name']);
+            // 检查文件是否已存在
+            $fileCheck = $this->manageFile('search', 'file_md5', $md5);
+            if ($fileCheck) {
+                return [
+                    'name' => $fileCheck['file_name'],
+                    'type' => $fileCheck['file_type'],
+                    'size' => round($fileCheck['file_size'] / 1024, 2) . 'KB',
+                    'path' => $fileCheck['file_path'], //实际存储路径(完整路径)
+                    'md5' => $md5,
+                    'created_at' => $fileCheck['created_at'],
+                    'updated_at' => $fileCheck['updated_at'],
+                    'user_id' => $fileCheck['user_id'],
+                    'status' => $fileCheck['status']
+                ];
+            }
+            $filePath = $uploadPath . '/' . $md5 . '.' . pathinfo($file['name'], PATHINFO_EXTENSION);
             if (!move_uploaded_file($file['tmp_name'], $filePath)) {
                 return false;
             }
-            $uuid = time() . $userId . uniqid();
             $fileInfo = [
                 'name' => $file['name'],
                 'type' => $file['type'],
-                'size' => round($file['size'] / 1024, 2) . 'KB',
-                'path' => $filePath, //存储实际路径
-                'uuid' => $uuid,
+                'size' => round($file['size'] / 1024, 2),
+                'path' => $filePath, //实际存储路径(完整路径)
+                'url' => "/api/v1/files/$md5",
+                'md5' => $md5,
             ];
             if (!$this->saveFileInfo($userId, $fileInfo)) {
                 return false;
             }
-            $fileInfo['url'] = "/api/v1/files/$uuid"; // 返回前端相对路径
             return $fileInfo;
         } catch (Throwable $e) {
             throw new Exception('文件保存失败:' . $e->getMessage());
@@ -82,14 +97,14 @@ class FileUploader
     private function saveFileInfo($userId, $fileData): bool
     {
         try {
-            $query = "INSERT INTO files (file_name, file_type, file_size, file_path, file_uuid, created_at, user_id) 
+            $query = "INSERT INTO files (file_name, file_type, file_size, file_path, file_md5, created_at, user_id) 
                       VALUES (?, ?, ?, ?, ?, ?, ?)";
             $params = [
                 $fileData['name'],
                 $fileData['type'],
                 $fileData['size'],
                 $fileData['path'],
-                $fileData['uuid'],
+                $fileData['md5'],
                 date('Y-m-d H:i:s'),
                 $userId,
             ];
@@ -119,22 +134,103 @@ class FileUploader
     {
         switch ($method) {
             case "search":
-                if (empty($options)) {
+                if (count($options) === 4) {
+                    // 分页搜索
+                    return $this->getPaginatedFiles($options[0], $options[1], $options[2], $options[3]);
+                } elseif (count($options) === 2) {
+                    // 条件搜索
+                    return $this->searchFiles($options);
+                } else {
+                    // 获取所有文件
                     return $this->getAllFiles();
-                }
-                if (count($options) > 0) {
-                    $condition = $options[0]; //第一个选项是条件（例如按文件名、文件类型等）
-                    return $this->searchFiles($condition);
                 }
                 break;
             case "delete":
                 if (isset($options[0])) {
-                    $fileUuid = $options[0]; // 第一个选项是文件UUID
-                    return $this->deleteFile($fileUuid);
+                    // 默认使用MD5删除
+                    $type = isset($options[1]) && $options[1] === 'id' ? 'id' : 'md5';
+                    return $this->deleteFile($options[0], $type);
                 }
                 break;
         }
         return false;
+    }
+
+    /**
+     * 获取分页文件列表
+     * 
+     * @param int $page 当前页码
+     * @param int $perPage 每页数量
+     * @param string $search 搜索关键词
+     * @param string $sort 排序字段
+     * @return array 文件列表和总数
+     */
+    public function getPaginatedFiles($page = 1, $perPage = 10, $search = '', $sort = 'created_at'): array
+    {
+        try {
+            // 验证排序字段
+            $allowedSortFields = ['file_name', 'file_type', 'file_size', 'created_at', 'username'];
+            $sortField = in_array($sort, $allowedSortFields) ? $sort : 'created_at';
+            $orderBy = "ORDER BY $sortField DESC";
+
+            // 计算偏移量
+            $offset = ($page - 1) * $perPage;
+
+            // 基础查询
+            $query = "SELECT f.*, u.username, u.avatar_url 
+                  FROM files f 
+                  LEFT JOIN users u ON f.user_id = u.user_id 
+                  WHERE f.status = 'active'";
+
+            // 添加搜索条件
+            $params = [];
+            if (!empty($search)) {
+                $query .= " AND (f.file_name LIKE :search OR u.username LIKE :search)";
+                $params[':search'] = '%' . $search . '%';
+            }
+
+            // 添加排序和分页
+            $query .= " $orderBy LIMIT :limit OFFSET :offset";
+
+            // 准备并执行查询
+            $stmt = $this->db->prepare($query);
+
+            // 绑定参数
+            foreach ($params as $key => $value) {
+                $stmt->bindValue($key, $value);
+            }
+            $stmt->bindValue(':limit', $perPage, PDO::PARAM_INT);
+            $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+
+            $stmt->execute();
+            $files = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            // 获取总数
+            $countQuery = "SELECT COUNT(*) as total 
+                       FROM files f 
+                       LEFT JOIN users u ON f.user_id = u.user_id 
+                       WHERE f.status = 'active'";
+
+            if (!empty($search)) {
+                $countQuery .= " AND (f.file_name LIKE :search OR u.username LIKE :search)";
+            }
+
+            $countStmt = $this->db->prepare($countQuery);
+            foreach ($params as $key => $value) {
+                if ($key !== ':limit' && $key !== ':offset') {
+                    $countStmt->bindValue($key, $value);
+                }
+            }
+            $countStmt->execute();
+            $total = $countStmt->fetch(PDO::FETCH_ASSOC)['total'];
+
+            return [
+                'total' => $total,
+                'files' => $files
+            ];
+        } catch (PDOException $e) {
+            throw new PDOException("获取分页文件列表失败:" . $e->getMessage());
+        }
     }
 
     /**
@@ -146,7 +242,11 @@ class FileUploader
     private function getAllFiles(): array
     {
         try {
-            $query = "SELECT * FROM files WHERE status = 'active'";
+            // 查询文件及对应用户的用户名和头像
+            $query = "SELECT f.*, u.username, u.avatar_url 
+                      FROM files f 
+                      LEFT JOIN users u ON f.user_id = u.user_id 
+                      WHERE f.status = 'active'";
             $stmt = $this->db->query($query);
             $files = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -173,49 +273,50 @@ class FileUploader
     private function searchFiles($condition): array
     {
         try {
-            if ($condition[1] === '1') {
-                return [];
-            }
-            if ($condition[1] === '0') {
-                return [];
-            }
-
             // 执行查询
             $sql = "SELECT * FROM files WHERE $condition[0] = :value AND status = 'active'";
             $stmt = $this->db->prepare($sql);
             $stmt->bindParam(':value', $condition[1]);
             $stmt->execute();
-            $results = $stmt->fetchAll();
-            return $results;
+            $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            // 如果只查找一个文件（如通过md5），返回第一个，否则返回全部
+            if ($condition[0] === 'file_md5') {
+                return $result[0] ?? [];
+            }
+            return $result;
         } catch (PDOException $e) {
             throw new PDOException("搜索文件失败: " . $e->getMessage());
         }
     }
 
     /**
-     * 删除文件
+     * 删除文件（支持通过文件ID或MD5删除）
      *
-     * @param string $fileUuid 文件的 UUID
+     * @param mixed $identifier 文件ID(int)或文件MD5(string)
+     * @param string $type 标识类型 ('id' 或 'md5')
      * @return bool 返回删除是否成功
      * @throws PDOException 如果数据库操作失败，将抛出异常
      */
-    private function deleteFile($fileUuid): bool
+    public function deleteFile($identifier, string $type = 'md5'): bool
     {
         try {
+            // 根据类型确定查询条件
+            $column = $type === 'id' ? 'id' : 'file_md5';
+
             // 获取文件路径
-            $query = "SELECT file_path FROM files WHERE file_uuid = ? AND status = 'active'";
+            $query = "SELECT file_path FROM files WHERE $column = ? AND status = 'active'";
             $stmt = $this->db->prepare($query);
-            $stmt->execute([$fileUuid]);
+            $stmt->execute([$identifier]);
             $file = $stmt->fetch(PDO::FETCH_ASSOC);
 
             if (!$file) {
                 return false;
             }
 
-            // 更新文件状态
-            $updateQuery = "UPDATE files SET status = 'deleted' WHERE file_uuid = ?";
+            // 更新文件状态为已删除（软删除）
+            $updateQuery = "UPDATE files SET status = 'deleted' WHERE $column = ?";
             $updateStmt = $this->db->prepare($updateQuery);
-            $updateStmt->execute([$fileUuid]);
+            $updateStmt->execute([$identifier]);
 
             return true;
         } catch (PDOException $e) {

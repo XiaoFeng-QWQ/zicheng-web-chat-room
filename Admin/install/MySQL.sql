@@ -1,123 +1,125 @@
-START TRANSACTION;
-DROP TABLE IF EXISTS `admin_login_attempts`;
 CREATE TABLE `admin_login_attempts` (
-    `id` INT NOT NULL AUTO_INCREMENT,
-    `ip_address` VARCHAR(45) NOT NULL,
-    `attempts` INT NOT NULL DEFAULT 0,
-    `last_attempt` DATETIME DEFAULT CURRENT_TIMESTAMP,
-    `is_blocked` TINYINT NOT NULL DEFAULT 0,
-    PRIMARY KEY(`id`),
-    UNIQUE KEY(`id`)
-) ENGINE=InnoDB;
+  `id` int NOT NULL AUTO_INCREMENT,
+  `ip_address` varchar(45) COLLATE utf8mb4_bin NOT NULL,
+  `attempts` int NOT NULL DEFAULT '0',
+  `last_attempt` datetime DEFAULT CURRENT_TIMESTAMP,
+  `is_blocked` boolean NOT NULL DEFAULT false,
+  PRIMARY KEY (`id`),
+  INDEX (`ip_address`),
+  INDEX (`is_blocked`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 
-DROP TABLE IF EXISTS `events`;
-CREATE TABLE `events` (
-    `event_id` INT NOT NULL AUTO_INCREMENT,
-    `event_type` VARCHAR(100) NOT NULL,
-    `user_id` INT NOT NULL,
-    `target_id` INT NOT NULL,
-    `created_at` DATETIME NOT NULL,
-    `additional_data` TEXT,
-    PRIMARY KEY(`event_id`)
-) ENGINE=InnoDB;
-
-DROP TABLE IF EXISTS `files`;
-CREATE TABLE `files` (
-    `id` INT NOT NULL AUTO_INCREMENT,
-    `file_name` VARCHAR(255) NOT NULL,
-    `file_type` VARCHAR(50),
-    `file_size` BIGINT,
-    `file_path` TEXT,
-    `file_uuid` VARCHAR(36),
-    `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    `user_id` INT,
-    `status` VARCHAR(50) DEFAULT 'active',
-    PRIMARY KEY(`id`),
-    UNIQUE KEY(`id`),
-    UNIQUE KEY(`file_uuid`)
-) ENGINE=InnoDB;
-
-DROP TABLE IF EXISTS `groups`;
 CREATE TABLE `groups` (
-    `group_id` INT NOT NULL AUTO_INCREMENT,
-    `group_name` VARCHAR(255) NOT NULL,
-    `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY(`group_id`),
-    UNIQUE KEY(`group_id`),
-    UNIQUE KEY(`group_name`)
-) ENGINE=InnoDB;
+  `group_id` int NOT NULL AUTO_INCREMENT,
+  `group_name` varchar(191) COLLATE utf8mb4_bin NOT NULL,
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`group_id`),
+  UNIQUE KEY `group_name` (`group_name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 
-DROP TABLE IF EXISTS `messages`;
-CREATE TABLE `messages` (
-    `id` INT NOT NULL AUTO_INCREMENT,
-    `type` VARCHAR(50) DEFAULT 'user',
-    `content` TEXT NOT NULL,
-    `user_name` VARCHAR(255) NOT NULL,
-    `user_ip` VARCHAR(45),
-    `reply_to` INT,
-    `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
-    `status` VARCHAR(50) DEFAULT 'active',
-    PRIMARY KEY(`id`),
-    UNIQUE KEY(`id`)
-) ENGINE=InnoDB;
-
-DROP TABLE IF EXISTS `system_logs`;
-CREATE TABLE `system_logs` (
-    `log_id` INT NOT NULL AUTO_INCREMENT,
-    `log_type` VARCHAR(50) NOT NULL,
-    `message` TEXT NOT NULL,
-    `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY(`log_id`),
-    UNIQUE KEY(`log_id`)
-) ENGINE=InnoDB;
-
-DROP TABLE IF EXISTS `system_sets`;
-CREATE TABLE `system_sets` (
-    `id` INT NOT NULL AUTO_INCREMENT,
-    `name` VARCHAR(255) NOT NULL,
-    `value` TEXT NOT NULL,
-    PRIMARY KEY(`id`),
-    UNIQUE KEY(`id`),
-    UNIQUE KEY(`name`)
-) ENGINE=InnoDB;
-
-DROP TABLE IF EXISTS `user_sets`;
-CREATE TABLE `user_sets` (
-    `id` INT NOT NULL AUTO_INCREMENT,
-    `user_id` INT NOT NULL,
-    `set_name` VARCHAR(255) NOT NULL,
-    `value` TEXT,
-    PRIMARY KEY(`id`),
-    UNIQUE KEY(`id`)
-) ENGINE=InnoDB;
-
-DROP TABLE IF EXISTS `user_tokens`;
-CREATE TABLE `user_tokens` (
-    `id` INT NOT NULL AUTO_INCREMENT,
-    `user_id` INT NOT NULL,
-    `token` VARCHAR(256) NOT NULL,
-    `expiration` DATETIME,
-    `created_at` DATETIME,
-    `updated_at` DATETIME,
-    PRIMARY KEY(`id`),
-    UNIQUE KEY(`id`),
-    UNIQUE KEY(`user_id`)
-) ENGINE=InnoDB;
-
-DROP TABLE IF EXISTS `users`;
 CREATE TABLE `users` (
-    `user_id` INT NOT NULL AUTO_INCREMENT,
-    `username` VARCHAR(255) NOT NULL,
-    `password` VARCHAR(255) NOT NULL,
-    `email` VARCHAR(255),
-    `register_ip` VARCHAR(45),
-    `group_id` INT NOT NULL DEFAULT 2,
-    `avatar_url` TEXT,
-    `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY(`user_id`),
-    UNIQUE KEY(`user_id`),
-    UNIQUE KEY(`username`)
-) ENGINE=InnoDB;
+  `user_id` int NOT NULL AUTO_INCREMENT,
+  `username` varchar(191) COLLATE utf8mb4_bin NOT NULL,
+  `password` varchar(191) COLLATE utf8mb4_bin NOT NULL,
+  `email` varchar(191) COLLATE utf8mb4_bin DEFAULT NULL,
+  `register_ip` varchar(45) COLLATE utf8mb4_bin DEFAULT NULL,
+  `group_id` int NOT NULL DEFAULT '2',
+  `avatar_url` mediumtext COLLATE utf8mb4_bin,
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  `last_login` datetime DEFAULT NULL,
+  PRIMARY KEY (`user_id`),
+  UNIQUE KEY `username` (`username`),
+  UNIQUE KEY `email` (`email`),
+  FOREIGN KEY (`group_id`) REFERENCES `groups`(`group_id`),
+  INDEX (`group_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 
-COMMIT;
+CREATE TABLE `files` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `file_name` varchar(191) COLLATE utf8mb4_bin NOT NULL,
+  `file_type` varchar(50) COLLATE utf8mb4_bin DEFAULT NULL,
+  `file_size` int UNSIGNED DEFAULT NULL,
+  `file_path` mediumtext COLLATE utf8mb4_bin,
+  `file_md5` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `user_id` int DEFAULT NULL,
+  `status` varchar(50) COLLATE utf8mb4_bin DEFAULT 'active',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `file_md5` (`file_md5`),
+  FOREIGN KEY (`user_id`) REFERENCES `users`(`user_id`),
+  INDEX (`user_id`),
+  INDEX (`status`),
+  INDEX (`created_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+
+CREATE TABLE `events` (
+  `event_id` int NOT NULL AUTO_INCREMENT,
+  `event_type` varchar(100) COLLATE utf8mb4_bin NOT NULL,
+  `user_id` int NOT NULL,
+  `target_id` int NOT NULL,
+  `created_at` datetime NOT NULL,
+  `additional_data` text CHARACTER SET utf8mb4 COLLATE utf8mb4_bin,
+  PRIMARY KEY (`event_id`),
+  FOREIGN KEY (`user_id`) REFERENCES `users`(`user_id`),
+  INDEX (`user_id`),
+  INDEX (`event_type`),
+  INDEX (`created_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+
+CREATE TABLE `messages` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `type` varchar(50) COLLATE utf8mb4_bin DEFAULT 'user',
+  `content` mediumtext COLLATE utf8mb4_bin NOT NULL,
+  `user_name` varchar(191) COLLATE utf8mb4_bin NOT NULL,
+  `user_ip` varbinary(16) DEFAULT NULL,
+  `reply_to` int DEFAULT NULL,
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  `status` varchar(50) COLLATE utf8mb4_bin DEFAULT 'active',
+  PRIMARY KEY (`id`),
+  INDEX (`user_name`),
+  INDEX (`created_at`),
+  INDEX (`status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+
+CREATE TABLE `system_logs` (
+  `log_id` int NOT NULL AUTO_INCREMENT,
+  `log_type` varchar(50) COLLATE utf8mb4_bin NOT NULL,
+  `message` mediumtext COLLATE utf8mb4_bin NOT NULL,
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`log_id`),
+  INDEX (`log_type`),
+  INDEX (`created_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+
+CREATE TABLE `system_sets` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `name` varchar(191) COLLATE utf8mb4_bin NOT NULL,
+  `value` mediumtext COLLATE utf8mb4_bin NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `name` (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+
+CREATE TABLE `user_sets` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `user_id` int NOT NULL,
+  `set_name` varchar(191) COLLATE utf8mb4_bin NOT NULL,
+  `value` mediumtext COLLATE utf8mb4_bin,
+  PRIMARY KEY (`id`),
+  FOREIGN KEY (`user_id`) REFERENCES `users`(`user_id`),
+  UNIQUE KEY `user_set` (`user_id`, `set_name`),
+  INDEX (`set_name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+
+CREATE TABLE `user_tokens` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `user_id` int NOT NULL,
+  `token` varchar(191) COLLATE utf8mb4_bin NOT NULL,
+  `expiration` datetime DEFAULT NULL,
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  FOREIGN KEY (`user_id`) REFERENCES `users`(`user_id`),
+  UNIQUE KEY `token` (`token`),
+  INDEX (`expiration`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;

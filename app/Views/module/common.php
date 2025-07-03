@@ -5,11 +5,12 @@
     position: fixed;
     bottom: 0;
     left: 0;
+    z-index: 0;
 ">
     © 2025 Powered By:
     <a href="http://blog.zicheng.icu" target="_blank" rel="noopener noreferrer" style="margin-left: 5px; color: #007bff; text-decoration: none;">
         小枫_QWQ |
-    </a>&nbsp;系统版本[2.1.0.0]
+    </a>&nbsp;系统版本[<?= FRAMEWORK_VERSION ?>]
 </span>
 
 
@@ -62,3 +63,12 @@
         <use xlink:href="#bolang-item" x="50" y="6" fill="rgba(224,233,239,.5)"></use>
     </g>
 </svg>
+<script src="/StaticResources/js/class.errorHandler.js"></script>
+<script>
+    new ErrorHandler({
+        appName: '子辰聊天室',
+        abortRequests: true, // 启用请求中止
+        contactSupport: true,
+        enableReporting: false,
+    });
+</script>

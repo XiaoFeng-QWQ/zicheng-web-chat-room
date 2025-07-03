@@ -28,6 +28,9 @@ class Events
     public function createEvent(string $eventType, int $user_id, int $targetId, mixed $additionalData = null): bool
     {
         try {
+            if (is_array($additionalData)) {
+                $additionalData = serialize($additionalData);
+            }
             $sql = "INSERT INTO events 
                     (event_type, user_id, target_id, created_at, additional_data) 
                     VALUES (?, ?, ?, ?, ?)";
@@ -43,6 +46,65 @@ class Events
         } catch (PDOException $e) {
             throw new PDOException('创建事件失败: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * 处理附加数据字段，如果是序列化数据则反序列化
+     * 
+     * @param mixed $additionalData 附加数据
+     * @return mixed 处理后的附加数据
+     */
+    private function processAdditionalData($additionalData)
+    {
+        // 如果数据为空或null，直接返回null
+        if ($additionalData === null || $additionalData === '' || $additionalData === 'null') {
+            return null;
+        }
+
+        // 如果已经是数组，直接返回
+        if (is_array($additionalData)) {
+            return $additionalData;
+        }
+
+        // 检查是否是有效的序列化字符串
+        if (is_string($additionalData)) {
+            // 检查序列化字符串的基本格式
+            if (
+                preg_match('/^[aOs]:\d+:/', $additionalData) ||
+                preg_match('/^a:\d+:\{/', $additionalData)
+            ) {
+                // 尝试反序列化
+                $unserialized = @unserialize($additionalData);
+                if ($unserialized !== false) {
+                    return $unserialized;
+                }
+            }
+
+            // 尝试解码JSON格式（如果存储的是JSON字符串）
+            $jsonDecoded = json_decode($additionalData, true);
+            if (json_last_error() === JSON_ERROR_NONE) {
+                return $jsonDecoded;
+            }
+        }
+
+        // 如果以上都不适用，直接返回原值
+        return $additionalData;
+    }
+
+    /**
+     * 处理事件数组中的附加数据字段
+     * 
+     * @param array $events 事件数组
+     * @return array 处理后的事件数组
+     */
+    private function processEventsAdditionalData(array $events): array
+    {
+        return array_map(function ($event) {
+            if (isset($event['additional_data'])) {
+                $event['additional_data'] = $this->processAdditionalData($event['additional_data']);
+            }
+            return $event;
+        }, $events);
     }
 
     /**
@@ -72,7 +134,7 @@ class Events
             $stmt->execute();
             $events = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-            return $events;
+            return $this->processEventsAdditionalData($events);
         } catch (PDOException $e) {
             throw new PDOException('获取事件列表失败: ' . $e->getMessage());
         }
@@ -164,7 +226,7 @@ class Events
 
             $events = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-            return $events;
+            return $this->processEventsAdditionalData($events);
         } catch (PDOException $e) {
             throw new PDOException('查询事件失败: ' . $e->getMessage());
         }
@@ -196,6 +258,65 @@ class Events
             return (int)($result['count'] ?? 0);
         } catch (PDOException $e) {
             throw new PDOException('获取事件数量失败: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * 更新事件的任意字段
+     * 
+     * @param int $eventId 要更新的事件ID
+     * @param array $fields 要更新的字段数组 [字段名 => 新值]
+     * @return bool 是否更新成功
+     * @throws PDOException
+     */
+    public function updateEventFields(int $eventId, array $fields): bool
+    {
+        // 移除event_id字段（如果存在）
+        unset($fields['event_id']);
+
+        // 如果没有有效字段可更新，直接返回false
+        if (empty($fields)) {
+            return false;
+        }
+
+        try {
+            // 构建SET子句
+            $setParts = [];
+            $params = [':event_id' => $eventId];
+
+            foreach ($fields as $field => $value) {
+                // 只允许更新白名单中的字段
+                $allowedFields = ['event_type', 'user_id', 'target_id', 'created_at', 'additional_data'];
+                if (in_array($field, $allowedFields)) {
+                    $paramName = ':' . $field;
+                    $setParts[] = "{$field} = {$paramName}";
+
+                    // 如果是additional_data字段且是数组，则序列化
+                    if ($field === 'additional_data' && is_array($value)) {
+                        $params[$paramName] = serialize($value);
+                    } else {
+                        $params[$paramName] = $value;
+                    }
+                }
+            }
+
+            // 如果没有有效字段通过验证，返回false
+            if (empty($setParts)) {
+                return false;
+            }
+
+            $sql = "UPDATE events SET " . implode(', ', $setParts) . " WHERE event_id = :event_id";
+            $stmt = $this->db->prepare($sql);
+
+            // 绑定参数
+            foreach ($params as $key => $value) {
+                $paramType = is_int($value) ? PDO::PARAM_INT : PDO::PARAM_STR;
+                $stmt->bindValue($key, $value, $paramType);
+            }
+
+            return $stmt->execute();
+        } catch (PDOException $e) {
+            throw new PDOException('更新事件失败: ' . $e->getMessage());
         }
     }
 }

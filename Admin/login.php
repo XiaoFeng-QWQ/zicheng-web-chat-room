@@ -252,9 +252,9 @@ function handleFailedLogin($ip_address, $username, $log)
             <button type="submit" class="btn btn-primary">登录</button>
         </form>
     </div>
-    <?php require_once FRAMEWORK_APP_PATH . '/Views/module/common.php' ?>
     <script src="/StaticResources/js/jquery.min.js"></script>
     <script src="/StaticResources/js/bootstrap.bundle.min.js"></script>
+    <?php require_once FRAMEWORK_APP_PATH . '/Views/module/common.php' ?>
 </body>
 
 </html>

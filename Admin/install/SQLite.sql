@@ -25,7 +25,7 @@ CREATE TABLE "files" (
 	"file_type"	VARCHAR(50),
 	"file_size"	BIGINT,
 	"file_path"	TEXT,
-	"file_uuid"	TEXT UNIQUE,
+	"file_md5"	TEXT UNIQUE,
 	"created_at"	TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 	"updated_at"	TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 	"user_id"	INT,
@@ -107,7 +107,7 @@ CREATE INDEX "events_index" ON "events" (
 );
 DROP INDEX IF EXISTS "files_index";
 CREATE INDEX "files_index" ON "files" (
-	"file_uuid"
+	"file_md5"
 );
 DROP INDEX IF EXISTS "groups_index";
 CREATE UNIQUE INDEX "groups_index" ON "groups" (

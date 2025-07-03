@@ -1,5 +1,7 @@
 ﻿<?php
 
+use ChatRoom\Core\Helpers\Helpers;
+
 /**
  * 自定义错误处理
  *
@@ -22,19 +24,19 @@ function HandleException($e, $saveLog = false, $isFatal = false)
         return;
     }
 
-    // 如果是AJAX请求，返回JSON格式的错误信息
-    if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest') {
-        header('Content-Type: application/json');
-        echo json_encode([
-            'error' => true,
-            'message' => $e->getMessage(),
-            'trace' => defined('FRAMEWORK_DEBUG') && FRAMEWORK_DEBUG ? $e->getTrace() : null
-        ]);
-        exit;
-    }
 
-    // 输出错误信息到屏幕
-    echo formatExceptionOutput($e);
+    $helpers = new Helpers;
+    header('Content-Type: application/json');
+    http_response_code(500);
+    $helpers->jsonResponse(500, '内部错误，请稍后再试。', [
+        'message' => $e->getMessage(),
+        'file' => basename($e->getFile()),
+        'line' => $e->getLine(),
+        'trace' => defined('FRAMEWORK_DEBUG') && FRAMEWORK_DEBUG ? $e->getTrace() : null,
+        'code_snippet' => getCodeSnippet($e->getFile(), $e->getLine()),
+        'variables' => safeVarExport(get_defined_vars())
+    ]);
+    exit;
 
     // 如果是致命错误，终止执行
     if ($isFatal) {
@@ -140,173 +142,4 @@ function safeVarExport($data)
     }
 
     return var_export($data, true);
-}
-
-/**
- * 格式化异常输出
- *
- * @param Throwable $exception 异常对象
- * @return string
- */
-function formatExceptionOutput($exception)
-{
-    $codeSnippet = getCodeSnippet($exception->getFile(), $exception->getLine());
-    $isDebug = defined('FRAMEWORK_DEBUG') && FRAMEWORK_DEBUG;
-
-    $output = '
-        <style>
-            .framework-error-container {
-                background-color: #fff;
-                box-shadow: 0px 0px 20px 20px rgba(0, 0, 0, 0.1);
-                padding: 20px;
-                margin: 20px;
-                font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-                position: relative;
-                border-left: 5px solid #b71c1c;
-            }
-
-            .framework-error-container .error-header {
-                font-size: 24px;
-                color: #b71c1c;
-                margin-bottom: 20px;
-                font-weight: bold;
-            }
-
-            .framework-error-container .error-section {
-                margin-bottom: 20px;
-                border-bottom: 1px solid #eee;
-                padding-bottom: 15px;
-            }
-
-            .framework-error-container .error-section h3 {
-                font-size: 18px;
-                color: #333;
-                margin-bottom: 10px;
-                font-weight: 600;
-            }
-
-            .framework-error-container pre {
-                background-color: #f5f5f5;
-                padding: 10px;
-                border-radius: 3px;
-                overflow-x: auto;
-            }
-
-            .framework-error-container pre code {
-                white-space: pre-wrap;
-                word-break: break-word;
-                font-family: Consolas, Monaco, "Andale Mono", monospace;
-                font-size: 14px;
-                line-height: 1.5;
-                color: #333;
-            }
-
-            .framework-error-container .error-line {
-                background-color: #ffebee;
-                display: block;
-                padding: 2px 4px;
-                margin: 0 -4px;
-                border-left: 3px solid #b71c1c;
-            }
-
-            .framework-error-container .error-footer {
-                text-align: right;
-                font-size: 12px;
-                color: #777;
-                margin-top: 20px;
-            }
-
-            .framework-error-container-close {
-                position: absolute;
-                font-size: 24px;
-                color: #333;
-                cursor: pointer;
-                right: 20px;
-                top: 20px;
-                font-weight: bold;
-            }
-
-            .framework-error-container-close:hover {
-                color: #b71c1c;
-            }
-
-            .error-type {
-                display: inline-block;
-                background-color: #b71c1c;
-                color: white;
-                padding: 2px 6px;
-                border-radius: 3px;
-                font-size: 14px;
-                margin-left: 10px;
-                vertical-align: middle;
-            }
-        </style>
-        <div class="framework-error-container">
-            <div class="error-header">
-                系统错误 <span class="error-type">' . get_class($exception) . '</span>
-            </div>
-            <div class="error-section">
-                <h3>错误信息:</h3>
-                <pre><code class="language-php">' . htmlspecialchars($exception->getMessage(), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . '</code></pre>
-            </div>';
-
-    if ($isDebug) {
-        $output .= '
-            <div class="error-section">
-                <h3>位置:</h3>
-                <pre><code class="language-php">' . htmlspecialchars($exception->getFile(), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . ' 第 ' . $exception->getLine() . ' 行</code></pre>
-            </div>
-            <div class="error-section">
-                <h3>错误堆栈:</h3>
-                <pre><code class="language-php">' . htmlspecialchars($exception->getTraceAsString(), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . '</code></pre>
-            </div>
-            <div class="error-section">
-                <h3>错误代码片段:</h3>
-                <pre><code class="language-php">' . $codeSnippet . '</code></pre>
-            </div>
-            <div class="error-section">
-                <h3>异常详情:</h3>
-                <pre><code class="language-php">' . htmlspecialchars(safeVarExport($exception), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . '</code></pre>
-            </div>
-            <div class="error-section">
-                <h3>请求信息:</h3>
-                <pre><code class="language-php">URL: ' . htmlspecialchars($_SERVER['REQUEST_URI'] ?? '', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . '
-Method: ' . htmlspecialchars($_SERVER['REQUEST_METHOD'] ?? '', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . '
-IP: ' . htmlspecialchars($_SERVER['REMOTE_ADDR'] ?? '', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . '</code></pre>
-            </div>
-            <div class="error-section">
-                <h3>请求参数:</h3>
-                <pre><code class="language-php">' . htmlspecialchars(safeVarExport($_REQUEST), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . '</code></pre>
-            </div>';
-
-        if (!empty($_SESSION)) {
-            $output .= '<div class="error-section">
-                    <h3>会话数据:</h3>
-                    <pre><code class="language-php">' . htmlspecialchars(safeVarExport($_SESSION), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . '</code></pre>
-                </div>';
-        }
-
-        $output .= '<div class="error-section">
-                <h3>环境信息:</h3>
-                <pre><code class="language-php">PHP 版本: ' . phpversion() . '
-服务器: ' . htmlspecialchars(php_uname(), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . '
-运行时间: ' . date('Y-m-d H:i:s') . '
-内存使用: ' . round(memory_get_usage(true) / 1024 / 1024, 2) . ' MB
-峰值内存: ' . round(memory_get_peak_usage(true) / 1024 / 1024, 2) . ' MB</code></pre>
-            </div>';
-    } else {
-        $output .= '<div class="error-section">
-                <h3>提示:</h3>
-                <p>如需查看详细错误信息，请开启调试模式或联系系统管理员。</p>
-            </div>';
-    }
-
-    $output .= '<div class="error-footer">
-                <hr>
-                <p>ZiChen ChatRooM V:' . (defined('FRAMEWORK_VERSION') ? FRAMEWORK_VERSION : '1.0') . ' | ' . date('Y-m-d H:i:s') . '</p>
-            </div>
-        </div>';
-
-    http_response_code(500);
-    return $output;
 }

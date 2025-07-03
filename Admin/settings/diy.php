@@ -44,8 +44,6 @@ $navLinkSetting = is_array($navLinkSetting) ? $navLinkSetting : unserialize($nav
 </form>
 
 <script>
-    let removedLinks = [];
-
     // 动态添加链接表单
     $('#add-link').on('click', function() {
         const container = $('#nav-links-container');

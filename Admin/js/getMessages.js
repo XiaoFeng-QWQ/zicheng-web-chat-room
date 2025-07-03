@@ -32,7 +32,7 @@ function loadMessages(page) {
 
         messages.forEach(({ id, user_name, user_ip, content, created_at, type }) => {
             const row = `
-                <tr>
+                <tr data-id="${id}">
                     <td><input type="checkbox" class="select-checkbox form-check-input"></td>
                     <td>${id}</td>
                     <td>${user_name}</td>
@@ -40,10 +40,6 @@ function loadMessages(page) {
                     <td>${content}</td>
                     <td>${type}</td>
                     <td>${created_at}</td>
-                    <td>
-                        <button class="btn btn-sm btn-primary edit-button" data-id="${id}"><i class="fas fa-edit"></i></button>
-                        <button class="btn btn-sm btn-danger delete-button" data-id="${id}"><i class="fas fa-trash"></i></button>
-                    </td>
                 </tr>`;
             tbody.append(row);
         });
@@ -107,7 +103,7 @@ function msgBindEvents() {
         $('#deleteModal').modal('hide');
         const selectedMessages = $('.select-checkbox:checked').not('#select-all');
         selectedMessages.each(function () {
-            const id = $(this).closest('tr').find('.delete-button').data('id');
+            const id = $(this).closest('tr').data('id');
             $.post('message/delete_message.php', { id }, function (response) {
                 if (response.success) {
                     $(this).closest('tr').remove();
