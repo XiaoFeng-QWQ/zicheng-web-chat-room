@@ -34,20 +34,3 @@ define('FRAMEWORK_CORE_DIR', FRAMEWORK_DIR . '/System/Core');
  * @var string
  */
 define('FRAMEWORK_APP_PATH', FRAMEWORK_DIR . '/App');
-/**
- * 数据库配置
- */
-define('FRAMEWORK_DATABASE', [
-    'driver' => 'sqlite',
-    'host' => 'F:\web\wwwroot\Zichen Web chat room/Writable/6866a780bce7e.db',
-    'port' => 3306,
-    'dbname' => '6866a780bce7e.db',
-    'username' => 'q1432777209@126.com',
-    'password' => 's26AFMWNB:_TApR',
-    'charset' => 'utf8mb4',
-]);
-
-/**
- * 安装锁
- */
-define('FRAMEWORK_INSTALL_LOCK', true);
